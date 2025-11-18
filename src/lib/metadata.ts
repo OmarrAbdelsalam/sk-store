@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://housescrub.com";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://scrubhousev1.vercel.app";
 const siteName = "HouseScrub - هاوس سكراب | السكراب الطبي رقم واحد في مصر";
 const siteDescription = "HouseScrub - السكراب الطبي رقم واحد في مصر. متجر متخصص في بيع الزي الطبي الفاخر والإكسسوارات الطبية عالية الجودة. توصيل لجميع أنحاء مصر خلال 3-7 أيام. فروع في المنصورة وطنطا. للتواصل: 01501881005";
 const phoneNumber = "+20-150-188-1005";
@@ -41,10 +41,11 @@ export const defaultMetadata: Metadata = {
     description: siteDescription,
     images: [
       {
-        url: "/yhouse-logo.png",
+        url: `${siteUrl}/yhouse-logo.png`,
         width: 1200,
         height: 630,
         alt: `${siteName} Logo`,
+        type: "image/png",
       },
     ],
   },
@@ -52,7 +53,7 @@ export const defaultMetadata: Metadata = {
     card: "summary_large_image",
     title: `${siteName} | الزي الطبي الفاخر`,
     description: siteDescription,
-    images: ["/yhouse-logo.png"],
+    images: [`${siteUrl}/yhouse-logo.png`],
     creator: "@housescrub",
   },
   robots: {
@@ -98,7 +99,7 @@ export function generatePageMetadata({
   locale?: string;
 }): Metadata {
   const url = `${siteUrl}${path}`;
-  const ogImage = image || "/yhouse-logo.png";
+  const ogImage = image ? (image.startsWith('http') ? image : `${siteUrl}${image}`) : `${siteUrl}/yhouse-logo.png`;
 
   return {
     title,
@@ -123,6 +124,7 @@ export function generatePageMetadata({
           width: 1200,
           height: 630,
           alt: title,
+          type: "image/png",
         },
       ],
     },

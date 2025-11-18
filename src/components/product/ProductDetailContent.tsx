@@ -185,7 +185,7 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
   const handleBuyNow = async () => {
     await handleAddToCart();
     if (!addDisabled) {
-      router.push(`/${locale}/checkout`);
+      router.push(`/${locale}/cart`);
     }
   };
 

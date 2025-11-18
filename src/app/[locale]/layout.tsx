@@ -46,6 +46,16 @@ export default async function LocaleLayout({
         <link rel="icon" href="/yhouse-logo.png" type="image/png" />
         <link rel="apple-touch-icon" href="/yhouse-logo.png" />
         <meta name="theme-color" content="#042d87" />
+        
+        {/* Open Graph - Explicit tags for better compatibility */}
+        <meta property="og:image" content="https://scrubhousev1.vercel.app/yhouse-logo.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:type" content="image/png" />
+        
+        {/* Twitter Card - Explicit tags */}
+        <meta name="twitter:image" content="https://scrubhousev1.vercel.app/yhouse-logo.png" />
+        <meta name="twitter:card" content="summary_large_image" />
       </head>
       <body className={locale === 'ar' ? cairo.className : inter.className}>    
         <SEOHead locale={locale} />

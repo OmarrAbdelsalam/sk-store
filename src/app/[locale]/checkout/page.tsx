@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/useCart";
@@ -23,6 +23,11 @@ export default function Checkout() {
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
   const [shippingPrice, setShippingPrice] = useState(90);
+
+  // Prefetch order-success page
+  useEffect(() => {
+    router.prefetch(`/${locale}/order-success`);
+  }, [locale, router]);
 
   const nf = useMemo(
     () => new Intl.NumberFormat(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
@@ -60,15 +65,19 @@ export default function Checkout() {
 
       const response = await res.json();
       try { localStorage.setItem('last_order_data', JSON.stringify(response.data)); } catch {}
+      
+      // Clear cart and navigate immediately for better UX
       clearCart();
-
-      toast({
-        title: t("orderSuccessTitle"),
-        description: t("orderSuccessDesc", { shipping: nf.format(shipping), currency: "EGP" }),
-        duration: 5000,
-      });
-
-      router.push("/order-success");
+      router.push(`/${locale}/order-success`);
+      
+      // Show toast after navigation starts
+      setTimeout(() => {
+        toast({
+          title: t("orderSuccessTitle"),
+          description: t("orderSuccessDesc", { shipping: nf.format(shipping), currency: "EGP" }),
+          duration: 5000,
+        });
+      }, 100);
     } catch (error) {
       const message = error instanceof Error ? error.message : typeof error === "string" ? error : t("genericErrorDesc");
       toast({ title: t("genericErrorTitle"), description: message, variant: "destructive" });

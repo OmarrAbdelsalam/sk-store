@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useTranslations, useLocale } from "next-intl";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { getCategories, type CategoryOption } from "@/api/categories";
 
@@ -12,22 +12,29 @@ export const DesktopMenu = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
+  const [isPending, startTransition] = useTransition();
 
   const [categories, setCategories] = useState<CategoryOption[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
 
   const categorySlug = searchParams.get("category");
-  
-  // Get the actual ID from sessionStorage if we have a slug
-  const activeCategoryId = categorySlug 
-    ? sessionStorage.getItem(`category_${categorySlug}`)
-    : null;
 
   useEffect(() => {
     (async () => {
       try {
         const data = await getCategories(locale);
         setCategories(data);
+        
+        // Prefetch all category pages
+        data.forEach((category) => {
+          const categoryName = locale === 'ar' ? category.arabicName : category.englishName;
+          const slug = categoryName.toLowerCase().replace(/\s+/g, '-');
+          router.prefetch(`/?category=${encodeURIComponent(slug)}`);
+        });
+        
+        // Prefetch home page (all products)
+        router.prefetch('/');
       } catch (e) {
         console.error("Failed to load categories", e);
         setCategories([]);
@@ -35,14 +42,32 @@ export const DesktopMenu = () => {
         setLoading(false);
       }
     })();
-  }, [locale]);
+  }, [locale, router]);
 
-  const goToAllProducts = () => router.push("/");
+  // Get the actual ID from sessionStorage if we have a slug (client-side only)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && categorySlug) {
+      const storedId = sessionStorage.getItem(`category_${categorySlug}`);
+      setActiveCategoryId(storedId);
+    } else {
+      setActiveCategoryId(null);
+    }
+  }, [categorySlug]);
+
+  const goToAllProducts = () => {
+    startTransition(() => {
+      router.push('/', { scroll: false });
+    });
+  };
+  
   const goToCategory = (id: string, name: string) => {
     const slug = name.toLowerCase().replace(/\s+/g, '-');
-    // Store the mapping in sessionStorage for ProductGrid to use
-    sessionStorage.setItem(`category_${slug}`, id);
-    router.push(`/?category=${encodeURIComponent(slug)}`);
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem(`category_${slug}`, id);
+    }
+    startTransition(() => {
+      router.push(`/?category=${encodeURIComponent(slug)}`, { scroll: false });
+    });
   };
 
   // Check if we're on the home page
@@ -83,6 +108,7 @@ export const DesktopMenu = () => {
                 variant="ghost"
                 onClick={() => goToCategory(category.key, categoryName)}
                 className="font-medium"
+                disabled={isPending}
               >
                 {categoryName}
               </Button>

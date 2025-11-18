@@ -11,8 +11,8 @@ export function OrganizationSchema({ locale = "ar" }: OrganizationSchemaProps) {
     name: "HouseScrub",
     alternateName: locale === "ar" ? "هاوس سكراب" : "HouseScrub",
     slogan: locale === "ar" ? "السكراب الطبي رقم واحد في مصر" : "Egypt's #1 Medical Scrubs Store",
-    url: process.env.NEXT_PUBLIC_SITE_URL || "https://housescrub.com",
-    logo: `${process.env.NEXT_PUBLIC_SITE_URL || "https://housescrub.com"}/yhouse-logo.png`,
+    url: process.env.NEXT_PUBLIC_SITE_URL || "https://scrubhousev1.vercel.app",
+    logo: `${process.env.NEXT_PUBLIC_SITE_URL || "https://scrubhousev1.vercel.app"}/yhouse-logo.png`,
     description:
       locale === "ar"
         ? "السكراب الطبي رقم واحد في مصر. متجر متخصص في بيع الزي الطبي الفاخر والإكسسوارات الطبية عالية الجودة. توصيل لجميع أنحاء مصر خلال 3-7 أيام عمل."
@@ -62,7 +62,7 @@ interface WebsiteSchemaProps {
 }
 
 export function WebsiteSchema({ locale = "ar" }: WebsiteSchemaProps) {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://housescrub.com";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://scrubhousev1.vercel.app";
   
   const schema = {
     "@context": "https://schema.org",

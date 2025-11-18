@@ -1,10 +1,12 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { prefetchProduct } from "@/hooks/useProduct";
 
 import * as React from "react";
 
@@ -48,56 +50,62 @@ const ProductCard: React.FC<ProductCardProps> = ({
   variant = "grid",
 }) => {
   const router = useRouter();
-  const t = useTranslations("ProductCard"); // namespace: ProductCard
+  const locale = useLocale();
+  const t = useTranslations("ProductCard");
+  
+  const productUrl = `/${locale}/${product.id}`;
+
+  const [isNavigating, setIsNavigating] = React.useState(false);
 
   const handleProductClick = React.useCallback(() => {
-    router.push(`/${product.id}`);
-  }, [product.id, router]);
+    setIsNavigating(true);
+    router.push(productUrl);
+  }, [productUrl, router]);
 
   const handleButtonClick = React.useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
       e.stopPropagation();
-      router.push(`/${product.id}`);
+      setIsNavigating(true);
+      router.push(productUrl);
     },
-    [product.id, router]
+    [productUrl, router]
   );
 
   if (variant === "related") {
     return (
-      <Card
-        className="group cursor-pointer hover:shadow-lg transition-all duration-300"
-        onClick={handleProductClick}
-      >
-        <CardContent className="p-4">
-          <div className="aspect-square bg-luxury-cream rounded-lg overflow-hidden mb-4 relative">
-            <Image
-              src={product.image}
-              alt={product.name}
-              fill
-              sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 100vw"
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
-              priority={index < 3}
-            />
-          </div>
+      <Link href={productUrl} prefetch={true}>
+        <Card className="group cursor-pointer hover:shadow-lg transition-all duration-300">
+          <CardContent className="p-4">
+            <div className="aspect-square bg-luxury-cream rounded-lg overflow-hidden mb-4 relative">
+              <Image
+                src={product.image}
+                alt={product.name}
+                fill
+                sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 100vw"
+                className="object-cover transition-transform duration-300 group-hover:scale-105"
+                priority={index < 3}
+              />
+            </div>
 
-          <div className="space-y-2">
-            <h3 className="font-medium text-sm line-clamp-2">{product.name}</h3>
-            <p className="font-semibold text-primary">{product.price}</p>
-            <p className="text-xs text-muted-foreground line-clamp-2">
-              {product.description}
-            </p>
+            <div className="space-y-2">
+              <h3 className="font-medium text-sm line-clamp-2">{product.name}</h3>
+              <p className="font-semibold text-primary">{product.price}</p>
+              <p className="text-xs text-muted-foreground line-clamp-2">
+                {product.description}
+              </p>
 
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full mt-3"
-              onClick={handleButtonClick}
-            >
-              {t("viewDetails")}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full mt-3"
+                onClick={handleButtonClick}
+              >
+                {t("viewDetails")}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </Link>
     );
   }
 
@@ -130,27 +138,40 @@ const ProductCard: React.FC<ProductCardProps> = ({
     setSelectedColorId(colorId);
   }, []);
 
+  const handleMouseEnter = React.useCallback(() => {
+    setIsHovered(true);
+    // Prefetch product data on hover
+    prefetchProduct(product.id);
+  }, [product.id]);
+
   return (
-    <div
-      className="group cursor-pointer animate-slide-up flex flex-col h-full"
-      style={{ animationDelay: `${index * 0.1}s` }}
-      onClick={handleProductClick}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      {/* Product Image */}
-      <div className="relative overflow-hidden bg-luxury-cream rounded-lg mb-4 aspect-[3/4]">
-        <Image
-          key={displayImage}
-          src={displayImage}
-          alt={product.name}
-          fill
-          sizes="(min-width: 1280px) 20vw, (min-width: 1024px) 25vw, (min-width: 768px) 33vw, 100vw"
-          className="object-cover transition-all duration-700 ease-in-out group-hover:scale-105"
-          priority={index < 3}
-        />
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-700" />
-      </div>
+    <Link href={productUrl} prefetch={true} className="block h-full">
+      <div
+        className={`group cursor-pointer animate-slide-up flex flex-col h-full transition-opacity ${
+          isNavigating ? "opacity-50" : "opacity-100"
+        }`}
+        style={{ animationDelay: `${index * 0.1}s` }}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        {/* Product Image */}
+        <div className="relative overflow-hidden bg-luxury-cream rounded-lg mb-4 aspect-[3/4]">
+          <Image
+            key={displayImage}
+            src={displayImage}
+            alt={product.name}
+            fill
+            sizes="(min-width: 1280px) 20vw, (min-width: 1024px) 25vw, (min-width: 768px) 33vw, 100vw"
+            className="object-cover transition-all duration-700 ease-in-out group-hover:scale-105"
+            priority={index < 3}
+          />
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-700" />
+          {isNavigating && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+              <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin" />
+            </div>
+          )}
+        </div>
 
       {/* Product Info */}
       <div className="space-y-2 flex flex-col flex-1">
@@ -207,6 +228,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         </Button>
       </div>
     </div>
+    </Link>
   );
 };
 

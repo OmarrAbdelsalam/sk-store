@@ -14,6 +14,7 @@ import {
   mapApiProductToUI,
   type ProductApi,
 } from "@/lib/api/products";
+import { Stethoscope } from "lucide-react";
 
 /* ===================== Types ===================== */
 
@@ -353,7 +354,9 @@ const ProductGrid = () => {
           </div>
         ) : currentProducts.length === 0 ? (
           <div className="text-center py-20">
-            <div className="text-6xl mb-4 opacity-20">🔍</div>
+            <div className="flex justify-center mb-6">
+              <Stethoscope className="w-24 h-24 text-muted-foreground/30" strokeWidth={1.5} />
+            </div>
             <h3 className="text-2xl font-medium mb-2">
               {t("ProductGrid.notFound")}
             </h3>

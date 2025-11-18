@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next';
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://housescrub.com';
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://scrubhousev1.vercel.app';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const locales = ['ar', 'en'];

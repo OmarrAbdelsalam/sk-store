@@ -37,6 +37,14 @@ export const MobileMenu = () => {
       try {
         const data = await getCategories(locale);
         setCategories(data);
+        
+        // Prefetch all category pages
+        data.forEach((category) => {
+          router.prefetch(`/?categoryId=${encodeURIComponent(category.key)}`);
+        });
+        
+        // Prefetch home page (all products)
+        router.prefetch('/');
       } catch (e) {
         // eslint-disable-next-line no-console
         console.error("Failed to load categories", e);
@@ -45,7 +53,7 @@ export const MobileMenu = () => {
         setLoading(false);
       }
     })();
-  }, [locale]);
+  }, [locale, router]);
 
   const goToAllProducts = () => router.push("/");
   const goToCategory = (id: string) => router.push(`/?categoryId=${encodeURIComponent(id)}`);

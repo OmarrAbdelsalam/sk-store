@@ -3,6 +3,8 @@
 import { Button } from "@/components/ui/button";
 import { ShoppingBag } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
+import { useRouter } from "next/navigation";
+import React from "react";
 
 interface AddToCartSectionProps {
   totalPrice: number;
@@ -10,8 +12,6 @@ interface AddToCartSectionProps {
   onBuyNow: () => void;
   disabled?: boolean;
 }
-
-import React from "react";
 
 const AddToCartSection = React.memo(({
   totalPrice,
@@ -22,6 +22,12 @@ const AddToCartSection = React.memo(({
   const t = useTranslations("AddToCart");
   const locale = useLocale();
   const dir = locale === "ar" ? "rtl" : "ltr";
+  const router = useRouter();
+
+  // Prefetch cart page on hover (for both buttons now)
+  const handleCartHover = React.useCallback(() => {
+    router.prefetch(`/${locale}/cart`);
+  }, [locale, router]);
 
   return (
     <div className="space-y-6" dir={dir}>
@@ -32,6 +38,7 @@ const AddToCartSection = React.memo(({
           variant="outline"
           className="w-full text-lg py-6"
           onClick={onAddToCart}
+          onMouseEnter={handleCartHover}
           disabled={disabled}
         >
           <ShoppingBag className={`h-5 w-5 ${dir === "rtl" ? "ml-2" : "mr-2"}`} />
@@ -42,6 +49,7 @@ const AddToCartSection = React.memo(({
           size="lg"
           className="w-full text-lg py-6 bg-primary hover:bg-primary/90"
           onClick={onBuyNow}
+          onMouseEnter={handleCartHover}
           disabled={disabled}
         >
           {t("buyNow")}

@@ -9,4 +9,4 @@ Disallow: /_next/
 Disallow: /checkout/success
 
 # Sitemap location
-Sitemap: https://housescrub.com/sitemap.xml
+Sitemap: https://scrubhousev1.vercel.app/sitemap.xml
