@@ -7,6 +7,7 @@ interface ProductSpecificationsProps {
     longDescription?: string;
     materials?: string;
     care?: string;
+    shippingReturn?: string;
     category: string;
   };
 }

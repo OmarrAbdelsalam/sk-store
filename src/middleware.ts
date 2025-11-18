@@ -27,8 +27,8 @@ export default function middleware(req: NextRequest) {
   const intlResp = intlMiddleware(req);
 
   const { pathname } = req.nextUrl;
-  const locales = routing.locales as string[];
-  const defaultLocale = routing.defaultLocale as string;
+  const locales = [...routing.locales];
+  const defaultLocale = routing.defaultLocale;
   const locale = getLocaleFromPath(pathname, locales, defaultLocale);
   const pathWithoutLocale = stripLocalePrefix(pathname, locales);
 

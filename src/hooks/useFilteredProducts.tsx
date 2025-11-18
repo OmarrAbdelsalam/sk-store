@@ -2,7 +2,7 @@
 "use client";
 import useSWR from "swr";
 import { useMemo } from "react";
-import { fetchFilteredProducts, type ProductApi } from "@/lib/api/products";
+import { filterProducts, type ProductApi } from "@/lib/api/products";
 
 export type Filters = {
   search?: string;        // بحث محلي (اسم/وصف)
@@ -17,7 +17,7 @@ export type Filters = {
 
 const fetcher = (key: string) => {
   const { priceFrom, priceTo, colorName, sizeName, pageNumber, pageSize } = JSON.parse(key);
-  return fetchFilteredProducts({ priceFrom, priceTo, colorName, sizeName, pageNumber, pageSize });
+  return filterProducts({ priceFrom, priceTo, colorName, sizeName, pageNumber, pageSize });
 };
 
 // بسيط: لو عايز تعمل debounce في الأب، ابعته جاهز هنا

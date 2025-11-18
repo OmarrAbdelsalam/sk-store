@@ -113,7 +113,7 @@ const Checkout = () => {
     [locale]
   );
 
-  const handleInputChange = (field: keyof CheckoutFormData, value: string) => {
+  const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => {
       const updated = { ...prev, [field]: value };
       // Save to localStorage
