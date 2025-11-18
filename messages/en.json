@@ -64,8 +64,10 @@
   "ProductSpecifications": {
     "descriptionTitle": "Description",
     "materialsCareTitle": "Materials & Care",
-    "shippingReturnsTitle": "Shipping & Returns",
-    "shippingReturnsText": "Shipping: Delivery to all parts of Egypt within 3-7 business days.\n\nExchange and Return: Available within 14 days of receipt, provided the item is in its original condition. The customer bears shipping costs except in case of manufacturing defect.",
+    "shippingTitle": "Shipping",
+    "shippingText": "Delivery to all parts of Egypt within 3-7 business days.",
+    "returnExchangeTitle": "Return & Exchange",
+    "returnExchangeText": "Available within 14 days of receipt, provided the item is in its original condition. The customer bears shipping costs except in case of manufacturing defect.",
     "noDescription": "No description available for this product.",
     "noMaterials": "Materials not specified.",
     "noCare": "Care instructions not provided."

@@ -135,7 +135,10 @@ export function mapApiProductToUI(p: ProductApi, locale: string = "ar") {
 ========================= */
 export async function getProductsPage(pageNumber = 1, pageSize = 12) {
   const url = `${API_BASE}/api/Product?pageNumber=${pageNumber}&pageSize=${pageSize}`;
-  const res = await fetch(url, { headers: { accept: "*/*" }, cache: "no-store" });
+  const res = await fetch(url, { 
+    headers: { accept: "*/*" }, 
+    next: { revalidate: 300 } // Cache for 5 minutes
+  });
   if (!res.ok) throw new Error(`Failed to load products page (HTTP ${res.status})`);
   const json = (await res.json()) as Envelope<{
     pageIndex: number;
@@ -152,7 +155,7 @@ export async function getProductsPage(pageNumber = 1, pageSize = 12) {
 export async function getProductById(productId: number) {
   const res = await fetch(`${API_BASE}/api/Product/${productId}`, {
     headers: { accept: "*/*" },
-    cache: "no-store",
+    next: { revalidate: 600 } // Cache for 10 minutes (increased from 5)
   });
   if (!res.ok)
     throw new Error(`Failed to load product ${productId} (HTTP ${res.status})`);
@@ -182,7 +185,10 @@ export async function filterProducts(params: FilterParams) {
   q.set("pageSize", String(params.pageSize ?? 12));
 
   const url = `${API_BASE}/api/Product/Filter?${q.toString()}`;
-  const res = await fetch(url, { headers: { accept: "*/*" }, cache: "no-store" });
+  const res = await fetch(url, { 
+    headers: { accept: "*/*" }, 
+    next: { revalidate: 180 } // Cache for 3 minutes
+  });
   if (!res.ok) throw new Error(`Filter API failed (HTTP ${res.status})`);
 
   const json = (await res.json()) as Envelope<{

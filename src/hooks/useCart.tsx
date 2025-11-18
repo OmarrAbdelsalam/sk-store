@@ -1,5 +1,5 @@
 "use client"
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 
 interface CartItem {
@@ -25,37 +25,38 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 const CART_STORAGE_KEY = 'mediscrub_cart';
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
-  const [items, setItems] = useState<CartItem[]>([]);
-  const { toast } = useToast();
-
-  // Load cart from localStorage on mount
-  useEffect(() => {
+  const [items, setItems] = useState<CartItem[]>(() => {
+    // Load from localStorage on initial render only
+    if (typeof window === 'undefined') return [];
     try {
       const savedCart = localStorage.getItem(CART_STORAGE_KEY);
-      if (savedCart) {
-        const parsedCart = JSON.parse(savedCart);
-        setItems(parsedCart);
-      }
+      return savedCart ? JSON.parse(savedCart) : [];
     } catch (error) {
       console.error('Error loading cart from localStorage:', error);
+      return [];
     }
-  }, []);
+  });
+  const { toast } = useToast();
 
-  // Save cart to localStorage whenever items change
+  // Debounced save to localStorage
   useEffect(() => {
-    try {
-      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
-    } catch (error) {
-      console.error('Error saving cart to localStorage:', error);
-    }
+    if (typeof window === 'undefined') return;
+    const timeoutId = setTimeout(() => {
+      try {
+        localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+      } catch (error) {
+        console.error('Error saving cart to localStorage:', error);
+      }
+    }, 300); // Debounce 300ms
+    
+    return () => clearTimeout(timeoutId);
   }, [items]);
 
-  const addToCart = (product: Omit<CartItem, 'quantity'>) => {
+  const addToCart = useCallback((product: Omit<CartItem, 'quantity'>) => {
     setItems(prevItems => {
       const existingItem = prevItems.find(item => item.id === product.id);
       
       if (existingItem) {
-        // Show toast after state update
         setTimeout(() => {
           toast({
             title: "تم تحديث السلة",
@@ -69,7 +70,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             : item
         );
       } else {
-        // Show toast after state update
         setTimeout(() => {
           toast({
             title: "تم إضافة المنتج",
@@ -80,13 +80,13 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         return [...prevItems, { ...product, quantity: 1 }];
       }
     });
-  };
+  }, [toast]);
 
-  const removeFromCart = (id: number) => {
+  const removeFromCart = useCallback((id: number) => {
     setItems(prevItems => prevItems.filter(item => item.id !== id));
-  };
+  }, []);
 
-  const updateQuantity = (id: number, quantity: number) => {
+  const updateQuantity = useCallback((id: number, quantity: number) => {
     if (quantity <= 0) {
       removeFromCart(id);
       return;
@@ -97,35 +97,39 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         item.id === id ? { ...item, quantity } : item
       )
     );
-  };
+  }, [removeFromCart]);
 
-  const clearCart = () => {
+  const clearCart = useCallback(() => {
     setItems([]);
-    localStorage.removeItem(CART_STORAGE_KEY);
-  };
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(CART_STORAGE_KEY);
+    }
+  }, []);
 
-  const getTotalItems = () => {
+  const getTotalItems = useCallback(() => {
     return items.reduce((total, item) => total + item.quantity, 0);
-  };
+  }, [items]);
 
-  const getTotalPrice = () => {
+  const getTotalPrice = useCallback(() => {
     return items.reduce((total, item) => {
       if (!item.price) return total;
       const price = parseFloat(String(item.price).replace(/[^\d.]/g, ''));
       return total + (isNaN(price) ? 0 : price * item.quantity);
     }, 0);
-  };
+  }, [items]);
+
+  const value = useMemo(() => ({
+    items,
+    addToCart,
+    removeFromCart,
+    updateQuantity,
+    clearCart,
+    getTotalItems,
+    getTotalPrice
+  }), [items, addToCart, removeFromCart, updateQuantity, clearCart, getTotalItems, getTotalPrice]);
 
   return (
-    <CartContext.Provider value={{
-      items,
-      addToCart,
-      removeFromCart,
-      updateQuantity,
-      clearCart,
-      getTotalItems,
-      getTotalPrice
-    }}>
+    <CartContext.Provider value={value}>
       {children}
     </CartContext.Provider>
   );

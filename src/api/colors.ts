@@ -14,12 +14,16 @@ type ApiResponse<T> = {
   data: T;
 };
 
+let _colorsCache: ColorOption[] | null = null;
+
 /** يجلب الألوان المتاحة من API */
 export async function getColors(): Promise<ColorOption[]> {
+  if (_colorsCache) return _colorsCache;
+  
   const url = `${API_BASE}/api/Color`;
   const res = await fetch(url, { 
     headers: { accept: "*/*" }, 
-    cache: "no-store" 
+    next: { revalidate: 3600 } // Cache for 1 hour
   });
   
   if (!res.ok) throw new Error(`Failed to load colors: ${res.status}`);
@@ -30,5 +34,6 @@ export async function getColors(): Promise<ColorOption[]> {
     throw new Error("Invalid colors response");
   }
   
-  return json.data;
+  _colorsCache = json.data;
+  return _colorsCache;
 }

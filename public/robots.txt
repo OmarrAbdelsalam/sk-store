@@ -1,0 +1,12 @@
+# Allow all crawlers
+User-agent: *
+Allow: /
+
+# Disallow admin and private pages
+Disallow: /api/
+Disallow: /admin/
+Disallow: /_next/
+Disallow: /checkout/success
+
+# Sitemap location
+Sitemap: https://housescrub.com/sitemap.xml

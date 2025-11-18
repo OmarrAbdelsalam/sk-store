@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { User } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { memo } from "react";
 
 interface PersonalInfoFormProps {
   formData: {
@@ -14,7 +15,7 @@ interface PersonalInfoFormProps {
   onInputChange: (field: string, value: string) => void;
 }
 
-const PersonalInfoForm = ({ formData, onInputChange }: PersonalInfoFormProps) => {
+const PersonalInfoForm = memo(({ formData, onInputChange }: PersonalInfoFormProps) => {
   const t = useTranslations("PersonalInfo");
   
   return (
@@ -69,6 +70,7 @@ const PersonalInfoForm = ({ formData, onInputChange }: PersonalInfoFormProps) =>
       </CardContent>
     </Card>
   );
-};
+});
 
+PersonalInfoForm.displayName = "PersonalInfoForm";
 export default PersonalInfoForm;

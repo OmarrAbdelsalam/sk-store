@@ -65,7 +65,10 @@ type ApiResponse<T> = {
 /** يجلب المنتجات من API مع تحديد الصفحة والحجم */
 export async function fetchProducts(pageNumber = 1, pageSize = 50): Promise<Paged<ProductApi>> {
   const url = `${API_BASE}/api/Product?pageNumber=${pageNumber}&pageSize=${pageSize}`;
-  const res = await fetch(url, { headers: { accept: "*/*" }, cache: "no-store" });
+  const res = await fetch(url, { 
+    headers: { accept: "*/*" }, 
+    next: { revalidate: 300 } // Cache for 5 minutes
+  });
   if (!res.ok) throw new Error(`Failed to load products: ${res.status}`);
   const json: ApiResponse<Paged<ProductApi>> = await res.json();
   if (!json?.succeeded || !json?.data?.items) throw new Error("Invalid products response");

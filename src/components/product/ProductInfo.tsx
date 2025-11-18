@@ -38,7 +38,7 @@ interface ProductInfoProps {
   sizeChartUrl?: string;
 }
 
-export default function ProductInfo({
+const ProductInfo = React.memo(function ProductInfo({
   name,
   description,
   price,
@@ -67,7 +67,7 @@ export default function ProductInfo({
       : String(price);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 md:space-y-8">
       {/* الاسم + الوصف + السعر */}
       <div>
         <h1 className="font-luxury text-3xl md:text-4xl font-medium mb-2" aria-label={t("a11y.productName")}>
@@ -124,9 +124,37 @@ export default function ProductInfo({
       {/* اختيار المقاس */}
       {hasSizes && (
         <div>
-          <Label className="block text-sm font-medium mb-3">
-            {t("size")}
-          </Label>
+          {/* العنوان + زر جدول المقاسات */}
+          <div className="flex items-center gap-3 mb-3">
+            <Label className="text-sm font-medium">
+              {t("size")}
+            </Label>
+            {sizeChartUrl && (
+              <Dialog open={sizeChartOpen} onOpenChange={setSizeChartOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" size="sm" className="text-xs gap-1 h-auto py-1 px-2 lg:hidden">
+                    <Ruler className="w-3 h-3" />
+                    {t("viewSizeChart")}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-3xl">
+                  <DialogHeader>
+                    <DialogTitle>{t("sizeChart")}</DialogTitle>
+                  </DialogHeader>
+                  <div className="relative w-full aspect-video">
+                    <Image
+                      src={sizeChartUrl}
+                      alt={t("sizeChart")}
+                      fill
+                      className="object-contain"
+                    />
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
+          </div>
+
+          {/* أزرار المقاسات */}
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex flex-wrap gap-2">
               {sizeOptions.length > 0 ? (
@@ -158,29 +186,31 @@ export default function ProductInfo({
                 </span>
               )}
             </div>
+            
+            {/* زر جدول المقاسات في الديسكتوب */}
             {sizeChartUrl && (
               <Dialog open={sizeChartOpen} onOpenChange={setSizeChartOpen}>
                 <DialogTrigger asChild>
-                  <Button variant="ghost" size="sm" className="text-xs gap-1">
+                  <Button variant="ghost" size="sm" className="text-xs gap-1 hidden lg:flex">
                     <Ruler className="w-3 h-3" />
                     {t("viewSizeChart")}
                   </Button>
                 </DialogTrigger>
-                    <DialogContent className="max-w-3xl">
-                      <DialogHeader>
-                        <DialogTitle>{t("sizeChart")}</DialogTitle>
-                      </DialogHeader>
-                      <div className="relative w-full aspect-video">
-                        <Image
-                          src={sizeChartUrl}
-                          alt={t("sizeChart")}
-                          fill
-                          className="object-contain"
-                        />
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                )}
+                <DialogContent className="max-w-3xl">
+                  <DialogHeader>
+                    <DialogTitle>{t("sizeChart")}</DialogTitle>
+                  </DialogHeader>
+                  <div className="relative w-full aspect-video">
+                    <Image
+                      src={sizeChartUrl}
+                      alt={t("sizeChart")}
+                      fill
+                      className="object-contain"
+                    />
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
           </div>
         </div>
       )}
@@ -220,4 +250,6 @@ export default function ProductInfo({
       </div>
     </div>
   );
-}
+});
+
+export default ProductInfo;

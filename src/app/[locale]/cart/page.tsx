@@ -1,51 +1,34 @@
-"use client";
-import { useCart } from "@/hooks/useCart";
-import CartItem from "@/components/cart/CartItem";
-import EmptyCart from "@/components/cart/EmptyCart";
-import OrderSummary from "@/components/cart/OrderSummary";
+import { Suspense } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
+import CartPageClient from "@/components/cart/CartPageClient";
+import { generatePageMetadata } from "@/lib/metadata";
 
-const Cart = () => {
-  const { items, removeFromCart, updateQuantity, getTotalPrice, getTotalItems } = useCart();
+export const metadata = generatePageMetadata({
+  title: "سلة التسوق",
+  description: "عرض وإدارة منتجات سلة التسوق الخاصة بك - HouseScrub",
+  path: "/cart",
+});
 
-  if (items.length === 0) {
-    return (
-      <div className="container mx-auto px-4 py-16">
-        <EmptyCart />
-      </div>
-    );
-  }
-
+export default function CartPage() {
   return (
     <div className="min-h-screen">
       <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Cart Items */}
-          <div className="lg:col-span-2 space-y-4">
-            <h1 className="text-3xl font-bold mb-6">سلة التسوق</h1>
-
-            <div className="space-y-4">
-              {items.map((item) => (
-                <CartItem
-                  key={item.id}
-                  item={item}
-                  onUpdateQuantity={updateQuantity}
-                  onRemove={removeFromCart}
-                />
+        <Suspense fallback={
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-4">
+              <Skeleton className="h-10 w-48 mb-6" />
+              {[...Array(3)].map((_, i) => (
+                <Skeleton key={i} className="h-32 w-full" />
               ))}
             </div>
+            <div className="lg:col-span-1">
+              <Skeleton className="h-96 w-full" />
+            </div>
           </div>
-
-          {/* Order Summary */}
-          <div className="lg:col-span-1">
-            <OrderSummary
-              totalItemsFallback={getTotalItems()}   // بدّل props القديمة
-              totalPriceFallback={getTotalPrice()}   // بدّل props القديمة
-            />
-          </div>
-        </div>
+        }>
+          <CartPageClient />
+        </Suspense>
       </div>
     </div>
   );
-};
-
-export default Cart;
+}

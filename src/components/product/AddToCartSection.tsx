@@ -11,7 +11,9 @@ interface AddToCartSectionProps {
   disabled?: boolean;
 }
 
-const AddToCartSection = ({
+import React from "react";
+
+const AddToCartSection = React.memo(({
   totalPrice,
   onAddToCart,
   onBuyNow,
@@ -57,6 +59,6 @@ const AddToCartSection = ({
       </Button>
     </div>
   );
-};
+});
 
 export default AddToCartSection;

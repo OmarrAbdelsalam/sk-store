@@ -19,7 +19,7 @@ const ProductHeader = ({ onBack }: ProductHeaderProps) => {
       <Button
         variant="ghost"
         onClick={onBack}
-        className={clsx("mb-8", dir === "rtl" ? "ml-0" : "mr-0")}
+        className={clsx("mb-0 md:mb-8", dir === "rtl" ? "ml-0" : "mr-0")}
         aria-label={t("back")}
       >
         <ArrowLeft

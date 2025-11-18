@@ -32,10 +32,14 @@ export type CategoryOption = {
 
 export async function fetchCategories(
   pageNumber = 1,
-  pageSize = 50
+  pageSize = 50,
+  locale = "ar"
 ): Promise<CategoryOption[]> {
   const url = `${API_BASE}/api/Category?pageNumber=${pageNumber}&pageSize=${pageSize}`;
-  const res = await fetch(url, { headers: { accept: "*/*" }, cache: "no-store" });
+  const res = await fetch(url, { 
+    headers: { accept: "*/*" }, 
+    next: { revalidate: 3600 } // Cache for 1 hour
+  });
 
   if (!res.ok) {
     throw new Error(`Failed to load categories: ${res.status}`);
@@ -49,15 +53,17 @@ export async function fetchCategories(
 
   return json.data.items.map((c) => ({
     key: c.id,
-    label: c.arabicName || c.englishName || "بدون اسم",
+    label: locale === "ar" 
+      ? (c.arabicName || c.englishName || "بدون اسم")
+      : (c.englishName || c.arabicName || "No name"),
     arabicName: c.arabicName,
     englishName: c.englishName,
   }));
 }
 
-let _categoriesCache: CategoryOption[] | null = null;
-export async function getCategories(): Promise<CategoryOption[]> {
-  if (_categoriesCache) return _categoriesCache;
-  _categoriesCache = await fetchCategories();
-  return _categoriesCache;
+let _categoriesCache: { [locale: string]: CategoryOption[] } = {};
+export async function getCategories(locale = "ar"): Promise<CategoryOption[]> {
+  if (_categoriesCache[locale]) return _categoriesCache[locale];
+  _categoriesCache[locale] = await fetchCategories(1, 50, locale);
+  return _categoriesCache[locale];
 }

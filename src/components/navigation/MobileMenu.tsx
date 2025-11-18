@@ -35,7 +35,7 @@ export const MobileMenu = () => {
   useEffect(() => {
     (async () => {
       try {
-        const data = await getCategories();
+        const data = await getCategories(locale);
         setCategories(data);
       } catch (e) {
         // eslint-disable-next-line no-console
@@ -45,7 +45,7 @@ export const MobileMenu = () => {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [locale]);
 
   const goToAllProducts = () => router.push("/");
   const goToCategory = (id: string) => router.push(`/?categoryId=${encodeURIComponent(id)}`);

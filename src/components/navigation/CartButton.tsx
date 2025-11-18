@@ -5,9 +5,10 @@ import { useCart } from "@/hooks/useCart";
 
 interface CartButtonProps {
   isMobile?: boolean;
+  className?: string;
 }
 
-export const CartButton = ({ isMobile = false }: CartButtonProps) => {
+export const CartButton = ({ isMobile = false, className = "" }: CartButtonProps) => {
   // Safely get cart items count
   let cartItemsCount = 0;
   try {
@@ -18,7 +19,7 @@ export const CartButton = ({ isMobile = false }: CartButtonProps) => {
   }
 
   return (
-    <Link href="/cart">
+    <Link href="/cart" className={className}>
       <Button variant="ghost" size="sm" className="relative">
         <ShoppingBag className="h-5 w-5" />
         {cartItemsCount > 0 && (

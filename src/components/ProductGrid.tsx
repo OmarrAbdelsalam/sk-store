@@ -341,9 +341,15 @@ const ProductGrid = () => {
         </div>
 
         {isBusy ? (
-          <div className="text-center py-20">
-            <div className="mb-3">⏳</div>
-            {t("ProductGrid.loading") ?? "جارٍ التحميل..."}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-10 lg:gap-12">
+            {Array.from({ length: isMobile ? 6 : 8 }).map((_, i) => (
+              <div key={i} className="space-y-4 animate-pulse">
+                <div className="aspect-[3/4] w-full rounded-lg bg-muted" />
+                <div className="h-6 w-3/4 rounded bg-muted" />
+                <div className="h-4 w-1/2 rounded bg-muted" />
+                <div className="h-8 w-full rounded bg-muted" />
+              </div>
+            ))}
           </div>
         ) : currentProducts.length === 0 ? (
           <div className="text-center py-20">

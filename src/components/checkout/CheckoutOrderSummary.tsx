@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Banknote } from "lucide-react";
+import { memo } from "react";
 
 interface CartItem {
   id: number;
@@ -14,7 +15,7 @@ interface CheckoutOrderSummaryProps {
   shippingPrice: number;
 }
 
-const CheckoutOrderSummary = ({ items, totalPrice, shippingPrice }: CheckoutOrderSummaryProps) => {
+const CheckoutOrderSummary = memo(({ items, totalPrice, shippingPrice }: CheckoutOrderSummaryProps) => {
   return (
     <Card>
       <CardHeader>
@@ -59,6 +60,7 @@ const CheckoutOrderSummary = ({ items, totalPrice, shippingPrice }: CheckoutOrde
       </CardContent>
     </Card>
   );
-};
+});
 
+CheckoutOrderSummary.displayName = "CheckoutOrderSummary";
 export default CheckoutOrderSummary;

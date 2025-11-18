@@ -26,7 +26,7 @@ export const DesktopMenu = () => {
   useEffect(() => {
     (async () => {
       try {
-        const data = await getCategories();
+        const data = await getCategories(locale);
         setCategories(data);
       } catch (e) {
         console.error("Failed to load categories", e);
@@ -35,7 +35,7 @@ export const DesktopMenu = () => {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [locale]);
 
   const goToAllProducts = () => router.push("/");
   const goToCategory = (id: string, name: string) => {

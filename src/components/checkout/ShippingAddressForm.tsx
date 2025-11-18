@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MapPin } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { memo } from "react";
 
 interface ShippingAddressFormProps {
   formData: {
@@ -20,7 +21,7 @@ interface ShippingAddressFormProps {
   onInputChange: (field: string, value: string) => void;
 }
 
-const ShippingAddressForm = ({ formData, egyptGovernorates, onInputChange }: ShippingAddressFormProps) => {
+const ShippingAddressForm = memo(({ formData, egyptGovernorates, onInputChange }: ShippingAddressFormProps) => {
   const t = useTranslations("ShippingAddress");
   
   return (
@@ -117,6 +118,7 @@ const ShippingAddressForm = ({ formData, egyptGovernorates, onInputChange }: Shi
       </CardContent>
     </Card>
   );
-};
+});
 
+ShippingAddressForm.displayName = "ShippingAddressForm";
 export default ShippingAddressForm;

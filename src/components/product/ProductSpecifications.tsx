@@ -1,44 +1,69 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 interface ProductSpecificationsProps {
   product: {
     longDescription?: string;
     materials?: string;
     care?: string;
-    shippingReturn?: string;
+    shipping?: string;
+    returnExchange?: string;
     category: string;
   };
 }
 
-const ProductSpecifications = ({ product }: ProductSpecificationsProps) => {
+export default function ProductSpecifications({ product }: ProductSpecificationsProps) {
   const t = useTranslations("ProductSpecifications");
   const locale = useLocale();
   const dir = locale === "ar" ? "rtl" : "ltr";
 
   return (
-    <div className="mt-12 space-y-8" dir={dir}>
-      {/* Materials & Care Section */}
-      <div className="space-y-4">
-        <h3 className="text-xl font-semibold text-foreground">{t("materialsCareTitle")}</h3>
-        <div className="space-y-3">
-          <p className="text-muted-foreground">
-            {product.materials || t("noMaterials")}
-          </p>
-          <p className="text-muted-foreground">
-            {product.care || t("noCare")}
-          </p>
-        </div>
-      </div>
+    <div className="mt-12" dir={dir}>
+      <Accordion type="single" collapsible className="w-full" defaultValue="materials-care">
+        {/* Materials & Care - مفتوح افتراضياً */}
+        <AccordionItem value="materials-care">
+          <AccordionTrigger className="text-lg font-semibold">
+            {t("materialsCareTitle")}
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-3 text-muted-foreground">
+              <p>{product.materials || t("noMaterials")}</p>
+              <p>{product.care || t("noCare")}</p>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
 
-      {/* Shipping & Returns Section */}
-      <div className="space-y-4">
-        <h3 className="text-xl font-semibold text-foreground">{t("shippingReturnsTitle")}</h3>
-        <p className="text-muted-foreground leading-relaxed">{t("shippingReturnsText")}</p>
-      </div>
+        {/* Shipping */}
+        <AccordionItem value="shipping">
+          <AccordionTrigger className="text-lg font-semibold">
+            {t("shippingTitle")}
+          </AccordionTrigger>
+          <AccordionContent>
+            <p className="text-muted-foreground leading-relaxed">
+              {product.shipping || t("shippingText")}
+            </p>
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* Return & Exchange */}
+        <AccordionItem value="return-exchange">
+          <AccordionTrigger className="text-lg font-semibold">
+            {t("returnExchangeTitle")}
+          </AccordionTrigger>
+          <AccordionContent>
+            <p className="text-muted-foreground leading-relaxed">
+              {product.returnExchange || t("returnExchangeText")}
+            </p>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </div>
   );
-};
-
-export default ProductSpecifications;
+}

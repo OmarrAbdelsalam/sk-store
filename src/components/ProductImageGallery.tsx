@@ -31,6 +31,7 @@ function SafeImage({
   height,
   sizes,
   priority,
+  loading,
 }: {
   src: string;
   alt: string;
@@ -40,6 +41,7 @@ function SafeImage({
   height?: number;
   sizes?: string;
   priority?: boolean;
+  loading?: "lazy" | "eager";
 }) {
   const [failed, setFailed] = useState(false);
   const effectiveSrc = failed ? FALLBACK : src || FALLBACK;
@@ -54,6 +56,7 @@ function SafeImage({
         ? { fill: true, sizes: sizes || "(max-width: 1024px) 100vw, 50vw" }
         : { width: width ?? 80, height: height ?? 80 })}
       priority={priority}
+      loading={loading || (priority ? "eager" : "lazy")}
     />
   );
 }
@@ -199,9 +202,9 @@ const ProductImageGallery = ({
         <div
           ref={imageBoxRef}
           className={clsx(
-            // موبايل وتابلت: حافظ على النسبة
-            "relative aspect-[3/4] bg-luxury-cream rounded-lg overflow-hidden",
-            // ديسكتوب: ارتفاع ثابت 70vh (تصغير الارتفاع)
+            // موبايل: نسبة أقصر (3/3.5 بدلاً من 3/4)
+            "relative aspect-[3/3.5] bg-luxury-cream rounded-lg overflow-hidden",
+            // ديسكتوب: ارتفاع ثابت 70vh
             "lg:aspect-auto lg:h-[70vh]"
           )}
         >
@@ -210,7 +213,8 @@ const ProductImageGallery = ({
             alt={t("imageAlt", { index: currentImageIndex + 1 })}
             className="object-cover"
             fill
-            priority
+            priority={currentImageIndex === 0}
+            loading={currentImageIndex === 0 ? "eager" : "lazy"}
           />
 
           {/* أسهم الكاروسيل — تظهر على الشاشات الصغيرة فقط */}
@@ -266,7 +270,7 @@ const ProductImageGallery = ({
 
         {/* ======== ثَمبنيلز أسفل الصورة — موبايل فقط (زي ما كانت) ======== */}
         {currentImages.length > 1 && (
-          <div className="flex gap-2 overflow-x-auto mt-4 lg:hidden">
+          <div className="flex gap-2 overflow-x-auto mt-4 lg:hidden scrollbar-hide">
             {currentImages.map((img, index) => (
               <button
                 key={img.id ?? index}
@@ -286,6 +290,7 @@ const ProductImageGallery = ({
                   className="object-cover w-full h-full"
                   width={80}
                   height={80}
+                  loading="lazy"
                 />
               </button>
             ))}
@@ -316,6 +321,7 @@ const ProductImageGallery = ({
                   className="object-cover w-full h-full"
                   width={120}
                   height={120}
+                  loading="lazy"
                 />
               </button>
             ))}

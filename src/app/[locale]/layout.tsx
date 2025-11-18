@@ -5,6 +5,9 @@ import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { CartProvider } from '@/hooks/useCart';
 import { Cairo, Inter } from 'next/font/google';
+import { defaultMetadata } from '@/lib/metadata';
+import SEOHead from '@/components/SEOHead';
+import type { Metadata } from 'next';
 
 const cairo = Cairo({
   subsets: ['arabic'],
@@ -17,6 +20,8 @@ const inter = Inter({
   weight: ['400', '500', '600', '700'],
   variable: '--font-inter',
 });
+
+export const metadata: Metadata = defaultMetadata;
 
 
 
@@ -37,19 +42,19 @@ export default async function LocaleLayout({
 
   return (
     <html lang={locale} dir={dir} suppressHydrationWarning>
+      <head>
+        <link rel="icon" href="/yhouse-logo.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/yhouse-logo.png" />
+        <meta name="theme-color" content="#042d87" />
+      </head>
       <body className={locale === 'ar' ? cairo.className : inter.className}>    
-
-
+        <SEOHead locale={locale} />
         <NextIntlClientProvider locale={locale}>
-              <CartProvider>
-
-          <Navigation />
-
+          <CartProvider>
+            <Navigation />
             {children}
-  <Footer />
-      </CartProvider>
-
-  
+            <Footer />
+          </CartProvider>
         </NextIntlClientProvider>
       </body>
     </html>
