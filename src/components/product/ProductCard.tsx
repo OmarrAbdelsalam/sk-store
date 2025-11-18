@@ -1,0 +1,213 @@
+"use client";
+
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+
+import * as React from "react";
+
+interface Product {
+  id: number;
+  name: string;
+  price: string;
+  priceNum: number;
+  image: string;
+  description: string;
+  gender: string;
+  availableColors: Array<{
+    name: string;
+    hex: string;
+  }>;
+  raw?: {
+    photos?: Array<{
+      id: number;
+      imageUrl: string;
+      colorId: number;
+      isMain: boolean;
+    }>;
+    colors?: Array<{
+      id: number;
+      colorNameAr?: string;
+      colorNameEn?: string;
+      hexa?: string;
+    }>;
+  };
+}
+
+interface ProductCardProps {
+  product: Product;
+  index?: number;
+  variant?: "grid" | "related";
+}
+
+const ProductCard: React.FC<ProductCardProps> = ({
+  product,
+  index = 0,
+  variant = "grid",
+}) => {
+  const router = useRouter();
+  const t = useTranslations("ProductCard"); // namespace: ProductCard
+
+  const handleProductClick = React.useCallback(() => {
+    router.push(`/${product.id}`);
+  }, [product.id, router]);
+
+  const handleButtonClick = React.useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation();
+      router.push(`/${product.id}`);
+    },
+    [product.id, router]
+  );
+
+  if (variant === "related") {
+    return (
+      <Card
+        className="group cursor-pointer hover:shadow-lg transition-all duration-300"
+        onClick={handleProductClick}
+      >
+        <CardContent className="p-4">
+          <div className="aspect-square bg-luxury-cream rounded-lg overflow-hidden mb-4 relative">
+            <Image
+              src={product.image}
+              alt={product.name}
+              fill
+              sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 100vw"
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
+              priority={index < 3}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="font-medium text-sm line-clamp-2">{product.name}</h3>
+            <p className="font-semibold text-primary">{product.price}</p>
+            <p className="text-xs text-muted-foreground line-clamp-2">
+              {product.description}
+            </p>
+
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full mt-3"
+              onClick={handleButtonClick}
+            >
+              {t("viewDetails")}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const [selectedColorId, setSelectedColorId] = React.useState<number | null>(null);
+  const [isHovered, setIsHovered] = React.useState(false);
+
+  const photos = product.raw?.photos || [];
+  const colors = product.raw?.colors || [];
+
+  const availableImages = React.useMemo(() => {
+    if (selectedColorId !== null) {
+      const colorPhotos = photos.filter(p => p.colorId === selectedColorId);
+      if (colorPhotos.length > 0) return colorPhotos.map(p => p.imageUrl);
+    }
+    if (photos.length > 0) {
+      return photos.map(p => p.imageUrl);
+    }
+    return [product.image];
+  }, [selectedColorId, photos, product.image]);
+
+  const displayImage = React.useMemo(() => {
+    if (isHovered && availableImages.length > 1) {
+      return availableImages[1];
+    }
+    return availableImages[0] || product.image;
+  }, [isHovered, availableImages, product.image]);
+
+  const handleColorClick = React.useCallback((e: React.MouseEvent, colorId: number) => {
+    e.stopPropagation();
+    setSelectedColorId(colorId);
+  }, []);
+
+  return (
+    <div
+      className="group cursor-pointer animate-slide-up flex flex-col h-full"
+      style={{ animationDelay: `${index * 0.1}s` }}
+      onClick={handleProductClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {/* Product Image */}
+      <div className="relative overflow-hidden bg-luxury-cream rounded-lg mb-4 aspect-[3/4]">
+        <Image
+          key={displayImage}
+          src={displayImage}
+          alt={product.name}
+          fill
+          sizes="(min-width: 1280px) 20vw, (min-width: 1024px) 25vw, (min-width: 768px) 33vw, 100vw"
+          className="object-cover transition-all duration-700 ease-in-out group-hover:scale-105"
+          priority={index < 3}
+        />
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-700" />
+      </div>
+
+      {/* Product Info */}
+      <div className="space-y-2 flex flex-col flex-1">
+        <div className="flex-1 space-y-2">
+          <div className="flex flex-col gap-1">
+            <h3 className="font-medium text-sm md:text-base group-hover:text-primary transition-colors line-clamp-2">
+              {product.name}
+            </h3>
+            <p className="font-semibold text-sm md:text-base text-right">
+              {product.price}
+            </p>
+          </div>
+
+          <p className="text-muted-foreground text-xs md:text-sm leading-relaxed line-clamp-2">
+            {product.description}
+          </p>
+
+          {Array.isArray(product.availableColors) &&
+            product.availableColors.length > 0 && (
+              <div className="flex items-center gap-2">
+                <div className="flex gap-1.5">
+                  {product.availableColors.map((color, i) => {
+                    const colorId = colors[i]?.id;
+                    const isSelected = selectedColorId === colorId;
+                    return (
+                      <div
+                        key={`${color.name}-${i}`}
+                        onClick={(e) => colorId && handleColorClick(e, colorId)}
+                        className={`w-4 h-4 md:w-6 md:h-6 rounded-full border shadow-md relative overflow-hidden cursor-pointer transition-all hover:scale-110 ${
+                          isSelected ? 'border-primary ring-2 ring-primary ring-offset-1' : 'border-gray-400'
+                        }`}
+                        title={color.name}
+                        aria-label={color.name}
+                      >
+                        <span
+                          className="absolute inset-0 rounded-full"
+                          style={{ backgroundColor: color.hex }}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+        </div>
+
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full transition-all duration-300 py-2 px-3 text-xs md:py-3 md:px-4 md:text-sm mt-3"
+          onClick={handleButtonClick}
+        >
+          {t("viewDetails")}
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+export default ProductCard;
