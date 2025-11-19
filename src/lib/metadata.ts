@@ -9,7 +9,7 @@ const whatsappNumber = "201501881005";
 export const defaultMetadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: `${siteName} | الزي الطبي الفاخر`,
+    default: `${siteName}`,
     template: `%s | ${siteName}`,
   },
   description: siteDescription,
@@ -37,7 +37,7 @@ export const defaultMetadata: Metadata = {
     alternateLocale: ["en_US"],
     url: siteUrl,
     siteName,
-    title: `${siteName} | الزي الطبي الفاخر`,
+    title: `${siteName} |`,
     description: siteDescription,
     images: [
       {
@@ -69,13 +69,12 @@ export const defaultMetadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/yhouse-logo.png", sizes: "any" }, // مؤقت - استبدل بـ favicon.ico
-      { url: "/yhouse-logo.png", sizes: "192x192", type: "image/png" }, // مؤقت - استبدل بـ icon-192.png
+      { url: "/favicon.ico", sizes: "32x32" },
+      { url: "/yhouse-logo.png", sizes: "192x192", type: "image/png" },
     ],
     apple: [
-      { url: "/yhouse-logo.png", sizes: "180x180", type: "image/png" }, // مؤقت - استبدل بـ apple-icon.png
+      { url: "/yhouse-logo.png", sizes: "180x180", type: "image/png" },
     ],
-    shortcut: "/yhouse-logo.png", // مؤقت
   },
   manifest: "/manifest.json",
   verification: {

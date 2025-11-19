@@ -43,7 +43,7 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} dir={dir} suppressHydrationWarning>
       <head>
-        <link rel="icon" href="/yhouse-logo.png" type="image/png" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="apple-touch-icon" href="/yhouse-logo.png" />
         <meta name="theme-color" content="#042d87" />
         
