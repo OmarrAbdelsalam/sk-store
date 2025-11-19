@@ -42,41 +42,30 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       const cartData = await getCart(sessionId);
       
       if (cartData && cartData.items) {
-        // Fetch product details for each item to get correct color photos
-        const formattedItemsPromises = cartData.items.map(async (item: any) => {
+        const formattedItems: CartItem[] = cartData.items.map((item: any) => {
           let selectedImage = '';
           
-          // Try to get product details to find color-specific photo
-          try {
-            const productRes = await fetch(`https://scrubstore.runasp.net/api/Product/${item.productId}`);
-            if (productRes.ok) {
-              const productData = await productRes.json();
-              const photos = productData.data?.photos || [];
-              
-              if (item.colorId && photos.length > 0) {
-                // Find main photo for selected color
-                const colorMainPhoto = photos.find((p: any) => 
-                  p.colorId === item.colorId && p.isMain
-                );
-                
-                if (colorMainPhoto) {
-                  selectedImage = colorMainPhoto.imageUrl;
-                } else {
-                  // Find any photo for selected color
-                  const colorPhoto = photos.find((p: any) => 
-                    p.colorId === item.colorId
-                  );
-                  if (colorPhoto) {
-                    selectedImage = colorPhoto.imageUrl;
-                  }
-                }
+          // Priority 1: Find photo for selected color (using colorEn/colorAr from API)
+          if (item.colorNameEn && item.photos) {
+            // Try to find main photo for selected color
+            const colorMainPhoto = item.photos.find((p: any) => 
+              (p.colorEn === item.colorNameEn || p.colorAr === item.colorNameAr) && p.isMain
+            );
+            
+            if (colorMainPhoto) {
+              selectedImage = colorMainPhoto.imageUrl;
+            } else {
+              // Try to find any photo for selected color
+              const colorPhoto = item.photos.find((p: any) => 
+                p.colorEn === item.colorNameEn || p.colorAr === item.colorNameAr
+              );
+              if (colorPhoto) {
+                selectedImage = colorPhoto.imageUrl;
               }
             }
-          } catch (error) {
-            console.warn('Failed to fetch product details for color photo:', error);
           }
           
-          // Fallback: use photos from cart API
+          // Priority 2: If no color-specific photo, use main photo
           if (!selectedImage && item.photos) {
             const mainPhoto = item.photos.find((p: any) => p.isMain);
             selectedImage = mainPhoto?.imageUrl || item.photos[0]?.imageUrl || '';
@@ -96,7 +85,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           };
         });
         
-        const formattedItems = await Promise.all(formattedItemsPromises);
         setItems(formattedItems);
       } else {
         setItems([]);
