@@ -10,8 +10,11 @@ import { LanguageSwitcher } from "../Navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useCategories } from "@/hooks/useCategories";
+import { useState } from "react";
 
 export const MobileMenu = () => {
+  const [open, setOpen] = useState(false);
+  
   // ✅ نستخدم try/catch زي ما عندك علشان لو ما فيش مزوّد للكارت ما يكسرش الصفحة
   let cartItemsCount = 0;
   try {
@@ -30,11 +33,22 @@ export const MobileMenu = () => {
 
   const { categories, isLoading: loading } = useCategories();
 
-  const goToAllProducts = () => router.push(`/${locale}`);
-  const goToCategory = (id: string) => router.push(`/${locale}?categoryId=${encodeURIComponent(id)}`);
+  const goToAllProducts = () => {
+    setOpen(false);
+    router.push(`/${locale}`);
+  };
+  
+  const goToCategory = (id: string, name: string) => {
+    const slug = name.toLowerCase().replace(/\s+/g, '-');
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem(`category_${slug}`, id);
+    }
+    setOpen(false);
+    router.push(`/${locale}?category=${encodeURIComponent(slug)}`);
+  };
 
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button variant="ghost" size="sm" aria-label={t("openMenu")}>
           <Menu className="h-5 w-5" />
@@ -50,9 +64,10 @@ export const MobileMenu = () => {
           {/* الرئيسية */}
           <div>
             <Link
-              href="/"
+              href={`/${locale}`}
               className="flex items-center py-3 text-lg font-medium text-foreground hover:text-primary transition-colors"
               aria-label={t("home")}
+              onClick={() => setOpen(false)}
             >
               {t("home")}
             </Link>
@@ -83,17 +98,20 @@ export const MobileMenu = () => {
             )}
 
             {!loading && categories.length > 0 &&
-              categories.map((category) => (
-                <Button
-                  key={category.key}
-                  variant="ghost"
-                  className="w-full justify-start text-base py-3 h-auto"
-                  onClick={() => goToCategory(category.key)}
-                  aria-label={category.label}
-                >
-                  <span>{category.label}</span>
-                </Button>
-              ))}
+              categories.map((category) => {
+                const categoryName = locale === 'ar' ? category.arabicName : category.englishName;
+                return (
+                  <Button
+                    key={category.key}
+                    variant="ghost"
+                    className="w-full justify-start text-base py-3 h-auto"
+                    onClick={() => goToCategory(category.key, categoryName)}
+                    aria-label={category.label}
+                  >
+                    <span>{category.label}</span>
+                  </Button>
+                );
+              })}
 
             {!loading && categories.length === 0 && (
               <div className="text-sm text-muted-foreground px-2 py-1">{t("noCategories")}</div>
@@ -107,7 +125,7 @@ export const MobileMenu = () => {
             <p className="text-sm font-medium mb-3 text-muted-foreground uppercase tracking-wider">
               {t("shopping")}
             </p>
-            <Link href="/cart">
+            <Link href={`/${locale}/cart`} onClick={() => setOpen(false)}>
               <Button variant="outline" className="w-full justify-start" aria-label={t("cart")}>
                 <ShoppingBag className="h-4 w-4 mr-2" />
                 {t("cart")}
@@ -130,7 +148,7 @@ export const MobileMenu = () => {
             <p className="text-sm font-medium mb-3 text-muted-foreground uppercase tracking-wider">
               {t("orders")}
             </p>
-            <Link href="/my-orders">
+            <Link href={`/${locale}/my-orders`} onClick={() => setOpen(false)}>
               <Button variant="outline" className="w-full justify-start" aria-label={t("myOrders")}>
                 {t("myOrders")}
               </Button>
