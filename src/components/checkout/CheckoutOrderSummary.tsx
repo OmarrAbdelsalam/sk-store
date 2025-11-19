@@ -51,11 +51,11 @@ const CheckoutOrderSummary = memo(({ items, totalPrice, shippingPrice }: Checkou
           </div>
           <div className="flex justify-between">
             <span>{t("shipping")}</span>
-            <span>{shippingPrice} {t("currency")}</span>
+            <span className="text-sm text-muted-foreground">{t("shippingNote")}</span>
           </div>
           <div className="flex justify-between font-semibold text-lg border-t pt-2">
             <span>{t("total")}</span>
-            <span>{(totalPrice + shippingPrice).toFixed(2)} {t("currency")}</span>
+            <span>{totalPrice.toFixed(2)} {t("currency")}</span>
           </div>
           <div className="border-t pt-2">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">

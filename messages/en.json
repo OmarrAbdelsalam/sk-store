@@ -34,6 +34,9 @@
     "genericErrorTitle": "An error occurred while placing the order",
     "genericErrorDesc": "Please try again later"
   },
+  "Cart": {
+    "title": "Shopping Cart"
+  },
   "EmptyCart": {
     "title": "Your cart is empty",
     "subtitle": "Start adding some great products to your bag",
@@ -43,7 +46,7 @@
     "title": "Order Summary",
     "itemsCount": "Items ({count})",
     "shipping": "Shipping",
-    "shippingNote": "Shipping cost will be determined upon location selection",
+    "shippingNote": "To be determined",
     "free": "Free",
     "total": "Total",
     "goCheckout": "Proceed to Checkout",
@@ -54,6 +57,7 @@
     "quantity": "Qty",
     "subtotal": "Subtotal",
     "shipping": "Shipping",
+    "shippingNote": "To be determined",
     "total": "Grand Total",
     "currency": "EGP",
     "paymentMethod": "Cash on Delivery"

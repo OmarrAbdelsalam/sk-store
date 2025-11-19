@@ -34,6 +34,9 @@
     "genericErrorTitle": "حدث خطأ أثناء تنفيذ الطلب",
     "genericErrorDesc": "حاول مرة أخرى لاحقًا"
   },
+  "Cart": {
+    "title": "سلة التسوق"
+  },
   "EmptyCart": {
     "title": "سلة التسوق فارغة",
     "subtitle": "ابدأ بإضافة بعض المنتجات الرائعة إلى سلتك",
@@ -43,7 +46,7 @@
     "title": "ملخص الطلب",
     "itemsCount": "العناصر ({count})",
     "shipping": "الشحن",
-    "shippingNote": "سيتم تحديد سعر الشحن عند تحديد الموقع",
+    "shippingNote": "سيتم التحديد عند تحديد الموقع",
     "free": "مجاني",
     "total": "الإجمالي",
     "goCheckout": "متابعة إلى الدفع",
@@ -54,6 +57,7 @@
     "quantity": "الكمية",
     "subtotal": "المجموع الفرعي",
     "shipping": "الشحن",
+    "shippingNote": "سيتم التحديد عند تحديد الموقع",
     "total": "الإجمالي",
     "currency": "جنيه",
     "paymentMethod": "الدفع عند الاستلام"

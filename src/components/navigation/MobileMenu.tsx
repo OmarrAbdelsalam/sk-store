@@ -41,12 +41,12 @@ export const MobileMenu = () => {
         </Button>
       </SheetTrigger>
 
-      <SheetContent side={sheetSide} className="w-80" dir={dir} aria-label={t("menuAriaLabel")}>
+      <SheetContent side={sheetSide} className="w-80 overflow-y-auto" dir={dir} aria-label={t("menuAriaLabel")}>
         <SheetHeader>
           <SheetTitle className="text-xl font-luxury">{t("menuTitle")}</SheetTitle>
         </SheetHeader>
 
-        <div className="space-y-6 mt-8">
+        <div className="space-y-6 mt-8 pb-8">
           {/* الرئيسية */}
           <div>
             <Link
