@@ -154,20 +154,24 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
     try {
       setBusy(true);
 
-      await addToCartApi({
+      const cartPayload = {
         sessionId,
         productId: product.id,
         colorId: selectedColorId ?? 0,
         sizeId: resolvedSizeId ?? 0,
         quantity,
-      });
+      };
+      
+      console.log('Adding to cart API:', cartPayload);
+      await addToCartApi(cartPayload);
+      console.log('Successfully added to cart API');
 
       addToCart({
         id: product.id,
         name: isAr ? (product.nameAr || product.nameEn || "") : (product.nameEn || product.nameAr || ""),
         price: `${Number(product.price ?? 0)} EGP`,
         image: mainImageUrl,
-      });
+      }, quantity);
 
       toast({ title: t("addedToCart"), description: t("savedSelections") });
     } catch (e: unknown) {

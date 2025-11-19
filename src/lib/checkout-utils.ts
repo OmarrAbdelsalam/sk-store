@@ -1,4 +1,66 @@
-export const egyptGovernorates = ["القاهرة","الجيزة","القليوبية","الدقهلية","البحيرة","الغربية","المنوفية","كفر الشيخ","دمياط","المنيا","أسيوط","سوهاج","قنا","الأقصر","أسوان","بني سويف","الفيوم","الوادي الجديد","الإسكندرية","البحر الأحمر","مطروح","شمال سيناء","جنوب سيناء","بورسعيد","الإسماعيلية","الشرقية","Cairo","Giza","Qalyubia","Dakahlia","Beheira","Gharbia","Menoufia","Kafr El-Sheikh","Damietta","Minya","Assiut","Sohag","Qena","Luxor","Aswan","Beni Suef","Fayoum","New Valley","Alexandria","Red Sea","Matrouh","North Sinai","South Sinai","Port Said","Ismailia","Sharqia"];
+// Governorates with both Arabic and English names
+export const egyptGovernoratesAr = [
+  "القاهرة",
+  "الجيزة", 
+  "الإسكندرية",
+  "القليوبية",
+  "الدقهلية",
+  "الشرقية",
+  "البحيرة",
+  "الغربية",
+  "المنوفية",
+  "كفر الشيخ",
+  "دمياط",
+  "بورسعيد",
+  "الإسماعيلية",
+  "السويس",
+  "المنيا",
+  "بني سويف",
+  "الفيوم",
+  "أسيوط",
+  "سوهاج",
+  "قنا",
+  "الأقصر",
+  "أسوان",
+  "البحر الأحمر",
+  "الوادي الجديد",
+  "مطروح",
+  "شمال سيناء",
+  "جنوب سيناء"
+];
+
+export const egyptGovernoratesEn = [
+  "Cairo",
+  "Giza",
+  "Alexandria",
+  "Qalyubia",
+  "Dakahlia",
+  "Sharqia",
+  "Beheira",
+  "Gharbia",
+  "Menoufia",
+  "Kafr El-Sheikh",
+  "Damietta",
+  "Port Said",
+  "Ismailia",
+  "Suez",
+  "Minya",
+  "Beni Suef",
+  "Fayoum",
+  "Assiut",
+  "Sohag",
+  "Qena",
+  "Luxor",
+  "Aswan",
+  "Red Sea",
+  "New Valley",
+  "Matrouh",
+  "North Sinai",
+  "South Sinai"
+];
+
+// For backward compatibility
+export const egyptGovernorates = egyptGovernoratesAr;
 
 const shippingRates: Record<string, number> = {
   "qalyubia,menoufia,gharbia,dakahlia,kafr,sharqia,beheira,damietta,cairo,giza,alexandria,القليوبية,المنوفية,الغربية,الدقهلية,الشرقية,البحيرة,دمياط,القاهرة,الجيزة,الإسكندرية": 75,

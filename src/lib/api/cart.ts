@@ -1,13 +1,22 @@
 // /lib/api/cart.ts
 const BASE = process.env.NEXT_PUBLIC_API_BASE ?? "https://scrubstore.runasp.net";
 
-/** اختياري: تأكيد/تهيئة الجلسة في السيرفر (200 OK بدون body) */
-export async function ensureCartSession(sessionId: string) {
+/** قراءة السلة كاملة من السيرفر */
+export async function getCart(sessionId: string) {
   const url = new URL(`${BASE}/api/Cart/SessionId`);
   url.searchParams.set("SessionId", sessionId);
   const res = await fetch(url.toString(), { cache: "no-store" });
-  if (!res.ok) throw new Error(`GET /Cart/SessionId ${res.status}`);
-  return true;
+  
+  if (!res.ok) {
+    // If cart is empty or not found, return empty cart
+    if (res.status === 400 || res.status === 404) {
+      return { items: [], totalItems: 0, totalPrice: 0 };
+    }
+    throw new Error(`GET /Cart/SessionId ${res.status}`);
+  }
+  
+  const response = await res.json();
+  return response.data || { items: [], totalItems: 0, totalPrice: 0 }; // Returns cart with items array
 }
 
 /** إضافة منتج للسلة */
@@ -18,19 +27,31 @@ export async function addToCart(params: {
   sizeId?: number;  // 0 لو مش موجود
   quantity: number;
 }) {
+  const payload = {
+    sessionId: params.sessionId,
+    productId: params.productId,
+    colorId: params.colorId ?? 0,
+    sizeId: params.sizeId ?? 0,
+    quantity: params.quantity,
+  };
+  
+  console.log('POST /api/Cart payload:', payload);
+  
   const res = await fetch(`${BASE}/api/Cart`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     cache: "no-store",
-    body: JSON.stringify({
-      sessionId: params.sessionId,
-      productId: params.productId,
-      colorId: params.colorId ?? 0,
-      sizeId: params.sizeId ?? 0,
-      quantity: params.quantity,
-    }),
+    body: JSON.stringify(payload),
   });
-  if (!res.ok) throw new Error(`POST /api/Cart ${res.status}`);
+  
+  console.log('POST /api/Cart response status:', res.status);
+  
+  if (!res.ok) {
+    const errorText = await res.text();
+    console.error('POST /api/Cart error:', errorText);
+    throw new Error(`POST /api/Cart ${res.status}: ${errorText}`);
+  }
+  
   return true; // 200 بدون body
 }
 
@@ -73,7 +94,27 @@ export async function clearCart(sessionId: string) {
     method: "DELETE",
     cache: "no-store",
   });
-  if (!res.ok) throw new Error(`DELETE /Cart/Cart ${res.status}`);
+  
+  if (!res.ok) {
+    // Try to get error message
+    try {
+      const errorData = await res.json();
+      console.warn('Clear cart warning:', errorData.message || res.status);
+      
+      // If cart is already empty, it's not really an error
+      if (res.status === 400 || errorData.message?.includes('empty') || errorData.message?.includes('not found')) {
+        return true;
+      }
+    } catch {
+      // If can't parse response, check status
+      if (res.status === 400) {
+        return true; // Cart already empty
+      }
+    }
+    
+    throw new Error(`DELETE /Cart/Cart ${res.status}`);
+  }
+  
   return true;
 }
 
@@ -85,8 +126,10 @@ export async function getItemsNumber(sessionId: string): Promise<number> {
   const res = await fetch(url.toString(), { cache: "no-store" });
   if (!res.ok) throw new Error(`GET /Cart/Items/Number ${res.status}`);
 
-  // السيرفر ممكن يرجع "12" كنص أو { "value": 12 } أو 12 كـ JSON
+  // السيرفر ممكن يرجع "12" كنص أو { "value": 12 } أو 12 كـ JSON أو { "data": 12 }
   const text = await res.text();
+  console.log('Cart Items Number API response:', text);
+  
   // جرّب تحويله لرقم مباشرة
   const asNum = Number(text);
   if (!Number.isNaN(asNum)) return asNum;
@@ -96,8 +139,12 @@ export async function getItemsNumber(sessionId: string): Promise<number> {
     const json = JSON.parse(text);
     if (typeof json === "number") return json;
     if (typeof json?.value === "number") return json.value;
+    if (typeof json?.data === "number") return json.data; // Support { "data": 13 } format
   } catch {}
-  throw new Error("Unexpected response for /Items/Number");
+  
+  // If all fails, return 0 instead of throwing
+  console.warn('Unexpected response for /Items/Number, returning 0:', text);
+  return 0;
 }
 
 /** قراءة إجمالي السعر (نفس فكرة التنسيق) */

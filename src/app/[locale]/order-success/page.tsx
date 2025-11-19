@@ -40,8 +40,11 @@ export default function OrderSuccessPage() {
   const isAr = locale === "ar";
 
   const [orderData, setOrderData] = useState<OrderData | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+    
     // Get order data from localStorage
     try {
       const saved = localStorage.getItem('last_order_data');
@@ -55,16 +58,26 @@ export default function OrderSuccessPage() {
   }, []);
 
   const orderNumber = useMemo(() => {
+    if (!mounted) return '';
     return orderData?.sessionId || getOrCreateSessionId();
-  }, [orderData]);
+  }, [orderData, mounted]);
 
   const orderDate = useMemo(() => {
+    if (!mounted) return '';
     try {
       return new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date());
     } catch {
       return new Date().toLocaleDateString();
     }
-  }, [locale]);
+  }, [locale, mounted]);
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen" dir={dir}>

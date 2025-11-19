@@ -11,17 +11,20 @@ import QuantityControl from "./QuantityControl";
 interface CartItemProps {
   item: {
     id: number;
+    itemId: number; // cartItemId from server
     productId?: number;
     name: string;
     price: string;
     quantity: number;
     image: string;
     size?: string;
+    sizeName?: string;
     color?: string;
+    colorName?: string;
     addOns?: string[];
   };
-  onUpdateQuantity: (id: number, quantity: number) => void;
-  onRemove: (id: number) => void;
+  onUpdateQuantity: (itemId: number, quantity: number) => void;
+  onRemove: (itemId: number) => void;
 }
 
 const CartItem = memo(({ item, onUpdateQuantity, onRemove }: CartItemProps) => {
@@ -29,16 +32,16 @@ const CartItem = memo(({ item, onUpdateQuantity, onRemove }: CartItemProps) => {
   const t = useTranslations("CartItem");
 
   const handleIncrease = useCallback(() => {
-    onUpdateQuantity(item.id, item.quantity + 1);
-  }, [item.id, item.quantity, onUpdateQuantity]);
+    onUpdateQuantity(item.itemId, item.quantity + 1);
+  }, [item.itemId, item.quantity, onUpdateQuantity]);
 
   const handleDecrease = useCallback(() => {
-    onUpdateQuantity(item.id, item.quantity - 1);
-  }, [item.id, item.quantity, onUpdateQuantity]);
+    onUpdateQuantity(item.itemId, item.quantity - 1);
+  }, [item.itemId, item.quantity, onUpdateQuantity]);
 
   const handleRemove = useCallback(() => {
-    onRemove(item.id);
-  }, [item.id, onRemove]);
+    onRemove(item.itemId);
+  }, [item.itemId, onRemove]);
 
   return (
     <Card>
@@ -51,8 +54,8 @@ const CartItem = memo(({ item, onUpdateQuantity, onRemove }: CartItemProps) => {
               <CartItemDetails
                 name={item.name}
                 price={item.price}
-                size={item.size}
-                color={item.color}
+                size={item.sizeName || item.size}
+                color={item.colorName || item.color}
                 addOns={item.addOns}
               />
 

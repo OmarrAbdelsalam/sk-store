@@ -12,17 +12,54 @@ import { useRouter } from "next/navigation";
 import { getOrCreateSessionId } from "@/lib/session";
 import { useLocale, useTranslations } from "next-intl";
 import { getShippingPrice, type CheckoutFormData } from "@/lib/checkout-utils";
+// clearCartAPI not needed - server clears cart automatically after order
 
 export default function Checkout() {
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations("Checkout");
   const dir = locale === "ar" ? "rtl" : "ltr";
+  const isAr = locale === "ar";
 
   const { items, getTotalPrice, clearCart } = useCart();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
-  const [shippingPrice, setShippingPrice] = useState(90);
+  const [shippingPrice, setShippingPrice] = useState(0);
+  const [selectedGovernorate, setSelectedGovernorate] = useState("");
+  const [mounted, setMounted] = useState(false);
+
+  // Avoid hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+    
+    // Load saved governorate from localStorage and calculate shipping
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('checkout_form_data');
+        if (saved) {
+          const data = JSON.parse(saved);
+          if (data.governorate) {
+            setSelectedGovernorate(data.governorate);
+            const price = getShippingPrice(data.governorate, data.city || "");
+            setShippingPrice(price);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading saved governorate:', error);
+      }
+    }
+  }, []);
+
+  // Update shipping price when governorate changes
+  useEffect(() => {
+    if (selectedGovernorate) {
+      const price = getShippingPrice(selectedGovernorate, "");
+      console.log('Governorate selected:', selectedGovernorate, 'Price:', price);
+      setShippingPrice(price);
+    } else {
+      setShippingPrice(0);
+    }
+  }, [selectedGovernorate]);
 
   // Prefetch order-success page
   useEffect(() => {
@@ -41,6 +78,14 @@ export default function Checkout() {
 
     try {
       const sessionId = getOrCreateSessionId();
+      
+      // Check if cart has items
+      if (items.length === 0) {
+        throw new Error(isAr ? "السلة فارغة" : "Cart is empty");
+      }
+      
+      console.log('Cart items before order:', items);
+      
       const payload = {
         sessionId,
         customerName: `${formData.firstName} ${formData.lastName}`.trim(),
@@ -55,19 +100,27 @@ export default function Checkout() {
         notes: formData.notes,
       };
 
+      console.log('Sending order payload:', payload);
+
       const res = await fetch("https://scrubstore.runasp.net/api/Orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) throw new Error(`Order API failed with status ${res.status}`);
-
       const response = await res.json();
+      console.log('Order API response:', response);
+      
+      // Check if the API returned an error
+      if (!res.ok || !response.succeeded) {
+        const errorMsg = response.message || `Order API failed with status ${res.status}`;
+        throw new Error(errorMsg);
+      }
+
       try { localStorage.setItem('last_order_data', JSON.stringify(response.data)); } catch {}
       
-      // Clear cart and navigate immediately for better UX
-      clearCart();
+      // Server automatically clears cart after order, just clear local state
+      clearCart(); // Clear from local state
       router.push(`/${locale}/order-success`);
       
       // Show toast after navigation starts
@@ -86,6 +139,20 @@ export default function Checkout() {
     }
   };
 
+  // Show loading state during hydration
+  if (!mounted) {
+    return (
+      <div className="min-h-screen" dir={dir}>
+        <div className="container mx-auto px-4 py-8">
+          <div className="animate-pulse space-y-4">
+            <div className="h-10 w-32 bg-muted rounded" />
+            <div className="h-8 w-48 bg-muted rounded" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (items.length === 0) return <EmptyCart dir={dir} />;
 
   return (
@@ -103,6 +170,7 @@ export default function Checkout() {
               onSubmit={handleSubmit}
               isProcessing={isProcessing}
               totalAmount={nf.format(getTotalPrice() + shippingPrice)}
+              onGovernorateChange={setSelectedGovernorate}
             />
           </div>
 

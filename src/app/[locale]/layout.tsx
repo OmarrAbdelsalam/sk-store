@@ -7,6 +7,7 @@ import { CartProvider } from '@/hooks/useCart';
 import { Cairo, Inter } from 'next/font/google';
 import { defaultMetadata } from '@/lib/metadata';
 import SEOHead from '@/components/SEOHead';
+import { Analytics } from '@vercel/analytics/next';
 import type { Metadata } from 'next';
 
 const cairo = Cairo({
@@ -66,6 +67,7 @@ export default async function LocaleLayout({
             <Footer />
           </CartProvider>
         </NextIntlClientProvider>
+        <Analytics />
       </body>
     </html>
   );

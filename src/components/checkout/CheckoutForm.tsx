@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import PersonalInfoForm from "./PersonalInfoForm";
 import ShippingAddressForm from "./ShippingAddressForm";
-import { egyptGovernorates, type CheckoutFormData, emptyFormData } from "@/lib/checkout-utils";
+import { egyptGovernoratesAr, egyptGovernoratesEn, type CheckoutFormData, emptyFormData } from "@/lib/checkout-utils";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 
@@ -13,12 +13,18 @@ type Props = {
   isProcessing: boolean;
   totalAmount: string;
   isLoggedIn?: boolean;
+  onGovernorateChange?: (governorate: string) => void;
 };
 
-export default function CheckoutForm({ onSubmit, isProcessing, totalAmount, isLoggedIn = false }: Props) {
+export default function CheckoutForm({ onSubmit, isProcessing, totalAmount, isLoggedIn = false, onGovernorateChange }: Props) {
   const t = useTranslations("Checkout");
   const locale = useLocale();
   const router = useRouter();
+  
+  // Select governorates list based on locale
+  const governoratesList = useMemo(() => {
+    return locale === 'ar' ? egyptGovernoratesAr : egyptGovernoratesEn;
+  }, [locale]);
   
   const [formData, setFormData] = useState<CheckoutFormData>(() => {
     if (typeof window !== 'undefined') {
@@ -36,7 +42,12 @@ export default function CheckoutForm({ onSubmit, isProcessing, totalAmount, isLo
       try { localStorage.setItem('checkout_form_data', JSON.stringify(updated)); } catch {}
       return updated;
     });
-  }, []);
+    
+    // Notify parent when governorate changes
+    if (field === 'governorate' && onGovernorateChange) {
+      onGovernorateChange(value);
+    }
+  }, [onGovernorateChange]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -51,7 +62,7 @@ export default function CheckoutForm({ onSubmit, isProcessing, totalAmount, isLo
 
       <ShippingAddressForm
         formData={formData}
-        egyptGovernorates={egyptGovernorates}
+        egyptGovernorates={governoratesList}
         onInputChange={handleInputChange}
       />
 

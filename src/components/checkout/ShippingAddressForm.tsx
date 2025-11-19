@@ -1,10 +1,23 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MapPin } from "lucide-react";
+import { MapPin, Check, ChevronsUpDown } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { memo } from "react";
+import { memo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 interface ShippingAddressFormProps {
   formData: {
@@ -23,6 +36,7 @@ interface ShippingAddressFormProps {
 
 const ShippingAddressForm = memo(({ formData, egyptGovernorates, onInputChange }: ShippingAddressFormProps) => {
   const t = useTranslations("ShippingAddress");
+  const [open, setOpen] = useState(false);
   
   return (
     <Card>
@@ -35,21 +49,45 @@ const ShippingAddressForm = memo(({ formData, egyptGovernorates, onInputChange }
       <CardContent className="space-y-4">
         <div>
           <Label htmlFor="governorate">{t("governorate")}</Label>
-          <Select
-            value={formData.governorate}
-            onValueChange={(value) => onInputChange("governorate", value)}
-          >
-            <SelectTrigger className="bg-background">
-              <SelectValue placeholder={t("selectGovernorate")} />
-            </SelectTrigger>
-            <SelectContent className="bg-background border shadow-md z-50">
-              {egyptGovernorates.map((gov) => (
-                <SelectItem key={gov} value={gov} className="hover:bg-accent">
-                  {gov}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={open}
+                className="w-full justify-between bg-background"
+              >
+                {formData.governorate || t("selectGovernorate")}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-full p-0" align="start">
+              <Command>
+                <CommandInput placeholder={t("searchGovernorate")} />
+                <CommandEmpty>{t("noGovernorateFound")}</CommandEmpty>
+                <CommandGroup className="max-h-[300px] overflow-y-auto">
+                  {egyptGovernorates.map((gov) => (
+                    <CommandItem
+                      key={gov}
+                      value={gov}
+                      onSelect={(currentValue) => {
+                        onInputChange("governorate", currentValue === formData.governorate ? "" : currentValue);
+                        setOpen(false);
+                      }}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          formData.governorate === gov ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      {gov}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </div>
 
         <div>

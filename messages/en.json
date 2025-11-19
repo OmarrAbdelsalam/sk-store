@@ -255,6 +255,8 @@
     "title": "Shipping Address",
     "governorate": "Governorate",
     "selectGovernorate": "Select Governorate",
+    "searchGovernorate": "Search governorate...",
+    "noGovernorateFound": "No governorate found",
     "city": "City",
     "cityPlaceholder": "Enter city name",
     "area": "Area",

@@ -251,6 +251,8 @@
     "title": "عنوان الشحن",
     "governorate": "المحافظة",
     "selectGovernorate": "اختر المحافظة",
+    "searchGovernorate": "ابحث عن محافظة...",
+    "noGovernorateFound": "لم يتم العثور على محافظة",
     "city": "المدينة",
     "cityPlaceholder": "أدخل اسم المدينة",
     "area": "المنطقة",
