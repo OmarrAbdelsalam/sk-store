@@ -3,21 +3,14 @@
 import { Instagram, Facebook } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslations, useLocale } from 'next-intl';
-import { useEffect, useState } from 'react';
-import { getCategories, type CategoryOption } from "@/api/categories";
+import { useCategories } from "@/hooks/useCategories";
 import { useRouter } from "next/navigation";
 
 const Footer = () => {
   const t = useTranslations();
   const locale = useLocale();
   const router = useRouter();
-  const [categories, setCategories] = useState<CategoryOption[]>([]);
-
-  useEffect(() => {
-    getCategories()
-      .then(setCategories)
-      .catch(() => setCategories([]));
-  }, []);
+  const { categories } = useCategories();
 
   const goToCategory = (id: string, name: string) => {
     const slug = name.toLowerCase().replace(/\s+/g, '-');

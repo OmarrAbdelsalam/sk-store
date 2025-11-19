@@ -61,9 +61,32 @@ export async function fetchCategories(
   }));
 }
 
-let _categoriesCache: { [locale: string]: CategoryOption[] } = {};
+// Enhanced caching with timestamp
+type CacheEntry = {
+  data: CategoryOption[];
+  timestamp: number;
+};
+
+const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
+let _categoriesCache: { [locale: string]: CacheEntry } = {};
+
 export async function getCategories(locale = "ar"): Promise<CategoryOption[]> {
-  if (_categoriesCache[locale]) return _categoriesCache[locale];
-  _categoriesCache[locale] = await fetchCategories(1, 50, locale);
-  return _categoriesCache[locale];
+  const now = Date.now();
+  const cached = _categoriesCache[locale];
+  
+  // Return cached data if it's still fresh
+  if (cached && (now - cached.timestamp) < CACHE_DURATION) {
+    return cached.data;
+  }
+  
+  // Fetch fresh data
+  const data = await fetchCategories(1, 50, locale);
+  _categoriesCache[locale] = { data, timestamp: now };
+  
+  return data;
+}
+
+// Clear cache manually if needed
+export function clearCategoriesCache() {
+  _categoriesCache = {};
 }

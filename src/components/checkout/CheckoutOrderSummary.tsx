@@ -1,6 +1,9 @@
+"use client";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Banknote } from "lucide-react";
 import { memo } from "react";
+import { useTranslations, useLocale } from "next-intl";
 
 interface CartItem {
   id: number;
@@ -16,10 +19,14 @@ interface CheckoutOrderSummaryProps {
 }
 
 const CheckoutOrderSummary = memo(({ items, totalPrice, shippingPrice }: CheckoutOrderSummaryProps) => {
+  const t = useTranslations("CheckoutSummary");
+  const locale = useLocale();
+  const dir = locale === "ar" ? "rtl" : "ltr";
+
   return (
-    <Card>
+    <Card dir={dir}>
       <CardHeader>
-        <CardTitle>Order Summary</CardTitle>
+        <CardTitle>{t("title")}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {items.map((item) => (
@@ -30,7 +37,7 @@ const CheckoutOrderSummary = memo(({ items, totalPrice, shippingPrice }: Checkou
               </div>
               <div>
                 <p className="font-medium text-sm">{item.name}</p>
-                <p className="text-muted-foreground text-sm">Qty: {item.quantity}</p>
+                <p className="text-muted-foreground text-sm">{t("quantity")}: {item.quantity}</p>
               </div>
             </div>
             <p className="font-medium">{item.price}</p>
@@ -39,21 +46,21 @@ const CheckoutOrderSummary = memo(({ items, totalPrice, shippingPrice }: Checkou
 
         <div className="border-t pt-4 space-y-2">
           <div className="flex justify-between">
-            <span>Total</span>
-            <span>{totalPrice.toFixed(2)} EGP</span>
+            <span>{t("subtotal")}</span>
+            <span>{totalPrice.toFixed(2)} {t("currency")}</span>
           </div>
           <div className="flex justify-between">
-            <span>Shipping</span>
-            <span>{shippingPrice} EGP</span>
+            <span>{t("shipping")}</span>
+            <span>{shippingPrice} {t("currency")}</span>
           </div>
           <div className="flex justify-between font-semibold text-lg border-t pt-2">
-            <span>Grand Total</span>
-            <span>{(totalPrice + shippingPrice).toFixed(2)} EGP</span>
+            <span>{t("total")}</span>
+            <span>{(totalPrice + shippingPrice).toFixed(2)} {t("currency")}</span>
           </div>
           <div className="border-t pt-2">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Banknote className="h-4 w-4" />
-              <span>Cash on Delivery</span>
+              <span>{t("paymentMethod")}</span>
             </div>
           </div>
         </div>

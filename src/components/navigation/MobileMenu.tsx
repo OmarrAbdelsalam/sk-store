@@ -8,9 +8,8 @@ import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/hooks/useCart";
 import { LanguageSwitcher } from "../Navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getCategories, type CategoryOption } from "@/api/categories";
+import { useCategories } from "@/hooks/useCategories";
 
 export const MobileMenu = () => {
   // ✅ نستخدم try/catch زي ما عندك علشان لو ما فيش مزوّد للكارت ما يكسرش الصفحة
@@ -29,31 +28,7 @@ export const MobileMenu = () => {
   const sheetSide = locale === "ar" ? "right" : "left";
   const router = useRouter();
 
-  const [categories, setCategories] = useState<CategoryOption[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const data = await getCategories(locale);
-        setCategories(data);
-        
-        // Prefetch all category pages
-        data.forEach((category) => {
-          router.prefetch(`/?categoryId=${encodeURIComponent(category.key)}`);
-        });
-        
-        // Prefetch home page (all products)
-        router.prefetch('/');
-      } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error("Failed to load categories", e);
-        setCategories([]);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [locale, router]);
+  const { categories, isLoading: loading } = useCategories();
 
   const goToAllProducts = () => router.push(`/${locale}`);
   const goToCategory = (id: string) => router.push(`/${locale}?categoryId=${encodeURIComponent(id)}`);

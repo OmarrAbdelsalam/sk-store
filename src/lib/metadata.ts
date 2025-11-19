@@ -37,7 +37,7 @@ export const defaultMetadata: Metadata = {
     alternateLocale: ["en_US"],
     url: siteUrl,
     siteName,
-    title: `${siteName} |`,
+    title: `${siteName}`,
     description: siteDescription,
     images: [
       {

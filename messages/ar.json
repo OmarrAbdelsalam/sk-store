@@ -49,6 +49,15 @@
     "goCheckout": "متابعة إلى الدفع",
     "continueShopping": "متابعة التسوق"
   },
+  "CheckoutSummary": {
+    "title": "ملخص الطلب",
+    "quantity": "الكمية",
+    "subtotal": "المجموع الفرعي",
+    "shipping": "الشحن",
+    "total": "الإجمالي",
+    "currency": "جنيه",
+    "paymentMethod": "الدفع عند الاستلام"
+  },
   "Gallery": {
     "noImages": "لا توجد صور",
     "thumbTitle": "صورة {index}",

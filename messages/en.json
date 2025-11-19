@@ -49,6 +49,15 @@
     "goCheckout": "Proceed to Checkout",
     "continueShopping": "Continue Shopping"
   },
+  "CheckoutSummary": {
+    "title": "Order Summary",
+    "quantity": "Qty",
+    "subtotal": "Subtotal",
+    "shipping": "Shipping",
+    "total": "Grand Total",
+    "currency": "EGP",
+    "paymentMethod": "Cash on Delivery"
+  },
   "Gallery": {
     "noImages": "No images available",
     "thumbTitle": "Image {index}",

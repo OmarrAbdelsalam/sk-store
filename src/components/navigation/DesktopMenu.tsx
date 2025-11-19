@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useTranslations, useLocale } from "next-intl";
 import { useEffect, useState, useTransition } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { getCategories, type CategoryOption } from "@/api/categories";
+import { useCategories } from "@/hooks/useCategories";
 
 export const DesktopMenu = () => {
   const t = useTranslations();
@@ -14,35 +14,22 @@ export const DesktopMenu = () => {
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
 
-  const [categories, setCategories] = useState<CategoryOption[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { categories, isLoading: loading } = useCategories();
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
 
   const categorySlug = searchParams.get("category");
 
+  // Prefetch category pages once categories are loaded
   useEffect(() => {
-    (async () => {
-      try {
-        const data = await getCategories(locale);
-        setCategories(data);
-        
-        // Prefetch all category pages
-        data.forEach((category) => {
-          const categoryName = locale === 'ar' ? category.arabicName : category.englishName;
-          const slug = categoryName.toLowerCase().replace(/\s+/g, '-');
-          router.prefetch(`/?category=${encodeURIComponent(slug)}`);
-        });
-        
-        // Prefetch home page (all products)
-        router.prefetch('/');
-      } catch (e) {
-        console.error("Failed to load categories", e);
-        setCategories([]);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [locale, router]);
+    if (categories.length > 0) {
+      categories.forEach((category) => {
+        const categoryName = locale === 'ar' ? category.arabicName : category.englishName;
+        const slug = categoryName.toLowerCase().replace(/\s+/g, '-');
+        router.prefetch(`/${locale}?category=${encodeURIComponent(slug)}`);
+      });
+      router.prefetch(`/${locale}`);
+    }
+  }, [categories, locale, router]);
 
   // Get the actual ID from sessionStorage if we have a slug (client-side only)
   useEffect(() => {
