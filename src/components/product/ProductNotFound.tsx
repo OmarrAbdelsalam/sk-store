@@ -2,9 +2,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Package, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useLocale } from "next-intl";
 
 const ProductNotFound = () => {
   const router = useRouter();
+  const locale = useLocale();
 
   return (
     <div className="min-h-screen flex items-center justify-center">
@@ -18,7 +20,7 @@ const ProductNotFound = () => {
             Sorry, we couldn&apos;t find the product you&apos;re looking for
           </p>
           <Button 
-            onClick={() => router.push('/')}
+            onClick={() => router.push(`/${locale}`)}
             className="w-full"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />

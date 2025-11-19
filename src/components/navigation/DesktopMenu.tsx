@@ -56,7 +56,7 @@ export const DesktopMenu = () => {
 
   const goToAllProducts = () => {
     startTransition(() => {
-      router.push('/', { scroll: false });
+      router.push(`/${locale}`, { scroll: false });
     });
   };
   
@@ -66,7 +66,7 @@ export const DesktopMenu = () => {
       sessionStorage.setItem(`category_${slug}`, id);
     }
     startTransition(() => {
-      router.push(`/?category=${encodeURIComponent(slug)}`, { scroll: false });
+      router.push(`/${locale}?category=${encodeURIComponent(slug)}`, { scroll: false });
     });
   };
 

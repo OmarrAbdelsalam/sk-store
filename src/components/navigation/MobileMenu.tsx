@@ -55,8 +55,8 @@ export const MobileMenu = () => {
     })();
   }, [locale, router]);
 
-  const goToAllProducts = () => router.push("/");
-  const goToCategory = (id: string) => router.push(`/?categoryId=${encodeURIComponent(id)}`);
+  const goToAllProducts = () => router.push(`/${locale}`);
+  const goToCategory = (id: string) => router.push(`/${locale}?categoryId=${encodeURIComponent(id)}`);
 
   return (
     <Sheet>

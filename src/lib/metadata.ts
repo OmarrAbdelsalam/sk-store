@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://scrubhousev1.vercel.app";
-const siteName = "HouseScrub - هاوس سكراب | السكراب الطبي رقم واحد في مصر";
+const siteName = "HouseScrub| السكراب الطبي رقم واحد في مصر";
 const siteDescription = "HouseScrub - السكراب الطبي رقم واحد في مصر. متجر متخصص في بيع الزي الطبي الفاخر والإكسسوارات الطبية عالية الجودة. توصيل لجميع أنحاء مصر خلال 3-7 أيام. فروع في المنصورة وطنطا. للتواصل: 01501881005";
 const phoneNumber = "+20-150-188-1005";
 const whatsappNumber = "201501881005";

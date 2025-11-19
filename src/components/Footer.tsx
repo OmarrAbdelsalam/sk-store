@@ -22,7 +22,7 @@ const Footer = () => {
   const goToCategory = (id: string, name: string) => {
     const slug = name.toLowerCase().replace(/\s+/g, '-');
     sessionStorage.setItem(`category_${slug}`, id);
-    router.push(`/?category=${encodeURIComponent(slug)}`);
+    router.push(`/${locale}?category=${encodeURIComponent(slug)}`);
   };
 
   return (
@@ -54,7 +54,7 @@ const Footer = () => {
                   variant="ghost" 
                   size="sm" 
                   className="text-primary-foreground/80 hover:text-white justify-start w-full p-0 h-auto"
-                  onClick={() => router.push('/my-orders')}
+                  onClick={() => router.push(`/${locale}/my-orders`)}
                 >
                   <span className="text-sm">{t('Footer.myOrders')}</span>
                 </Button>

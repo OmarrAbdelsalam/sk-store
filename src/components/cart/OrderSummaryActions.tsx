@@ -1,11 +1,12 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { memo } from "react";
 
 const OrderSummaryActions = memo(() => {
   const router = useRouter();
+  const locale = useLocale();
   const t = useTranslations("OrderSummary");
 
   return (
@@ -13,7 +14,7 @@ const OrderSummaryActions = memo(() => {
       <Button
         size="lg"
         className="w-full"
-        onClick={() => router.push("/checkout")}
+        onClick={() => router.push(`/${locale}/checkout`)}
         aria-label={t("goCheckout")}
       >
         {t("goCheckout")}
@@ -21,7 +22,7 @@ const OrderSummaryActions = memo(() => {
       <Button
         variant="outline"
         className="w-full"
-        onClick={() => router.push("/")}
+        onClick={() => router.push(`/${locale}`)}
         aria-label={t("continueShopping")}
       >
         {t("continueShopping")}
