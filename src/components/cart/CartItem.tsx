@@ -25,15 +25,20 @@ interface CartItemProps {
   };
   onUpdateQuantity: (itemId: number, quantity: number) => void;
   onRemove: (itemId: number) => void;
+  maxQuantity?: number;
 }
 
-const CartItem = memo(({ item, onUpdateQuantity, onRemove }: CartItemProps) => {
+const CartItem = memo(({ item, onUpdateQuantity, onRemove, maxQuantity }: CartItemProps) => {
   const [busy, setBusy] = useState(false);
   const t = useTranslations("CartItem");
 
+  const canIncrease = maxQuantity === undefined || item.quantity < maxQuantity;
+
   const handleIncrease = useCallback(() => {
-    onUpdateQuantity(item.itemId, item.quantity + 1);
-  }, [item.itemId, item.quantity, onUpdateQuantity]);
+    if (canIncrease) {
+      onUpdateQuantity(item.itemId, item.quantity + 1);
+    }
+  }, [item.itemId, item.quantity, onUpdateQuantity, canIncrease]);
 
   const handleDecrease = useCallback(() => {
     onUpdateQuantity(item.itemId, item.quantity - 1);
@@ -77,6 +82,7 @@ const CartItem = memo(({ item, onUpdateQuantity, onRemove }: CartItemProps) => {
               onIncrease={handleIncrease}
               onDecrease={handleDecrease}
               disabled={busy}
+              disableIncrease={!canIncrease}
             />
           </div>
         </div>

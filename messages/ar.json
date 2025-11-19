@@ -35,7 +35,15 @@
     "genericErrorDesc": "حاول مرة أخرى لاحقًا"
   },
   "Cart": {
-    "title": "سلة التسوق"
+    "title": "سلة التسوق",
+    "stockValidation": "تحديث السلة",
+    "someItemsOutOfStock": "بعض المنتجات غير متوفرة وتم حذفها من السلة",
+    "quantitiesAdjusted": "تم تعديل الكميات حسب المتوفر في المخزون",
+    "validationError": "خطأ في التحقق من المخزون",
+    "tryAgainLater": "حاول مرة أخرى لاحقاً",
+    "validating": "جاري التحقق...",
+    "stockLimitReached": "وصلت للحد الأقصى المتاح",
+    "maxAvailable": "الكمية المتاحة: {quantity} فقط"
   },
   "EmptyCart": {
     "title": "سلة التسوق فارغة",
@@ -160,7 +168,9 @@
     "addedToCart": "تمت الإضافة إلى السلة",
     "savedSelections": "تم حفظ اختيارات اللون/المقاس",
     "addFailed": "فشل إضافة المنتج",
-    "unknownError": "حدث خطأ ما. حاول مرة أخرى."
+    "unknownError": "حدث خطأ ما. حاول مرة أخرى.",
+    "insufficientStock": "الكمية المطلوبة غير متوفرة",
+    "availableQuantity": "الكمية المتاحة: {quantity}"
   },
   "AddToCart": {
     "addToCart": "أضف إلى السلة",
@@ -174,6 +184,11 @@
     "viewSizeChart": "عرض جدول المقاسات",
     "noSizesForColor": "لا توجد مقاسات متاحة لهذا اللون",
     "quantity": "الكمية",
+    "available": "متاح",
+    "piecesRemaining": "{count, plural, one {قطعة واحدة متبقية!} other {# قطع متبقية!}}",
+    "soldOut": "نفذت الكمية! 🔥",
+    "allInCart": "جميع القطع المتاحة موجودة في سلة التسوق الخاصة بك",
+    "hurryUp": "سارع بإتمام الشراء قبل نفاد الكمية!",
     "a11y": {
       "productName": "اسم المنتج",
       "price": "السعر",

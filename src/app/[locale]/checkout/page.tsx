@@ -86,6 +86,68 @@ export default function Checkout() {
       
       console.log('Cart items before order:', items);
       
+      // Validate stock before placing order
+      const { getCart } = await import("@/lib/api/cart");
+      const { getProductById } = await import("@/lib/api/products");
+      
+      const cartData = await getCart(sessionId);
+      const cartItems = cartData.items || [];
+      
+      const stockIssues: Array<{ name: string; requested: number; available: number }> = [];
+      
+      for (const item of cartItems) {
+        try {
+          const product = await getProductById(item.productId);
+          
+          let availableStock = 0;
+          if (product.hasSizes && item.sizeId) {
+            const variant = product.variants.find(
+              v => v.colorId === item.colorId && v.sizeId === item.sizeId
+            );
+            availableStock = variant?.quantity ?? 0;
+          } else if (item.colorId) {
+            const variant = product.variants.find(v => v.colorId === item.colorId);
+            availableStock = variant?.quantity ?? 0;
+          } else if (product.variants.length > 0) {
+            availableStock = product.variants[0]?.quantity ?? 0;
+          }
+          
+          if (item.quantity > availableStock) {
+            const productName = isAr 
+              ? (product.nameAr || product.nameEn || `Product ${item.productId}`)
+              : (product.nameEn || product.nameAr || `Product ${item.productId}`);
+            
+            stockIssues.push({
+              name: productName,
+              requested: item.quantity,
+              available: availableStock
+            });
+          }
+        } catch (error) {
+          console.error(`Error validating product ${item.productId}:`, error);
+        }
+      }
+      
+      if (stockIssues.length > 0) {
+        const messages = stockIssues.map(issue => {
+          if (issue.available === 0) {
+            return isAr 
+              ? `${issue.name}: غير متوفر (نفذت الكمية)`
+              : `${issue.name}: Out of stock`;
+          } else {
+            return isAr
+              ? `${issue.name}: طلبت ${issue.requested} لكن المتاح فقط ${issue.available}`
+              : `${issue.name}: Requested ${issue.requested} but only ${issue.available} available`;
+          }
+        });
+        
+        throw new Error(
+          isAr 
+            ? `بعض المنتجات غير متوفرة بالكمية المطلوبة:\n${messages.join('\n')}`
+            : `Some products are not available in requested quantity:\n${messages.join('\n')}`
+        );
+      }
+      
       const payload = {
         sessionId,
         customerName: `${formData.firstName} ${formData.lastName}`.trim(),

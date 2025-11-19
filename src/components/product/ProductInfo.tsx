@@ -36,6 +36,8 @@ interface ProductInfoProps {
   onQuantityChange: (quantity: number) => void;
   
   sizeChartUrl?: string;
+  maxQuantity?: number;
+  quantityInCart?: number;
 }
 
 const ProductInfo = React.memo(function ProductInfo({
@@ -52,13 +54,27 @@ const ProductInfo = React.memo(function ProductInfo({
   onColorChangeId,
   onQuantityChange,
   sizeChartUrl,
+  maxQuantity = 999,
+  quantityInCart = 0,
 }: ProductInfoProps) {
   const t = useTranslations("ProductInfo"); // استخدم namespace: ProductInfo
   const locale = useLocale();
   const [sizeChartOpen, setSizeChartOpen] = useState(false);
 
+  // Preload size chart image when component mounts
+  React.useEffect(() => {
+    if (sizeChartUrl) {
+      const img = new window.Image();
+      img.src = sizeChartUrl;
+    }
+  }, [sizeChartUrl]);
+
   const dec = () => onQuantityChange(Math.max(1, quantity - 1));
-  const inc = () => onQuantityChange(quantity + 1);
+  const inc = () => {
+    if (quantity < maxQuantity) {
+      onQuantityChange(quantity + 1);
+    }
+  };
 
   // تنسيق السعر حسب اللغة (عملة EGP)
   const priceText =
@@ -220,33 +236,61 @@ const ProductInfo = React.memo(function ProductInfo({
         <Label className="block text-sm font-medium mb-3">
           {t("quantity")}
         </Label>
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={dec}
-            aria-label={t("a11y.decreaseQty")}
-            title={t("a11y.decreaseQty")}
-          >
-            <Minus className="h-4 w-4" />
-          </Button>
-          <span
-            className="text-lg font-medium min-w-[3rem] text-center"
-            aria-live="polite"
-            aria-label={t("a11y.currentQty", { qty: quantity })}
-          >
-            {quantity}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={inc}
-            aria-label={t("a11y.increaseQty")}
-            title={t("a11y.increaseQty")}
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
-        </div>
+        
+        {maxQuantity === 0 ? (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 space-y-2">
+            <p className="text-red-700 font-semibold text-base">
+              {t("soldOut")}
+            </p>
+            {quantityInCart > 0 && (
+              <>
+                <p className="text-red-600 text-sm">
+                  {t("allInCart")}
+                </p>
+                <p className="text-red-600 text-sm font-medium">
+                  {t("hurryUp")}
+                </p>
+              </>
+            )}
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={dec}
+                disabled={quantity <= 1}
+                aria-label={t("a11y.decreaseQty")}
+                title={t("a11y.decreaseQty")}
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+              <span
+                className="text-lg font-medium min-w-[3rem] text-center"
+                aria-live="polite"
+                aria-label={t("a11y.currentQty", { qty: quantity })}
+              >
+                {quantity}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={inc}
+                disabled={quantity >= maxQuantity}
+                aria-label={t("a11y.increaseQty")}
+                title={t("a11y.increaseQty")}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            {maxQuantity > 0 && maxQuantity <= 10 && (
+              <p className="text-sm text-red-600 font-medium mt-2">
+                {t("piecesRemaining", { count: maxQuantity })}
+              </p>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

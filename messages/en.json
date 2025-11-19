@@ -35,7 +35,15 @@
     "genericErrorDesc": "Please try again later"
   },
   "Cart": {
-    "title": "Shopping Cart"
+    "title": "Shopping Cart",
+    "stockValidation": "Cart Update",
+    "someItemsOutOfStock": "Some items are out of stock and have been removed from your cart",
+    "quantitiesAdjusted": "Quantities have been adjusted based on available stock",
+    "validationError": "Error validating stock",
+    "tryAgainLater": "Please try again later",
+    "validating": "Validating...",
+    "stockLimitReached": "Maximum available quantity reached",
+    "maxAvailable": "Only {quantity} available"
   },
   "EmptyCart": {
     "title": "Your cart is empty",
@@ -160,7 +168,9 @@
     "addedToCart": "Added to cart",
     "savedSelections": "Your color/size selections have been saved",
     "addFailed": "Failed to add the product",
-    "unknownError": "Something went wrong. Please try again."
+    "unknownError": "Something went wrong. Please try again.",
+    "insufficientStock": "Requested quantity not available",
+    "availableQuantity": "Available quantity: {quantity}"
   },
   "AddToCart": {
     "addToCart": "Add to Cart",
@@ -174,6 +184,11 @@
     "viewSizeChart": "View Size Chart",
     "noSizesForColor": "No sizes available for this color",
     "quantity": "Quantity",
+    "available": "Available",
+    "piecesRemaining": "{count, plural, one {Only 1 piece left!} other {Only # pieces left!}}",
+    "soldOut": "Sold Out! 🔥",
+    "allInCart": "All available pieces are already in your cart",
+    "hurryUp": "Hurry up and complete your purchase before it's gone!",
     "a11y": {
       "productName": "Product name",
       "price": "Price",

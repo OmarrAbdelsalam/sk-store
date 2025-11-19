@@ -34,8 +34,8 @@ export const SearchAndFilters = () => {
   const [searchQuery, setSearchQuery] = useState(initial.search);
   const [priceFrom, setPriceFrom] = useState<number>(initial.priceFrom);
   const [priceTo, setPriceTo] = useState<number>(initial.priceTo);
-  const [selectedGenders, setSelectedGenders] = useState<string[]>(initial.genders);
-  const [selectedColors, setSelectedColors] = useState<string[]>(initial.colorNames);
+  const [selectedGender, setSelectedGender] = useState<string>(initial.genders[0] ?? "");
+  const [selectedColor, setSelectedColor] = useState<string>(initial.colorNames[0] ?? "");
   const [genderOpen, setGenderOpen] = useState(false);
   const [colorOpen, setColorOpen] = useState(false);
 
@@ -51,24 +51,18 @@ export const SearchAndFilters = () => {
     setSearchQuery(initial.search);
     setPriceFrom(initial.priceFrom);
     setPriceTo(initial.priceTo);
-    setSelectedGenders(initial.genders);
-    setSelectedColors(initial.colorNames);
+    setSelectedGender(initial.genders[0] ?? "");
+    setSelectedColor(initial.colorNames[0] ?? "");
   }, [initial]);
 
-  const toggleGender = (gender: string) => {
-    setSelectedGenders(prev => 
-      prev.includes(gender) 
-        ? prev.filter(g => g !== gender)
-        : [...prev, gender]
-    );
+  const selectGender = (gender: string) => {
+    setSelectedGender(gender);
+    setGenderOpen(false);
   };
 
-  const toggleColor = (color: string) => {
-    setSelectedColors(prev => 
-      prev.includes(color) 
-        ? prev.filter(c => c !== color)
-        : [...prev, color]
-    );
+  const selectColor = (color: string) => {
+    setSelectedColor(color);
+    setColorOpen(false);
   };
 
   const apply = () => {
@@ -77,14 +71,14 @@ export const SearchAndFilters = () => {
     params.set("priceFrom", String(priceFrom));
     params.set("priceTo", String(priceTo));
 
-    if (selectedGenders.length > 0) {
-      params.set("gender", selectedGenders.join(","));
+    if (selectedGender) {
+      params.set("gender", selectedGender);
     } else {
       params.delete("gender");
     }
 
-    if (selectedColors.length > 0) {
-      params.set("colorName", selectedColors.join(","));
+    if (selectedColor) {
+      params.set("colorName", selectedColor);
     } else {
       params.delete("colorName");
     }
@@ -151,9 +145,7 @@ export const SearchAndFilters = () => {
                   aria-expanded={genderOpen}
                   className="w-full justify-between"
                 >
-                  {selectedGenders.length > 0
-                    ? `${selectedGenders.length} ${t("selected")}`
-                    : t("selectGender")}
+                  {selectedGender ? t(selectedGender) : t("selectGender")}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
@@ -163,12 +155,13 @@ export const SearchAndFilters = () => {
                     {["unisex", "men", "women"].map((gender) => (
                       <CommandItem
                         key={gender}
-                        onSelect={() => toggleGender(gender)}
+                        value={gender}
+                        onSelect={() => selectGender(gender)}
                       >
                         <Check
                           className={cn(
                             "mr-2 h-4 w-4",
-                            selectedGenders.includes(gender) ? "opacity-100" : "opacity-0"
+                            selectedGender === gender ? "opacity-100" : "opacity-0"
                           )}
                         />
                         {t(gender)}
@@ -191,9 +184,32 @@ export const SearchAndFilters = () => {
                   aria-expanded={colorOpen}
                   className="w-full justify-between"
                 >
-                  {selectedColors.length > 0
-                    ? `${selectedColors.length} ${t("selected")}`
-                    : t("selectColor")}
+                  {selectedColor ? (
+                    <span className="flex items-center gap-2">
+                      {colors.find(c => {
+                        const colorName = locale === 'ar' ? c.colorNameAr : c.colorNameEn;
+                        return colorName.toLowerCase() === selectedColor;
+                      }) && (
+                        <div 
+                          className="w-4 h-4 rounded-full border border-gray-300" 
+                          style={{ 
+                            backgroundColor: colors.find(c => {
+                              const colorName = locale === 'ar' ? c.colorNameAr : c.colorNameEn;
+                              return colorName.toLowerCase() === selectedColor;
+                            })?.hexa 
+                          }}
+                        />
+                      )}
+                      {colors.find(c => {
+                        const colorName = locale === 'ar' ? c.colorNameAr : c.colorNameEn;
+                        return colorName.toLowerCase() === selectedColor;
+                      }) ? (
+                        locale === 'ar' 
+                          ? colors.find(c => (locale === 'ar' ? c.colorNameAr : c.colorNameEn).toLowerCase() === selectedColor)?.colorNameAr
+                          : colors.find(c => (locale === 'ar' ? c.colorNameAr : c.colorNameEn).toLowerCase() === selectedColor)?.colorNameEn
+                      ) : selectedColor}
+                    </span>
+                  ) : t("selectColor")}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
@@ -205,11 +221,12 @@ export const SearchAndFilters = () => {
                     {colors.map((color) => {
                       const colorName = locale === 'ar' ? color.colorNameAr : color.colorNameEn;
                       const colorKey = colorName.toLowerCase();
-                      const isSelected = selectedColors.includes(colorKey);
+                      const isSelected = selectedColor === colorKey;
                       return (
                         <CommandItem
                           key={color.id}
-                          onSelect={() => toggleColor(colorKey)}
+                          value={colorKey}
+                          onSelect={() => selectColor(colorKey)}
                         >
                           <Check
                             className={cn(

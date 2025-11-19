@@ -6,7 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useCart } from "@/hooks/useCart";
 import { useToast } from "@/components/ui/use-toast";
 import { getOrCreateSessionId } from "@/lib/session";
-import { addToCart as addToCartApi } from "@/lib/api/cart";
+import { addToCart as addToCartApi, getCart } from "@/lib/api/cart";
 import type { ProductApi } from "@/lib/api/products";
 
 import ProductImageGallery from "@/components/ProductImageGallery";
@@ -136,6 +136,64 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
     return main?.imageUrl || "/placeholder.png";
   }, [photos, selectedColorId]);
 
+  const [cartItems, setCartItems] = useState<any[]>([]);
+
+  // جلب السلة عند تحميل الصفحة
+  useEffect(() => {
+    const fetchCartItems = async () => {
+      try {
+        const sessionId = getOrCreateSessionId();
+        const cartData = await getCart(sessionId);
+        setCartItems(cartData.items || []);
+      } catch (error) {
+        console.error('Error fetching cart:', error);
+        setCartItems([]);
+      }
+    };
+    fetchCartItems();
+  }, []);
+
+  const { availableStock, quantityInCart } = useMemo(() => {
+    if (!product) return { availableStock: 0, quantityInCart: 0 };
+    
+    let stockInInventory = 0;
+    
+    // إذا كان المنتج له مقاسات
+    if (product.hasSizes && selectedColorId && resolvedSizeId) {
+      const variant = variants.find(
+        v => v.colorId === selectedColorId && v.sizeId === resolvedSizeId
+      );
+      stockInInventory = variant?.quantity ?? 0;
+    }
+    // إذا كان المنتج له ألوان فقط بدون مقاسات
+    else if (selectedColorId && !product.hasSizes) {
+      const variant = variants.find(v => v.colorId === selectedColorId);
+      stockInInventory = variant?.quantity ?? 0;
+    }
+    // إذا لم يكن له ألوان أو مقاسات
+    else if (!selectedColorId && variants.length > 0) {
+      stockInInventory = variants[0]?.quantity ?? 0;
+    }
+    
+    // حساب الكمية الموجودة في السلة من نفس المنتج باللون والمقاس
+    const quantityInCart = cartItems.reduce((total, item) => {
+      const isSameProduct = item.productId === product.id;
+      const isSameColor = !selectedColorId || item.colorId === selectedColorId;
+      const isSameSize = !resolvedSizeId || item.sizeId === resolvedSizeId;
+      
+      if (isSameProduct && isSameColor && isSameSize) {
+        return total + (item.quantity || 0);
+      }
+      return total;
+    }, 0);
+    
+    // الكمية المتاحة = المخزون - الموجود في السلة
+    return { 
+      availableStock: Math.max(0, stockInInventory - quantityInCart),
+      quantityInCart 
+    };
+  }, [product, variants, selectedColorId, resolvedSizeId, cartItems]);
+
   const totalPrice = Number(product?.price ?? 0) * quantity;
 
   const handleAddToCart = async () => {
@@ -148,6 +206,16 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
     }
     if (product.hasSizes && !resolvedSizeId) {
       toast({ title: t("chooseSizeFirst"), variant: "destructive" });
+      return;
+    }
+    
+    // التحقق من الكمية المتاحة
+    if (quantity > availableStock) {
+      toast({ 
+        title: t("insufficientStock"), 
+        description: t("availableQuantity", { quantity: availableStock }),
+        variant: "destructive" 
+      });
       return;
     }
 
@@ -172,6 +240,10 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
         price: `${Number(product.price ?? 0)} EGP`,
         image: mainImageUrl,
       }, quantity);
+
+      // تحديث السلة بعد الإضافة
+      const updatedCart = await getCart(sessionId);
+      setCartItems(updatedCart.items || []);
 
       toast({ title: t("addedToCart"), description: t("savedSelections") });
     } catch (e: unknown) {
@@ -247,6 +319,8 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
               sizeOptions={uiSizes}
               hasSizes={!!product.hasSizes}
               sizeChartUrl={product.sizeChartImageUrl}
+              maxQuantity={availableStock}
+              quantityInCart={quantityInCart}
             />
 
             <AddToCartSection

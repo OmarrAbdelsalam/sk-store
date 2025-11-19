@@ -8,9 +8,10 @@ interface QuantityControlProps {
   onIncrease: () => void;
   onDecrease: () => void;
   disabled?: boolean;
+  disableIncrease?: boolean;
 }
 
-const QuantityControl = memo(({ quantity, onIncrease, onDecrease, disabled }: QuantityControlProps) => {
+const QuantityControl = memo(({ quantity, onIncrease, onDecrease, disabled, disableIncrease }: QuantityControlProps) => {
   return (
     <div className="flex items-center gap-3">
       <Button
@@ -29,7 +30,7 @@ const QuantityControl = memo(({ quantity, onIncrease, onDecrease, disabled }: Qu
         variant="outline"
         size="sm"
         onClick={onIncrease}
-        disabled={disabled}
+        disabled={disabled || disableIncrease}
         aria-label="زيادة الكمية"
       >
         <Plus className="h-4 w-4" />
