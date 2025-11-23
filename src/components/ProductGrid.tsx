@@ -306,7 +306,7 @@ const ProductGrid = () => {
 
   /* Render */
   return (
-    <section className="py-4 md:py-12 bg-background">
+    <section id="products" className="py-4 md:py-12 bg-background">
       <div className="container mx-auto px-4">
         <div
           className={`md:mb-12 animate-fade-in ${

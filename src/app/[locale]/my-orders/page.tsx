@@ -55,7 +55,6 @@ export default function MyOrdersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [openOrderId, setOpenOrderId] = useState<number | null>(null);
-  const [customSessionId, setCustomSessionId] = useState("");
 
   const fetchOrders = async (sessionId: string) => {
     setLoading(true);
@@ -89,15 +88,6 @@ export default function MyOrdersPage() {
     const sessionId = getOrCreateSessionId();
     fetchOrders(sessionId);
   }, []);
-
-  const handleSessionIdSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (customSessionId.trim()) {
-      // Remove # if user added it
-      const cleanId = customSessionId.trim().replace(/^#/, '');
-      fetchOrders(cleanId);
-    }
-  };
 
   const formatDate = (dateString: string) => {
     try {
@@ -177,33 +167,9 @@ export default function MyOrdersPage() {
     <div className="min-h-screen bg-background" dir={dir}>
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">{t("title")}</h1>
-          <p className="text-muted-foreground">{t("subtitle")}</p>
+          <h1 className="text-2xl md:text-3xl font-bold mb-2">{t("title")}</h1>
+          <p className="text-sm md:text-base text-muted-foreground">{t("subtitle")}</p>
         </div>
-
-        {/* Custom Session ID Input */}
-        <Card className="mb-6">
-          <CardContent className="pt-6">
-            <form onSubmit={handleSessionIdSubmit} className="flex gap-3">
-              <div className="flex-1">
-                <label htmlFor="sessionId" className="text-sm font-medium mb-2 block">
-                  {t("enterOrderId")}
-                </label>
-                <input
-                  id="sessionId"
-                  type="text"
-                  value={customSessionId}
-                  onChange={(e) => setCustomSessionId(e.target.value)}
-                  placeholder={t("orderIdPlaceholder")}
-                  className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-              </div>
-              <Button type="submit" className="self-end">
-                {t("search")}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
 
         {orders.length === 0 ? (
           <Card>

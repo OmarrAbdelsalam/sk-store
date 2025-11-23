@@ -227,7 +227,7 @@ export default function Checkout() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="space-y-6">
-            <h1 className="text-3xl font-bold">{t("checkoutTitle")}</h1>
+            <h1 className="text-2xl md:text-3xl font-bold">{t("checkoutTitle")}</h1>
             <CheckoutForm
               onSubmit={handleSubmit}
               isProcessing={isProcessing}
