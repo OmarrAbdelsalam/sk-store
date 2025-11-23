@@ -7,6 +7,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { prefetchProduct } from "@/hooks/useProduct";
+import { motion, AnimatePresence } from "framer-motion";
 
 import * as React from "react";
 
@@ -34,6 +35,13 @@ interface Product {
       colorNameAr?: string;
       colorNameEn?: string;
       hexa?: string;
+    }>;
+    variants?: Array<{
+      id: number;
+      quantity: number;
+      colorId: number;
+      sizeId: number;
+      name: string;
     }>;
   };
 }
@@ -111,9 +119,16 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   const [selectedColorId, setSelectedColorId] = React.useState<number | null>(null);
   const [isHovered, setIsHovered] = React.useState(false);
+  const [showStockBadge, setShowStockBadge] = React.useState(true);
 
   const photos = product.raw?.photos || [];
   const colors = product.raw?.colors || [];
+  const variants = product.raw?.variants || [];
+
+  // Calculate total stock
+  const totalStock = React.useMemo(() => {
+    return variants.reduce((sum, variant) => sum + (variant.quantity || 0), 0);
+  }, [variants]);
 
   const availableImages = React.useMemo(() => {
     if (selectedColorId !== null) {
@@ -144,16 +159,26 @@ const ProductCard: React.FC<ProductCardProps> = ({
     prefetchProduct(product.id);
   }, [product.id]);
 
+  // Toggle between stock badge and description every 3 seconds
+  React.useEffect(() => {
+    if (totalStock > 0 && totalStock <= 10) {
+      const interval = setInterval(() => {
+        setShowStockBadge(prev => !prev);
+      }, 3000);
+      return () => clearInterval(interval);
+    }
+  }, [totalStock]);
+
   return (
-    <Link href={productUrl} prefetch={true} className="block h-full">
-      <div
-        className={`group cursor-pointer animate-slide-up flex flex-col h-full transition-opacity ${
-          isNavigating ? "opacity-50" : "opacity-100"
-        }`}
-        style={{ animationDelay: `${index * 0.1}s` }}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={() => setIsHovered(false)}
-      >
+    <div
+      className={`group cursor-pointer animate-slide-up flex flex-col h-full transition-opacity ${
+        isNavigating ? "opacity-50" : "opacity-100"
+      }`}
+      style={{ animationDelay: `${index * 0.1}s` }}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={handleProductClick}
+    >
         {/* Product Image */}
         <div className="relative overflow-hidden bg-luxury-cream rounded-lg mb-4 aspect-[3/4]">
           <Image
@@ -180,14 +205,47 @@ const ProductCard: React.FC<ProductCardProps> = ({
             <h3 className="font-medium text-sm md:text-base group-hover:text-primary transition-colors line-clamp-2">
               {product.name}
             </h3>
-            <p className="font-semibold text-sm md:text-base text-right">
+            <p className="font-semibold text-sm md:text-base text-start">
               {product.price}
             </p>
           </div>
 
-          <p className="text-muted-foreground text-xs md:text-sm leading-relaxed line-clamp-2">
-            {product.description}
-          </p>
+          <div className="relative">
+            {totalStock > 0 && totalStock <= 10 ? (
+              <AnimatePresence mode="wait">
+                {showStockBadge ? (
+                  <motion.p
+                    key="stock-badge"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.4, ease: "easeInOut" }}
+                    className="text-red-600 text-xs md:text-sm font-medium"
+                  >
+                    {locale === 'ar' 
+                      ? `${totalStock === 1 ? 'قطعة واحدة متبقية!' : `${totalStock} قطع متبقية!`}`
+                      : `Only ${totalStock} piece${totalStock === 1 ? '' : 's'} left!`
+                    }
+                  </motion.p>
+                ) : (
+                  <motion.p
+                    key="description"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.4, ease: "easeInOut" }}
+                    className="text-muted-foreground text-xs md:text-sm leading-relaxed line-clamp-2"
+                  >
+                    {product.description}
+                  </motion.p>
+                )}
+              </AnimatePresence>
+            ) : (
+              <p className="text-muted-foreground text-xs md:text-sm leading-relaxed line-clamp-2">
+                {product.description}
+              </p>
+            )}
+          </div>
 
           {Array.isArray(product.availableColors) &&
             product.availableColors.length > 0 && (
@@ -228,7 +286,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
         </Button>
       </div>
     </div>
-    </Link>
   );
 };
 

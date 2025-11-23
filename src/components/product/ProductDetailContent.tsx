@@ -267,6 +267,7 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
 
   const addDisabled =
     busy ||
+    availableStock === 0 ||
     ((product?.colors?.length ?? 0) > 0 && !selectedColorId) ||
     (product?.hasSizes && !resolvedSizeId);
 

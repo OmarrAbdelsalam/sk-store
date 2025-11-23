@@ -2,10 +2,12 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, X, ZoomIn } from "lucide-react";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import clsx from "clsx";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { motion, AnimatePresence } from "framer-motion";
 
 type Photo = {
   id: number;
@@ -74,6 +76,8 @@ const ProductImageGallery = ({
   const desktopRowClass = dir === "rtl" ? "lg:flex-row-reverse" : "lg:flex-row";
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [direction, setDirection] = useState(0); // 1 for next, -1 for prev
 
   // عرض كل الصور مع إعطاء الأولوية لصور اللون المختار
   const currentImages = useMemo(() => {
@@ -108,14 +112,37 @@ const ProductImageGallery = ({
 
   const nextImage = () => {
     if (currentImages.length <= 1) return;
+    setDirection(1);
     setCurrentImageIndex((prev) => (prev + 1) % currentImages.length);
   };
 
   const prevImage = () => {
     if (currentImages.length <= 1) return;
+    setDirection(-1);
     setCurrentImageIndex(
       (prev) => (prev - 1 + currentImages.length) % currentImages.length
     );
+  };
+
+  const selectImage = (index: number) => {
+    if (index === currentImageIndex) return;
+    setDirection(index > currentImageIndex ? 1 : -1);
+    setCurrentImageIndex(index);
+  };
+
+  const variants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? '100%' : '-100%',
+      opacity: 1
+    }),
+    center: {
+      x: 0,
+      opacity: 1
+    },
+    exit: (direction: number) => ({
+      x: direction > 0 ? '-100%' : '100%',
+      opacity: 1
+    })
   };
 
   // ====== مراجع وقياسات (بقت غير مهمة للديسكتوب لأننا لغينا عمود الثمبنيلز) ======
@@ -203,19 +230,41 @@ const ProductImageGallery = ({
           ref={imageBoxRef}
           className={clsx(
             // موبايل: نسبة أقصر (3/3.5 بدلاً من 3/4)
-            "relative aspect-[3/3.5] bg-luxury-cream rounded-lg overflow-hidden",
+            "relative aspect-[3/3.5] bg-luxury-cream rounded-lg overflow-hidden cursor-zoom-in group",
             // ديسكتوب: ارتفاع ثابت 70vh
             "lg:aspect-auto lg:h-[70vh]"
           )}
+          onClick={() => setIsLightboxOpen(true)}
         >
-          <SafeImage
-            src={currentImages[currentImageIndex]?.imageUrl || FALLBACK}
-            alt={t("imageAlt", { index: currentImageIndex + 1 })}
-            className="object-cover"
-            fill
-            priority={currentImageIndex === 0}
-            loading={currentImageIndex === 0 ? "eager" : "lazy"}
-          />
+          <AnimatePresence initial={false} custom={direction}>
+            <motion.div
+              key={currentImageIndex}
+              custom={direction}
+              variants={variants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{
+                x: { type: "spring", stiffness: 300, damping: 30 },
+                opacity: { duration: 0.15 }
+              }}
+              className="absolute inset-0"
+            >
+              <SafeImage
+                src={currentImages[currentImageIndex]?.imageUrl || FALLBACK}
+                alt={t("imageAlt", { index: currentImageIndex + 1 })}
+                className="object-cover"
+                fill
+                priority={currentImageIndex === 0}
+                loading={currentImageIndex === 0 ? "eager" : "lazy"}
+              />
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Zoom icon in corner */}
+          <div className="absolute top-3 right-3 bg-black/40 backdrop-blur-sm rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10">
+            <ZoomIn className="h-4 w-4 text-white" />
+          </div>
 
           {/* أسهم الكاروسيل — تظهر على الشاشات الصغيرة فقط */}
           {currentImages.length > 1 && (
@@ -228,7 +277,10 @@ const ProductImageGallery = ({
                   dir === "rtl" ? "right-2" : "left-2",
                   "lg:hidden" // إخفاء في الديسكتوب
                 )}
-                onClick={dir === "rtl" ? nextImage : prevImage}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  dir === "rtl" ? nextImage() : prevImage();
+                }}
                 aria-label={dir === "rtl" ? t("next") : t("prev")}
               >
                 {dir === "rtl" ? (
@@ -245,7 +297,10 @@ const ProductImageGallery = ({
                   dir === "rtl" ? "left-2" : "right-2",
                   "lg:hidden" // إخفاء في الديسكتوب
                 )}
-                onClick={dir === "rtl" ? prevImage : nextImage}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  dir === "rtl" ? prevImage() : nextImage();
+                }}
                 aria-label={dir === "rtl" ? t("prev") : t("next")}
               >
                 {dir === "rtl" ? (
@@ -274,11 +329,14 @@ const ProductImageGallery = ({
             {currentImages.map((img, index) => (
               <button
                 key={img.id ?? index}
-                onClick={() => setCurrentImageIndex(index)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  selectImage(index);
+                }}
                 className={clsx(
-                  "flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden border-2 transition-all",
+                  "flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden border-2 transition-all duration-200",
                   index === currentImageIndex
-                    ? "border-primary shadow-md"
+                    ? "border-primary shadow-md scale-105"
                     : "border-gray-200 hover:border-gray-300"
                 )}
                 title={t("thumbTitle", { index: index + 1 })}
@@ -305,12 +363,15 @@ const ProductImageGallery = ({
             {currentImages.map((img, index) => (
               <button
                 key={img.id ?? index}
-                onClick={() => setCurrentImageIndex(index)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  selectImage(index);
+                }}
                 className={clsx(
-                  "w-full aspect-square rounded-lg overflow-hidden border-2 transition-all",
+                  "w-full aspect-square rounded-lg overflow-hidden border-2 transition-all duration-200",
                   index === currentImageIndex
-                    ? "border-primary shadow-md"
-                    : "border-gray-200 hover:border-gray-300"
+                    ? "border-primary shadow-md scale-105"
+                    : "border-gray-200 hover:border-gray-300 hover:scale-105"
                 )}
                 title={t("thumbTitle", { index: index + 1 })}
                 aria-label={t("thumbTitle", { index: index + 1 })}
@@ -328,6 +389,102 @@ const ProductImageGallery = ({
           </div>
         )}
       </div>
+
+      {/* ======== Lightbox Dialog ======== */}
+      <Dialog open={isLightboxOpen} onOpenChange={setIsLightboxOpen}>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-black/95 border-none">
+          <div className="relative w-full h-[95vh] flex items-center justify-center overflow-hidden">
+            {/* Close button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-4 right-4 z-50 bg-white/10 hover:bg-white/20 text-white rounded-full"
+              onClick={() => setIsLightboxOpen(false)}
+            >
+              <X className="h-6 w-6" />
+            </Button>
+
+            {/* Main image with animation */}
+            <div className="relative w-full h-full flex items-center justify-center p-8">
+              <AnimatePresence initial={false} custom={direction}>
+                <motion.div
+                  key={`lightbox-${currentImageIndex}`}
+                  custom={direction}
+                  variants={variants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{
+                    x: { type: "spring", stiffness: 300, damping: 30 },
+                    opacity: { duration: 0.15 }
+                  }}
+                  className="absolute inset-0 flex items-center justify-center p-8"
+                >
+                  <SafeImage
+                    src={currentImages[currentImageIndex]?.imageUrl || FALLBACK}
+                    alt={t("imageAlt", { index: currentImageIndex + 1 })}
+                    className="object-contain"
+                    fill
+                    priority
+                  />
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            {/* Navigation arrows */}
+            {currentImages.length > 1 && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={clsx(
+                    "absolute top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white rounded-full z-50",
+                    dir === "rtl" ? "right-4" : "left-4"
+                  )}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    dir === "rtl" ? nextImage() : prevImage();
+                  }}
+                >
+                  {dir === "rtl" ? (
+                    <ChevronRight className="h-6 w-6" />
+                  ) : (
+                    <ChevronLeft className="h-6 w-6" />
+                  )}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={clsx(
+                    "absolute top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white rounded-full z-50",
+                    dir === "rtl" ? "left-4" : "right-4"
+                  )}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    dir === "rtl" ? prevImage() : nextImage();
+                  }}
+                >
+                  {dir === "rtl" ? (
+                    <ChevronLeft className="h-6 w-6" />
+                  ) : (
+                    <ChevronRight className="h-6 w-6" />
+                  )}
+                </Button>
+              </>
+            )}
+
+            {/* Counter */}
+            {currentImages.length > 1 && (
+              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-white/20 text-white px-4 py-2 rounded-full text-sm backdrop-blur-sm z-50">
+                {t("counter", {
+                  index: currentImageIndex + 1,
+                  total: currentImages.length,
+                })}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
