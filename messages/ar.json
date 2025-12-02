@@ -317,5 +317,23 @@
       "delivered": "تم التوصيل",
       "cancelled": "ملغي"
     }
+  },
+  "Reviews": {
+    "title": "تقييم المنتج",
+    "rating": "التقييم",
+    "comment": "التعليق",
+    "optional": "اختياري",
+    "commentPlaceholder": "شارك تجربتك مع هذا المنتج...",
+    "submit": "إرسال التقييم",
+    "submitting": "جارٍ الإرسال...",
+    "cancel": "إلغاء",
+    "addReview": "إضافة تقييم",
+    "yourReview": "تقييمك",
+    "selectRating": "يرجى اختيار التقييم",
+    "submitError": "حدث خطأ أثناء إرسال التقييم",
+    "deleteTitle": "حذف التقييم",
+    "deleteDescription": "هل أنت متأكد من حذف هذا التقييم؟ لا يمكن التراجع عن هذا الإجراء.",
+    "delete": "حذف",
+    "deleting": "جارٍ الحذف..."
   }
 }

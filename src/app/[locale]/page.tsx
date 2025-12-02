@@ -1,5 +1,6 @@
 "use client"
 
+import { Suspense } from "react";
 import ProductGrid from "@/components/ProductGrid";
 
 const Index = () => {
@@ -35,7 +36,9 @@ const Index = () => {
         aria-label="House Scrub Brand"
       >
       </section>
-      <ProductGrid />
+      <Suspense fallback={<div className="container mx-auto px-4 py-12"><div className="text-center">Loading...</div></div>}>
+        <ProductGrid />
+      </Suspense>
     </div>
   );
 };

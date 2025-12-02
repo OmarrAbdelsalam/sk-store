@@ -310,6 +310,7 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
               name={isAr ? (product.nameAr || product.nameEn || "") : (product.nameEn || product.nameAr || "")}
               description={isAr ? (product.descriptionAr || product.descriptionEn || "") : (product.descriptionEn || product.descriptionAr || "")}
               price={Number(product.price ?? 0)}
+              beforePrice={product.beforePrice}
               selectedColorId={selectedColorId}
               selectedSize={selectedSize}
               quantity={quantity}

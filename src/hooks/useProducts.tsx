@@ -31,25 +31,37 @@ export const useProducts = () => {
   const [error, setError]   = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
+    
     (async () => {
       try {
         setLoading(true);
         setError(null);
 
-        const page = await getProductsPage(1, 200);
+        const page = await getProductsPage(1, 100); // ← قللنا من 200 لـ 100
+        
+        if (cancelled) return; // تجنب race conditions
+        
         const mapped = (page.items ?? []).map((p) =>
-          mapApiProductToUI(p, locale) // 👈 نمرر الـ locale
+          mapApiProductToUI(p, locale)
         );
         setProducts(mapped);
       } catch (e: any) {
+        if (cancelled) return;
         console.error(e);
         setError(e?.message || "Failed to load products");
         setProducts([]);
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     })();
-  }, [locale]); // 👈 لو غيرت اللغة، يعيد الماب تلقائيًا
+    
+    return () => {
+      cancelled = true;
+    };
+  }, [locale]);
 
   return { products, loading, error };
 };

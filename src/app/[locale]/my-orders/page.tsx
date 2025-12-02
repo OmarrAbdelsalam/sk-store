@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getOrCreateSessionId } from "@/lib/session";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { OrderItemReview } from "@/components/orders/OrderItemReview";
 
 type OrderItem = {
+  id: number;
   productName: string;
   colorNameAr: string;
   colorNameEn: string;
@@ -17,6 +19,11 @@ type OrderItem = {
   quantity: number;
   unitPrice: number;
   subtotal: number;
+  review?: {
+    id: number;
+    rating: number;
+    comment: string | null;
+  } | null;
 };
 
 type Order = {
@@ -239,23 +246,33 @@ export default function MyOrdersPage() {
                       {/* Items */}
                       <div>
                         <h4 className="font-semibold mb-3">{t("items")}</h4>
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                           {order.items.map((item, idx) => {
                             const colorName = isAr ? item.colorNameAr : item.colorNameEn;
                             return (
-                              <div
-                                key={idx}
-                                className="flex justify-between items-center p-3 bg-muted rounded-lg"
-                              >
-                                <div>
-                                  <p className="font-medium">{item.productName}</p>
-                                  <p className="text-sm text-muted-foreground">
-                                    {colorName} • {item.sizeName} • {t("qty")}: {item.quantity}
+                              <div key={idx} className="space-y-2">
+                                <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
+                                  <div className="flex-1">
+                                    <p className="font-medium">{item.productName}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                      {colorName} • {item.sizeName} • {t("qty")}: {item.quantity}
+                                    </p>
+                                  </div>
+                                  <p className="font-semibold">
+                                    {item.subtotal} {isAr ? "جنيه" : "EGP"}
                                   </p>
                                 </div>
-                                <p className="font-semibold">
-                                  {item.subtotal} {isAr ? "جنيه" : "EGP"}
-                                </p>
+                                {order.orderStatus.toLowerCase() === "delivered" && (
+                                  <OrderItemReview
+                                    orderItemId={item.id}
+                                    productName={item.productName}
+                                    existingReview={item.review}
+                                    onReviewChange={() => {
+                                      const sessionId = getOrCreateSessionId();
+                                      fetchOrders(sessionId);
+                                    }}
+                                  />
+                                )}
                               </div>
                             );
                           })}

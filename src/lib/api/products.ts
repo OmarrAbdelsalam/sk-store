@@ -29,6 +29,7 @@ export type ProductApi = {
   descriptionAr?: string;
   descriptionEn?: string;
   price: number;
+  beforePrice?: number | null;
   hasSizes: boolean;
   oneSizeAmount?: number | null;
   genderType?: string;

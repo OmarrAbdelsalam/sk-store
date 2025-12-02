@@ -157,7 +157,7 @@ const ProductGrid = () => {
       colorName,
       sizeName,
       pageNumber: 1,
-      pageSize: 200,
+      pageSize: 100, // ← قللنا من 200 لـ 100
     })
       .then((res: unknown) => {
         const { items } = (res as FilterResponse) ?? {};

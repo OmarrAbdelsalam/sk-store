@@ -24,6 +24,7 @@ interface Product {
     hex: string;
   }>;
   raw?: {
+    beforePrice?: number | null;
     photos?: Array<{
       id: number;
       imageUrl: string;
@@ -63,17 +64,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
   
   const productUrl = `/${locale}/${product.id}`;
 
-  const [isNavigating, setIsNavigating] = React.useState(false);
-
   const handleProductClick = React.useCallback(() => {
-    setIsNavigating(true);
     router.push(productUrl);
   }, [productUrl, router]);
 
   const handleButtonClick = React.useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
       e.stopPropagation();
-      setIsNavigating(true);
       router.push(productUrl);
     },
     [productUrl, router]
@@ -171,9 +168,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   return (
     <div
-      className={`group cursor-pointer animate-slide-up flex flex-col h-full transition-opacity ${
-        isNavigating ? "opacity-50" : "opacity-100"
-      }`}
+      className="group cursor-pointer animate-slide-up flex flex-col h-full"
       style={{ animationDelay: `${index * 0.1}s` }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={() => setIsHovered(false)}
@@ -191,11 +186,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
             priority={index < 3}
           />
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-700" />
-          {isNavigating && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-              <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin" />
-            </div>
-          )}
         </div>
 
       {/* Product Info */}
@@ -205,9 +195,16 @@ const ProductCard: React.FC<ProductCardProps> = ({
             <h3 className="font-medium text-sm md:text-base group-hover:text-primary transition-colors line-clamp-2">
               {product.name}
             </h3>
-            <p className="font-semibold text-sm md:text-base text-start">
-              {product.price}
-            </p>
+            <div className="flex items-center gap-2 text-start">
+              {product.raw?.beforePrice && (
+                <p className="text-xs md:text-sm text-red-500 line-through font-medium">
+                  {product.raw.beforePrice} {locale === 'ar' ? 'جنيه' : 'EGP'}
+                </p>
+              )}
+              <p className="font-semibold text-sm md:text-base">
+                {product.price}
+              </p>
+            </div>
           </div>
 
           <div className="relative">

@@ -21,6 +21,7 @@ interface ProductInfoProps {
   name: string;
   description?: string;
   price: number | string;
+  beforePrice?: number | null;
 
   colorOptions?: ColorOption[];
   sizeOptions?: SizeOption[];
@@ -44,6 +45,7 @@ const ProductInfo = React.memo(function ProductInfo({
   name,
   description,
   price,
+  beforePrice,
   colorOptions = [],
   sizeOptions = [],
   hasSizes = false,
@@ -79,7 +81,7 @@ const ProductInfo = React.memo(function ProductInfo({
   // تنسيق السعر حسب اللغة (عملة EGP)
   const priceText =
     typeof price === "number"
-      ? new Intl.NumberFormat(locale, { style: "currency", currency: "EGP", maximumFractionDigits: 2 }).format(price)
+      ? `${price} ${locale === 'ar' ? 'جنيه' : 'EGP'}`
       : String(price);
 
   return (
@@ -94,9 +96,16 @@ const ProductInfo = React.memo(function ProductInfo({
             {description}
           </p>
         )}
-        <p className="text-2xl font-semibold text-foreground/90" aria-label={t("a11y.price")}>
-          {priceText}
-        </p>
+        <div className="flex items-center gap-3" aria-label={t("a11y.price")}>
+          {beforePrice && (
+            <p className="text-lg text-red-500 line-through font-medium">
+              {beforePrice} {locale === 'ar' ? 'جنيه' : 'EGP'}
+            </p>
+          )}
+          <p className="text-2xl font-semibold text-foreground/90">
+            {priceText}
+          </p>
+        </div>
       </div>
 
       {/* اختيار اللون (ID) */}
