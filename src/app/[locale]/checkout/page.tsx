@@ -27,7 +27,13 @@ export default function Checkout() {
   const [shippingPrice, setShippingPrice] = useState(0);
   const [selectedGovernorate, setSelectedGovernorate] = useState("");
   const [mounted, setMounted] = useState(false);
-  const [discount, setDiscount] = useState<{ amount: number; percentage?: number; code: string } | null>(null);
+  const [discount, setDiscount] = useState<{ 
+    amount: number; 
+    percentage: number; 
+    code: string;
+    originalTotal: number;
+    finalTotal: number;
+  } | null>(null);
 
   // Avoid hydration mismatch
   useEffect(() => {

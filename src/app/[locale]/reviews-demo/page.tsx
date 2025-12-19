@@ -72,7 +72,7 @@ export default function ReviewsDemoPage() {
           <CardContent>
             <div className="space-y-4">
               <div>
-                <h4 className="font-semibold">GET /api/Reviews/{reviewId}</h4>
+                <h4 className="font-semibold">GET /api/Reviews/{"{reviewId}"}</h4>
                 <p className="text-sm text-gray-600">
                   Retrieves a specific review by ID, with optional sessionId parameter
                 </p>
