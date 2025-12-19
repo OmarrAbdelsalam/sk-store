@@ -62,7 +62,7 @@
   },
   "PromoCode": {
     "label": "Promo Code",
-    "placeholder": "Enter promo code",
+    "placeholder": "Enter promo code ",
     "apply": "Apply",
     "applying": "Applying...",
     "hint": "Enter a promo code if you have one to get additional discount",
