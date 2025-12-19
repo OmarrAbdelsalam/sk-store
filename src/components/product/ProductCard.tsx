@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { Link as IntlLink } from "@/i18n/navigation";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { Card, CardContent } from "@/components/ui/card";
@@ -192,15 +193,16 @@ const ProductCard: React.FC<ProductCardProps> = ({
   }, [totalStock]);
 
   return (
-    <div
-      className={`group cursor-pointer animate-slide-up flex flex-col h-full transition-all duration-300 ${
-        isNavigating ? 'opacity-75 scale-[0.98]' : ''
-      }`}
-      style={{ animationDelay: `${index * 0.1}s` }}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={() => setIsHovered(false)}
-      onClick={handleProductClick}
-    >
+    <IntlLink href={`/${product.id}`} prefetch={true}>
+      <div
+        className={`group cursor-pointer animate-slide-up flex flex-col h-full transition-all duration-300 ${
+          isNavigating ? 'opacity-75 scale-[0.98]' : ''
+        }`}
+        style={{ animationDelay: `${index * 0.1}s` }}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={() => setIsHovered(false)}
+        onClick={handleProductClick}
+      >
         {/* Product Image */}
         <div className="relative overflow-hidden bg-luxury-cream rounded-lg mb-4 aspect-[3/4]">
           <Image
@@ -333,6 +335,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         </Button>
       </div>
     </div>
+    </IntlLink>
   );
 };
 

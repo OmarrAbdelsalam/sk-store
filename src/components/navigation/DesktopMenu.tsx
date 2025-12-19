@@ -28,6 +28,13 @@ export const DesktopMenu = () => {
         router.prefetch(`/${locale}?category=${encodeURIComponent(slug)}`);
       });
       router.prefetch(`/${locale}`);
+      
+      // Prefetch common product pages (first few products)
+      setTimeout(() => {
+        for (let i = 1; i <= 10; i++) {
+          router.prefetch(`/${locale}/${i}`);
+        }
+      }, 2000);
     }
   }, [categories, locale, router]);
 

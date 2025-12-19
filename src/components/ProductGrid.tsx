@@ -14,6 +14,7 @@ import {
   mapApiProductToUI,
   type ProductApi,
 } from "@/lib/api/products";
+import { prefetchProduct } from "@/hooks/useProduct";
 import { Stethoscope } from "lucide-react";
 
 /* ===================== Types ===================== */
@@ -288,6 +289,26 @@ const ProductGrid = () => {
     indexOfFirstProduct,
     indexOfLastProduct
   );
+
+  /* Prefetch visible products */
+  useEffect(() => {
+    if (currentProducts.length > 0) {
+      // Prefetch current page products
+      currentProducts.forEach((product) => {
+        prefetchProduct(product.id);
+      });
+      
+      // Prefetch next page products if available
+      if (currentPage < totalPages) {
+        const nextPageStart = indexOfLastProduct;
+        const nextPageEnd = nextPageStart + productsPerPage;
+        const nextPageProducts = filteredProducts.slice(nextPageStart, nextPageEnd);
+        nextPageProducts.forEach((product) => {
+          setTimeout(() => prefetchProduct(product.id), 1000); // Delay to avoid overwhelming
+        });
+      }
+    }
+  }, [currentProducts, currentPage, totalPages, indexOfLastProduct, productsPerPage, filteredProducts]);
 
   /* Actions */
   const showAll = () => {

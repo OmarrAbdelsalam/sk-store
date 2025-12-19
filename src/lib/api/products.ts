@@ -171,7 +171,7 @@ export async function getProductsPage(pageNumber = 1, pageSize = 12) {
 export async function getProductById(productId: number) {
   const res = await fetch(`${API_BASE}/api/Product/${productId}`, {
     headers: { accept: "*/*" },
-    next: { revalidate: 600 } // Cache for 10 minutes (increased from 5)
+    next: { revalidate: 900 } // Cache for 15 minutes (increased for better performance)
   });
   if (!res.ok)
     throw new Error(`Failed to load product ${productId} (HTTP ${res.status})`);
