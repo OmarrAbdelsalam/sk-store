@@ -4,6 +4,8 @@ import { routing } from '@/i18n/routing';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { CartProvider } from '@/hooks/useCart';
+import { NavigationLoadingProvider } from '@/contexts/NavigationLoadingContext';
+import NavigationLoadingOverlay from '@/components/ui/NavigationLoadingOverlay';
 import { Cairo, Inter } from 'next/font/google';
 import { defaultMetadata } from '@/lib/metadata';
 import SEOHead from '@/components/SEOHead';
@@ -61,11 +63,14 @@ export default async function LocaleLayout({
       <body className={locale === 'ar' ? cairo.className : inter.className}>    
         <SEOHead locale={locale} />
         <NextIntlClientProvider locale={locale}>
-          <CartProvider>
-            <Navigation />
-            {children}
-            <Footer />
-          </CartProvider>
+          <NavigationLoadingProvider>
+            <CartProvider>
+              <Navigation />
+              {children}
+              <Footer />
+              <NavigationLoadingOverlay />
+            </CartProvider>
+          </NavigationLoadingProvider>
         </NextIntlClientProvider>
         <Analytics />
       </body>

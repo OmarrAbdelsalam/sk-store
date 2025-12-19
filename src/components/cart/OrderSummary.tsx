@@ -10,6 +10,11 @@ type OrderSummaryProps = {
   totalPriceFallback: number;
   shippingPrice?: number;
   currency?: string;
+  discount?: {
+    amount: number;
+    percentage: number;
+    code: string;
+  } | null;
 };
 
 const OrderSummary = memo(({
@@ -17,14 +22,15 @@ const OrderSummary = memo(({
   totalPriceFallback,
   shippingPrice = 0,
   currency = "EGP",
+  discount,
 }: OrderSummaryProps) => {
   const t = useTranslations("OrderSummary");
   const locale = useLocale();
   const dir = locale === "ar" ? "rtl" : "ltr";
 
   const total = useMemo(
-    () => totalPriceFallback + shippingPrice,
-    [totalPriceFallback, shippingPrice]
+    () => totalPriceFallback + shippingPrice - (discount?.amount || 0),
+    [totalPriceFallback, shippingPrice, discount?.amount]
   );
 
   return (
@@ -37,6 +43,7 @@ const OrderSummary = memo(({
           subtotal={totalPriceFallback}
           total={total}
           currency={currency}
+          discount={discount}
         />
 
         <OrderSummaryActions />

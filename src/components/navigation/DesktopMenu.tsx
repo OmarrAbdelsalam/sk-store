@@ -42,6 +42,12 @@ export const DesktopMenu = () => {
   }, [categorySlug]);
 
   const goToAllProducts = () => {
+    // Clear category from sessionStorage
+    if (typeof window !== 'undefined') {
+      const keys = Object.keys(sessionStorage).filter(k => k.startsWith('category_'));
+      keys.forEach(k => sessionStorage.removeItem(k));
+    }
+    setActiveCategoryId(null);
     startTransition(() => {
       router.push(`/${locale}`, { scroll: false });
     });

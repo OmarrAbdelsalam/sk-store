@@ -8,8 +8,9 @@ import ProductHeader from "@/components/product/ProductHeader";
 import ProductDetailLoading from "@/components/product/ProductDetailLoading";
 import ProductDetailError from "@/components/product/ProductDetailError";
 import ProductDetailContent from "@/components/product/ProductDetailContent";
+import NavigationLoadingHandler from "@/components/NavigationLoadingHandler";
 
-const RelatedProducts = lazy(() => import("@/components/product/RelatedProducts"));
+
 
 export default function ProductDetailPage() {
   const router = useRouter();
@@ -29,13 +30,9 @@ export default function ProductDetailPage() {
   // Prefetch cart and checkout pages in background
   useEffect(() => {
     if (product) {
-      // Prefetch after a short delay to not block initial render
-      const timer = setTimeout(() => {
-        router.prefetch(`/${locale}/cart`);
-        router.prefetch(`/${locale}/checkout`);
-      }, 1000);
-      
-      return () => clearTimeout(timer);
+      // ✅ Prefetch فوراً بدون تأخير
+      router.prefetch(`/${locale}/cart`);
+      router.prefetch(`/${locale}/checkout`);
     }
   }, [product, locale, router]);
 
@@ -55,14 +52,13 @@ export default function ProductDetailPage() {
 
   return (
     <div className="min-h-screen" dir={dir}>
+      <NavigationLoadingHandler />
       <div className="container mx-auto px-4 py-4">
         <ProductHeader onBack={() => router.back()} />
         
         <ProductDetailContent product={product} />
 
-        <Suspense fallback={<div className="mt-16 h-80 animate-pulse bg-muted rounded" />}>
-          <RelatedProducts currentProductId={numericId} />
-        </Suspense>
+
 
         {/* Hidden prefetch links for cart and checkout */}
         <div className="hidden">

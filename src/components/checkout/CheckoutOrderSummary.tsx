@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Banknote } from "lucide-react";
 import { memo } from "react";
 import { useTranslations, useLocale } from "next-intl";
+import PromoCodeInput from "./PromoCodeInput";
 
 interface CartItem {
   id: number;
@@ -16,12 +17,40 @@ interface CheckoutOrderSummaryProps {
   items: CartItem[];
   totalPrice: number;
   shippingPrice: number;
+  discount?: { 
+    amount: number; 
+    percentage: number; 
+    code: string;
+    originalTotal: number;
+    finalTotal: number;
+  } | null;
+  onDiscountChange?: (discount: { 
+    amount: number; 
+    percentage: number; 
+    code: string;
+    originalTotal: number;
+    finalTotal: number;
+  } | null) => void;
+  disabled?: boolean;
 }
 
-const CheckoutOrderSummary = memo(({ items, totalPrice, shippingPrice }: CheckoutOrderSummaryProps) => {
+const CheckoutOrderSummary = memo(({ 
+  items, 
+  totalPrice, 
+  shippingPrice, 
+  discount, 
+  onDiscountChange,
+  disabled = false 
+}: CheckoutOrderSummaryProps) => {
   const t = useTranslations("CheckoutSummary");
+  const tPromo = useTranslations("PromoCode");
   const locale = useLocale();
   const dir = locale === "ar" ? "rtl" : "ltr";
+
+  // استخدم finalTotal من API إذا كان متوفر، وإلا احسبه يدوياً
+  const finalTotal = discount?.finalTotal 
+    ? discount.finalTotal + shippingPrice 
+    : totalPrice + shippingPrice - (discount?.amount || 0);
 
   return (
     <Card dir={dir}>
@@ -44,6 +73,16 @@ const CheckoutOrderSummary = memo(({ items, totalPrice, shippingPrice }: Checkou
           </div>
         ))}
 
+        {/* كود الخصم */}
+        <div className="border-t pt-4">
+          <PromoCodeInput
+            onDiscountApplied={(discountData) => onDiscountChange?.(discountData)}
+            onDiscountRemoved={() => onDiscountChange?.(null)}
+            appliedDiscount={discount}
+            disabled={disabled}
+          />
+        </div>
+
         <div className="border-t pt-4 space-y-2">
           <div className="flex justify-between">
             <span>{t("subtotal")}</span>
@@ -57,9 +96,15 @@ const CheckoutOrderSummary = memo(({ items, totalPrice, shippingPrice }: Checkou
               <span className="text-sm text-muted-foreground">{t("shippingNote")}</span>
             )}
           </div>
+          {discount && (
+            <div className="flex justify-between text-green-600">
+              <span>{tPromo("discount")}</span>
+              <span>-{discount.amount.toFixed(2)} {t("currency")}</span>
+            </div>
+          )}
           <div className="flex justify-between font-semibold text-lg border-t pt-2">
             <span>{t("total")}</span>
-            <span>{(totalPrice + shippingPrice).toFixed(2)} {t("currency")}</span>
+            <span>{finalTotal.toFixed(2)} {t("currency")}</span>
           </div>
           <div className="border-t pt-2">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">

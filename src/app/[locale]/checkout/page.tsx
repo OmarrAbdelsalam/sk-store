@@ -27,6 +27,7 @@ export default function Checkout() {
   const [shippingPrice, setShippingPrice] = useState(0);
   const [selectedGovernorate, setSelectedGovernorate] = useState("");
   const [mounted, setMounted] = useState(false);
+  const [discount, setDiscount] = useState<{ amount: number; percentage?: number; code: string } | null>(null);
 
   // Avoid hydration mismatch
   useEffect(() => {
@@ -231,13 +232,20 @@ export default function Checkout() {
             <CheckoutForm
               onSubmit={handleSubmit}
               isProcessing={isProcessing}
-              totalAmount={nf.format(getTotalPrice() + shippingPrice)}
+              totalAmount={nf.format(getTotalPrice() + shippingPrice - (discount?.amount || 0))}
               onGovernorateChange={setSelectedGovernorate}
             />
           </div>
 
           <div className="lg:sticky lg:top-8 lg:h-fit">
-            <CheckoutOrderSummary items={items} totalPrice={getTotalPrice()} shippingPrice={shippingPrice} />
+            <CheckoutOrderSummary 
+              items={items} 
+              totalPrice={getTotalPrice()} 
+              shippingPrice={shippingPrice}
+              discount={discount}
+              onDiscountChange={setDiscount}
+              disabled={isProcessing}
+            />
           </div>
         </div>
       </div>

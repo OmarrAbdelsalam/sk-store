@@ -6,15 +6,22 @@ interface OrderSummaryDetailsProps {
   subtotal: number;
   total: number;
   currency?: string;
+  discount?: {
+    amount: number;
+    percentage: number;
+    code: string;
+  } | null;
 }
 
 export default function OrderSummaryDetails({ 
   items, 
   subtotal, 
   total, 
-  currency = "EGP" 
+  currency = "EGP",
+  discount 
 }: OrderSummaryDetailsProps) {
   const t = useTranslations("OrderSummary");
+  const tPromo = useTranslations("PromoCode");
   const locale = useLocale();
 
   const nf = useMemo(
@@ -43,6 +50,15 @@ export default function OrderSummaryDetails({
           </span>
         </div>
       </div>
+
+      {discount && (
+        <div className="flex justify-between text-green-600">
+          <span>{tPromo("discount")} ({discount.percentage}%)</span>
+          <span>
+            -{nf.format(discount.amount)} {currency}
+          </span>
+        </div>
+      )}
 
       <div className="border-t pt-3">
         <div className="flex justify-between font-semibold text-lg">

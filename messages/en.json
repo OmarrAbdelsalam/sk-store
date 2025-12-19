@@ -45,6 +45,41 @@
     "stockLimitReached": "Maximum available quantity reached",
     "maxAvailable": "Only {quantity} available"
   },
+  "ProductReviews": {
+    "title": "Customer Reviews",
+    "noReviews": "No reviews yet",
+    "beFirst": "Be the first to review this product",
+    "writeReview": "Write a Review",
+    "basedOn": "Based on {count} review(s)",
+    "ratingBreakdown": "Rating Breakdown",
+    "allReviews": "All Reviews",
+    "verified": "Verified Purchase",
+    "color": "Color",
+    "size": "Size",
+    "showMore": "Show {count} more review(s)",
+    "shareExperience": "Share your experience",
+    "helpOthers": "Help others make a purchase decision"
+  },
+  "PromoCode": {
+    "label": "Promo Code",
+    "placeholder": "Enter promo code",
+    "apply": "Apply",
+    "applying": "Applying...",
+    "hint": "Enter a promo code if you have one to get additional discount",
+    "success": "Discount Applied",
+    "error": "Error",
+    "enterCode": "Please enter a promo code",
+    "applied": "Promo code {code} applied with {amount} EGP discount",
+    "invalidCode": "Invalid or expired promo code",
+    "networkError": "Network error, please try again",
+    "removed": "Discount Removed",
+    "discountRemoved": "Promo code removed successfully",
+    "removeError": "Failed to remove promo code",
+    "codeApplied": "Code Applied",
+    "percentageDiscount": "{percentage}% discount",
+    "amountDiscount": "{amount} EGP discount",
+    "discount": "Discount"
+  },
   "EmptyCart": {
     "title": "Your cart is empty",
     "subtitle": "Start adding some great products to your bag",
@@ -97,7 +132,8 @@
     "title": "Related Products"
   },
   "ProductCard": {
-    "viewDetails": "View Details"
+    "viewDetails": "View Details",
+    "soldOut": "Sold Out"
   },
   "SearchFilters": {
     "openFilters": "Open search & filters",
@@ -324,20 +360,25 @@
   },
   "Reviews": {
     "title": "Rate Product",
+    "editTitle": "Edit Review",
     "rating": "Rating",
     "comment": "Comment",
     "optional": "optional",
     "commentPlaceholder": "Share your experience with this product...",
     "submit": "Submit Review",
+    "update": "Update Review",
     "submitting": "Submitting...",
+    "updating": "Updating...",
     "cancel": "Cancel",
     "addReview": "Add Review",
     "yourReview": "Your Review",
     "selectRating": "Please select a rating",
     "submitError": "An error occurred while submitting the review",
+    "updateError": "An error occurred while updating the review",
     "deleteTitle": "Delete Review",
     "deleteDescription": "Are you sure you want to delete this review? This action cannot be undone.",
     "delete": "Delete",
-    "deleting": "Deleting..."
+    "deleting": "Deleting...",
+    "checkingReview": "Checking review..."
   }
 }

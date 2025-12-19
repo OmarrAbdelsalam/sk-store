@@ -14,6 +14,10 @@ export function useProduct(id?: number) {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
       dedupingInterval: 60000, // 1 minute
+      // ✅ استخدم الـ cache بشكل أقوى
+      revalidateIfStale: false,
+      // ✅ خلي الـ data يظهر فوراً من الـ cache
+      fallbackData: undefined,
     }
   );
 

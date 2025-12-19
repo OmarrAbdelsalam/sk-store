@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, lazy, Suspense } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useCart } from "@/hooks/useCart";
@@ -12,8 +12,9 @@ import type { ProductApi } from "@/lib/api/products";
 import ProductImageGallery from "@/components/ProductImageGallery";
 import ProductInfo from "@/components/product/ProductInfo";
 import AddToCartSection from "@/components/product/AddToCartSection";
-
-const ProductSpecifications = lazy(() => import("@/components/product/ProductSpecifications"));
+import ProductSpecifications from "@/components/product/ProductSpecifications";
+import ProductReviews from "@/components/product/ProductReviews";
+import RelatedProducts from "@/components/product/RelatedProducts";
 
 type Variant = {
   id: number;
@@ -138,19 +139,32 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
 
   const [cartItems, setCartItems] = useState<any[]>([]);
 
-  // جلب السلة عند تحميل الصفحة
+  // جلب السلة عند تحميل الصفحة - بشكل أسرع
   useEffect(() => {
+    let cancelled = false;
+    
     const fetchCartItems = async () => {
       try {
         const sessionId = getOrCreateSessionId();
         const cartData = await getCart(sessionId);
-        setCartItems(cartData.items || []);
+        if (!cancelled) {
+          setCartItems(cartData.items || []);
+        }
       } catch (error) {
-        console.error('Error fetching cart:', error);
-        setCartItems([]);
+        if (!cancelled) {
+          console.error('Error fetching cart:', error);
+          setCartItems([]);
+        }
       }
     };
-    fetchCartItems();
+    
+    // ✅ تأخير بسيط عشان الصفحة تظهر أول
+    const timer = setTimeout(fetchCartItems, 100);
+    
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, []);
 
   const { availableStock, quantityInCart } = useMemo(() => {
@@ -193,6 +207,17 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
       quantityInCart 
     };
   }, [product, variants, selectedColorId, resolvedSizeId, cartItems]);
+
+  // ✅ إعادة تعيين الكمية عند تغيير اللون أو المقاس
+  useEffect(() => {
+    if (availableStock > 0 && quantity > availableStock) {
+      // إذا كانت الكمية المحددة أكبر من المتاح، اجعلها الحد الأقصى المتاح
+      setQuantity(availableStock);
+    } else if (availableStock === 0 && quantity > 1) {
+      // إذا لم يكن هناك مخزون متاح، اجعل الكمية 1
+      setQuantity(1);
+    }
+  }, [selectedColorId, resolvedSizeId, availableStock, quantity]);
 
   const totalPrice = Number(product?.price ?? 0) * quantity;
 
@@ -286,19 +311,17 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
 
             {/* المواصفات - تظهر تحت الصور في الديسكتوب، وفي الآخر في الموبايل */}
             <div className="hidden lg:block">
-              <Suspense fallback={<div className="h-40 animate-pulse bg-muted rounded" />}>
-                <ProductSpecifications
-                  product={{
-                    category:
-                      isAr
-                        ? (product?.categories?.[0]?.arabicName || product?.categories?.[0]?.englishName || "")
-                        : (product?.categories?.[0]?.englishName || product?.categories?.[0]?.arabicName || ""),
-                    longDescription: isAr ? (product.descriptionAr || product.descriptionEn || "") : (product.descriptionEn || product.descriptionAr || ""),
-                    materials: isAr ? "قطن 100% عالي الجودة، مريح وقابل للتنفس" : "100% high-quality cotton, comfortable and breathable",
-                    care: isAr ? "يُغسل بالماء البارد، لا يُستخدم المُبيض، يُجفف على حرارة منخفضة" : "Wash with cold water, do not bleach, tumble dry low",
-                  }}
-                />
-              </Suspense>
+              <ProductSpecifications
+                product={{
+                  category:
+                    isAr
+                      ? (product?.categories?.[0]?.arabicName || product?.categories?.[0]?.englishName || "")
+                      : (product?.categories?.[0]?.englishName || product?.categories?.[0]?.arabicName || ""),
+                  longDescription: isAr ? (product.descriptionAr || product.descriptionEn || "") : (product.descriptionEn || product.descriptionAr || ""),
+                  materials: product.material?.trim() || (isAr ? "قطن 100% عالي الجودة، مريح وقابل للتنفس" : "100% high-quality cotton, comfortable and breathable"),
+                  care: isAr ? "يُغسل بالماء البارد، لا يُستخدم المُبيض، يُجفف على حرارة منخفضة" : "Wash with cold water, do not bleach, tumble dry low",
+                }}
+              />
             </div>
           </div>
         </div>
@@ -314,8 +337,14 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
               selectedColorId={selectedColorId}
               selectedSize={selectedSize}
               quantity={quantity}
-              onColorChangeId={setSelectedColorId}
-              onSizeChange={setSelectedSize}
+              onColorChangeId={(colorId) => {
+                setSelectedColorId(colorId);
+                setQuantity(1); // ✅ إعادة تعيين الكمية إلى 1 عند تغيير اللون
+              }}
+              onSizeChange={(size) => {
+                setSelectedSize(size);
+                setQuantity(1); // ✅ إعادة تعيين الكمية إلى 1 عند تغيير المقاس
+              }}
               onQuantityChange={setQuantity}
               colorOptions={uiColors}
               sizeOptions={uiSizes}
@@ -337,20 +366,35 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
 
       {/* المواصفات في الموبايل - في الآخر */}
       <div className="mt-12 lg:hidden">
-        <Suspense fallback={<div className="h-40 animate-pulse bg-muted rounded" />}>
-          <ProductSpecifications
-            product={{
-              category:
-                isAr
-                  ? (product?.categories?.[0]?.arabicName || product?.categories?.[0]?.englishName || "")
-                  : (product?.categories?.[0]?.englishName || product?.categories?.[0]?.arabicName || ""),
-              longDescription: isAr ? (product.descriptionAr || product.descriptionEn || "") : (product.descriptionEn || product.descriptionAr || ""),
-              materials: isAr ? "قطن 100% عالي الجودة، مريح وقابل للتنفس" : "100% high-quality cotton, comfortable and breathable",
-              care: isAr ? "يُغسل بالماء البارد، لا يُستخدم المُبيض، يُجفف على حرارة منخفضة" : "Wash with cold water, do not bleach, tumble dry low",
-            }}
-          />
-        </Suspense>
+        <ProductSpecifications
+          product={{
+            category:
+              isAr
+                ? (product?.categories?.[0]?.arabicName || product?.categories?.[0]?.englishName || "")
+                : (product?.categories?.[0]?.englishName || product?.categories?.[0]?.arabicName || ""),
+            longDescription: isAr ? (product.descriptionAr || product.descriptionEn || "") : (product.descriptionEn || product.descriptionAr || ""),
+            materials: product.material?.trim() || (isAr ? "قطن 100% عالي الجودة، مريح وقابل للتنفس" : "100% high-quality cotton, comfortable and breathable"),
+            care: isAr ? "يُغسل بالماء البارد، لا يُستخدم المُبيض، يُجفف على حرارة منخفضة" : "Wash with cold water, do not bleach, tumble dry low",
+          }}
+        />
       </div>
+
+      {/* قسم المراجعات */}
+      <ProductReviews 
+        reviews={product?.reviews || []}
+        averageRating={product?.averageRating || 0}
+        totalReviews={product?.reviews?.length || 0}
+        productId={product?.id}
+        sessionId={getOrCreateSessionId()}
+        canAddReview={false}
+      />
+
+      {/* المنتجات ذات الصلة */}
+      <RelatedProducts 
+        currentProductId={product?.id || 0}
+        relatedProducts={product?.relatedProducts || []}
+        categoryId={product?.categories?.[0]?.id}
+      />
     </>
   );
 }

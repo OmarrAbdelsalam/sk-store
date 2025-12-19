@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { prefetchProduct } from "@/hooks/useProduct";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigationLoading } from "@/contexts/NavigationLoadingContext";
 
 import * as React from "react";
 
@@ -61,25 +62,39 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations("ProductCard");
+  const { startNavigation } = useNavigationLoading();
   
   const productUrl = `/${locale}/${product.id}`;
 
   const handleProductClick = React.useCallback(() => {
+    setIsNavigating(true);
+    startNavigation();
     router.push(productUrl);
-  }, [productUrl, router]);
+  }, [productUrl, router, startNavigation]);
 
   const handleButtonClick = React.useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
       e.stopPropagation();
+      setIsNavigating(true);
+      startNavigation();
       router.push(productUrl);
     },
-    [productUrl, router]
+    [productUrl, router, startNavigation]
   );
 
   if (variant === "related") {
+    const [isRelatedNavigating, setIsRelatedNavigating] = React.useState(false);
+    
+    const handleRelatedClick = React.useCallback(() => {
+      setIsRelatedNavigating(true);
+      startNavigation();
+    }, [startNavigation]);
+
     return (
-      <Link href={productUrl} prefetch={true}>
-        <Card className="group cursor-pointer hover:shadow-lg transition-all duration-300">
+      <Link href={productUrl} prefetch={true} onClick={handleRelatedClick}>
+        <Card className={`group cursor-pointer hover:shadow-lg transition-all duration-300 ${
+          isRelatedNavigating ? 'opacity-75 scale-[0.98]' : ''
+        }`}>
           <CardContent className="p-4">
             <div className="aspect-square bg-luxury-cream rounded-lg overflow-hidden mb-4 relative">
               <Image
@@ -94,7 +109,16 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
             <div className="space-y-2">
               <h3 className="font-medium text-sm line-clamp-2">{product.name}</h3>
-              <p className="font-semibold text-primary">{product.price}</p>
+              <div className="flex items-center gap-2 text-start">
+                {product.raw?.beforePrice && (
+                  <p className="text-xs text-red-500 line-through font-medium">
+                    {product.raw.beforePrice} {locale === 'ar' ? 'جنيه' : 'EGP'}
+                  </p>
+                )}
+                <p className="font-semibold text-primary text-sm">
+                  {product.price}
+                </p>
+              </div>
               <p className="text-xs text-muted-foreground line-clamp-2">
                 {product.description}
               </p>
@@ -117,6 +141,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const [selectedColorId, setSelectedColorId] = React.useState<number | null>(null);
   const [isHovered, setIsHovered] = React.useState(false);
   const [showStockBadge, setShowStockBadge] = React.useState(true);
+  const [isNavigating, setIsNavigating] = React.useState(false);
 
   const photos = product.raw?.photos || [];
   const colors = product.raw?.colors || [];
@@ -168,7 +193,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   return (
     <div
-      className="group cursor-pointer animate-slide-up flex flex-col h-full"
+      className={`group cursor-pointer animate-slide-up flex flex-col h-full transition-all duration-300 ${
+        isNavigating ? 'opacity-75 scale-[0.98]' : ''
+      }`}
       style={{ animationDelay: `${index * 0.1}s` }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={() => setIsHovered(false)}
@@ -185,7 +212,22 @@ const ProductCard: React.FC<ProductCardProps> = ({
             className="object-cover transition-all duration-700 ease-in-out group-hover:scale-105"
             priority={index < 3}
           />
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-700" />
+          <div className={`absolute inset-0 transition-colors duration-700 ${
+            isNavigating 
+              ? 'bg-black/20 navigation-shimmer' 
+              : 'bg-black/0 group-hover:bg-black/10'
+          }`} />
+          
+          {/* Sold Out Badge */}
+          {totalStock === 0 && (
+            <div className="absolute top-0 right-0 z-10">
+              <div className="relative w-0 h-0 border-t-[70px] md:border-t-[80px] border-t-red-600 border-l-[70px] md:border-l-[80px] border-l-transparent shadow-lg">
+                <span className={`absolute -top-[60px] md:-top-[68px] text-white font-bold text-[11px] text-center leading-tight rotate-45 w-12 ${locale === 'ar' ? 'right-[0px] md:right-[2px] md:text-[12px]' : 'right-[10px] md:right-[13px] -mr-2 mt-2'}`}>
+                  {t("soldOut")}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
       {/* Product Info */}
@@ -278,8 +320,16 @@ const ProductCard: React.FC<ProductCardProps> = ({
           size="sm"
           className="w-full transition-all duration-300 py-2 px-3 text-xs md:py-3 md:px-4 md:text-sm mt-3"
           onClick={handleButtonClick}
+          disabled={isNavigating}
         >
-          {t("viewDetails")}
+          {isNavigating ? (
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 border border-current border-t-transparent rounded-full smooth-spinner" />
+              <span>{locale === 'ar' ? 'جاري التحميل...' : 'Loading...'}</span>
+            </div>
+          ) : (
+            t("viewDetails")
+          )}
         </Button>
       </div>
     </div>

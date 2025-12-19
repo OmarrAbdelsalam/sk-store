@@ -178,4 +178,21 @@ export async function applyDiscount(params: { sessionId: string; code: string })
   return true;
 }
 
+/** حذف كوبون الخصم من السلة */
+export async function deleteDiscount(sessionId: string) {
+  const url = new URL(`${BASE}/api/Cart/Discount`);
+  url.searchParams.set("sessionid", sessionId);
+
+  const res = await fetch(url.toString(), { 
+    method: "DELETE", 
+    cache: "no-store" 
+  });
+  
+  if (!res.ok) {
+    throw new Error(`DELETE /Cart/Discount ${res.status}`);
+  }
+  
+  return true;
+}
+
 

@@ -1,37 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Star, Trash2 } from "lucide-react";
+import { Star, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ReviewDialog } from "./ReviewDialog";
 import { getOrCreateSessionId } from "@/lib/session";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+
 
 type OrderItemReviewProps = {
   orderItemId: number;
+  productId: number;
   productName: string;
-  existingReview?: {
-    id: number;
-    rating: number;
-    comment: string | null;
-  } | null;
+  sessionId: string;
   onReviewChange?: () => void;
 };
 
 export function OrderItemReview({
   orderItemId,
+  productId,
   productName,
-  existingReview,
+  sessionId,
   onReviewChange,
 }: OrderItemReviewProps) {
   const t = useTranslations("Reviews");
@@ -39,36 +28,94 @@ export function OrderItemReview({
   const isAr = locale === "ar";
 
   const [showReviewDialog, setShowReviewDialog] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleDelete = async () => {
-    if (!existingReview) return;
+  const [existingReview, setExistingReview] = useState<{
+    id: number;
+    rating: number;
+    comment: string | null;
+  } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-    setIsDeleting(true);
-    try {
-      const sessionId = getOrCreateSessionId();
-      const response = await fetch(
-        `https://scrubstore.runasp.net/api/Reviews/${existingReview.id}?sessionId=${sessionId}`,
-        {
-          method: "DELETE",
+  // Check if user has already reviewed this product
+  useEffect(() => {
+    const checkExistingReview = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch(`https://scrubstore.runasp.net/api/Product/${productId}`);
+        
+        if (response.ok) {
+          const result = await response.json();
+          if (result.succeeded && result.data.reviews) {
+            // Find review by current user's sessionId
+            const userReview = result.data.reviews.find(
+              (review: any) => review.sessionId === sessionId
+            );
+            
+            if (userReview) {
+              setExistingReview({
+                id: userReview.id,
+                rating: userReview.rating,
+                comment: userReview.comment,
+              });
+            }
+          }
         }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to delete review");
+      } catch (error) {
+        console.error("Error checking existing review:", error);
+      } finally {
+        setIsLoading(false);
       }
+    };
 
-      setShowDeleteDialog(false);
-      if (onReviewChange) {
-        onReviewChange();
+    checkExistingReview();
+  }, [productId, sessionId]);
+
+
+
+  const handleReviewSubmitted = () => {
+    setShowReviewDialog(false);
+    // Refresh the review data
+    const checkExistingReview = async () => {
+      try {
+        const response = await fetch(`https://scrubstore.runasp.net/api/Product/${productId}`);
+        
+        if (response.ok) {
+          const result = await response.json();
+          if (result.succeeded && result.data.reviews) {
+            const userReview = result.data.reviews.find(
+              (review: any) => review.sessionId === sessionId
+            );
+            
+            if (userReview) {
+              setExistingReview({
+                id: userReview.id,
+                rating: userReview.rating,
+                comment: userReview.comment,
+              });
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error refreshing review:", error);
       }
-    } catch (err) {
-      console.error("Error deleting review:", err);
-    } finally {
-      setIsDeleting(false);
+    };
+
+    checkExistingReview();
+    if (onReviewChange) {
+      onReviewChange();
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-3 bg-muted/50 rounded-lg border">
+        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+        <span className="ml-2 text-sm text-muted-foreground">
+          {t("checkingReview")}
+        </span>
+      </div>
+    );
+  }
 
   if (existingReview) {
     return (
@@ -94,34 +141,28 @@ export function OrderItemReview({
               <p className="text-sm text-muted-foreground">{existingReview.comment}</p>
             )}
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setShowDeleteDialog(true)}
-            className="text-destructive hover:text-destructive"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          <div className="flex gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowReviewDialog(true)}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
-        <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-          <AlertDialogContent dir={isAr ? "rtl" : "ltr"}>
-            <AlertDialogHeader>
-              <AlertDialogTitle>{t("deleteTitle")}</AlertDialogTitle>
-              <AlertDialogDescription>{t("deleteDescription")}</AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDelete}
-                disabled={isDeleting}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                {isDeleting ? t("deleting") : t("delete")}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <ReviewDialog
+          orderItemId={orderItemId}
+          productName={productName}
+          open={showReviewDialog}
+          onOpenChange={setShowReviewDialog}
+          onReviewSubmitted={handleReviewSubmitted}
+          existingReview={existingReview}
+        />
+
+
       </>
     );
   }
@@ -143,7 +184,7 @@ export function OrderItemReview({
         productName={productName}
         open={showReviewDialog}
         onOpenChange={setShowReviewDialog}
-        onReviewSubmitted={onReviewChange}
+        onReviewSubmitted={handleReviewSubmitted}
       />
     </>
   );

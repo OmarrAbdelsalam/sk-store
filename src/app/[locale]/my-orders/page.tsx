@@ -12,6 +12,7 @@ import { OrderItemReview } from "@/components/orders/OrderItemReview";
 
 type OrderItem = {
   id: number;
+  productId: number;
   productName: string;
   colorNameAr: string;
   colorNameEn: string;
@@ -265,8 +266,9 @@ export default function MyOrdersPage() {
                                 {order.orderStatus.toLowerCase() === "delivered" && (
                                   <OrderItemReview
                                     orderItemId={item.id}
+                                    productId={item.productId}
                                     productName={item.productName}
-                                    existingReview={item.review}
+                                    sessionId={getOrCreateSessionId()}
                                     onReviewChange={() => {
                                       const sessionId = getOrCreateSessionId();
                                       fetchOrders(sessionId);

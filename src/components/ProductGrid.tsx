@@ -115,22 +115,24 @@ const ProductGrid = () => {
     };
   }, []);
 
-  /* Read URL category once per change */
+  /* Read URL category once per change - optimized */
   useEffect(() => {
     const categorySlug = searchParams.get("category");
-    if (categorySlug) {
-      // Get the actual ID from sessionStorage
-      const categoryId = sessionStorage.getItem(`category_${categorySlug}`);
-      if (categoryId) {
-        setActiveFilter(categoryId);
-        return;
+    if (!categorySlug) {
+      if (activeFilter !== "All") {
+        setActiveFilter("All");
       }
-      // Fallback to slug if no mapping found
-      setActiveFilter(categorySlug);
       return;
     }
-    setActiveFilter("All");
-  }, [searchParams]);
+    
+    // Get the actual ID from sessionStorage
+    const categoryId = sessionStorage.getItem(`category_${categorySlug}`);
+    const newFilter = categoryId || categorySlug;
+    
+    if (activeFilter !== newFilter) {
+      setActiveFilter(newFilter);
+    }
+  }, [searchParams, activeFilter]);
 
   /* Server filtering when filters present */
   useEffect(() => {

@@ -28,18 +28,33 @@ export type ProductApi = {
   nameEn?: string;
   descriptionAr?: string;
   descriptionEn?: string;
+  material?: string;
   price: number;
   beforePrice?: number | null;
   hasSizes: boolean;
   oneSizeAmount?: number | null;
   genderType?: string;
   sizeChartImageUrl?: string;
+  averageRating?: number | null;
   tags?: string[];
   colors: ProductColor[];
   categories?: { id: string; arabicName?: string; englishName?: string }[];
   photos: ProductPhoto[];
   variants: ProductVariant[];
   relatedProducts?: { id: number; nameAr?: string; nameEn?: string }[];
+  reviews?: ProductReview[];
+};
+
+export type ProductReview = {
+  id: number;
+  name: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  updatedAt?: string | null;
+  verified?: boolean;
+  colorName?: string;
+  sizeName?: string;
 };
 
 type Envelope<T> = { succeeded: boolean; message: string; data: T };

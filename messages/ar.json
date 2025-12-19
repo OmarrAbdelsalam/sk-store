@@ -45,6 +45,42 @@
     "stockLimitReached": "وصلت للحد الأقصى المتاح",
     "maxAvailable": "الكمية المتاحة: {quantity} فقط"
   },
+  "ProductReviews": {
+    "title": "تقييمات العملاء",
+    "noReviews": "لا توجد تقييمات بعد",
+    "beFirst": "كن أول من يقيّم هذا المنتج",
+    "writeReview": "اكتب تقييماً",
+    "basedOn": "بناءً على {count} تقييم",
+    "ratingBreakdown": "توزيع التقييمات",
+    "allReviews": "جميع التقييمات",
+    "verified": "مشتري موثق",
+    "color": "اللون",
+    "size": "المقاس",
+    "showMore": "عرض {count} تقييم إضافي",
+    "shareExperience": "شارك تجربتك",
+    "helpOthers": "ساعد الآخرين في اتخاذ قرار الشراء"
+  },
+
+  "PromoCode": {
+    "label": "كود الخصم",
+    "placeholder": "أدخل كود الخصم",
+    "apply": "تطبيق",
+    "applying": "جاري التطبيق...",
+    "hint": "أدخل كود الخصم إن وجد للحصول على خصم إضافي",
+    "success": "تم تطبيق الخصم",
+    "error": "خطأ",
+    "enterCode": "يرجى إدخال كود الخصم",
+    "applied": "تم تطبيق كود الخصم {code} بخصم {amount} جنيه",
+    "invalidCode": "كود الخصم غير صحيح أو منتهي الصلاحية",
+    "networkError": "خطأ في الشبكة، حاول مرة أخرى",
+    "removed": "تم إزالة الخصم",
+    "discountRemoved": "تم إزالة كود الخصم بنجاح",
+    "removeError": "فشل في إزالة كود الخصم",
+    "codeApplied": "كود مطبق",
+    "percentageDiscount": "خصم {percentage}%",
+    "amountDiscount": "خصم {amount} جنيه",
+    "discount": "الخصم"
+  },
   "EmptyCart": {
     "title": "سلة التسوق فارغة",
     "subtitle": "ابدأ بإضافة بعض المنتجات الرائعة إلى سلتك",
@@ -94,10 +130,14 @@
     "noCare": "لم يتم تحديد تعليمات العناية."
   },
   "RelatedProducts": {
-    "title": "منتجات ذات صلة"
+    "title": "منتجات ذات صلة",
+    "previous": "السابق",
+    "next": "التالي",
+    "goToSlide": "الانتقال إلى الشريحة {slide}"
   },
   "ProductCard": {
-    "viewDetails": "عرض التفاصيل"
+    "viewDetails": "عرض التفاصيل",
+    "soldOut": "نفذت الكمية"
   },
   "SearchFilters": {
     "openFilters": "فتح البحث والفلاتر",
@@ -320,20 +360,25 @@
   },
   "Reviews": {
     "title": "تقييم المنتج",
+    "editTitle": "تعديل التقييم",
     "rating": "التقييم",
     "comment": "التعليق",
     "optional": "اختياري",
     "commentPlaceholder": "شارك تجربتك مع هذا المنتج...",
     "submit": "إرسال التقييم",
+    "update": "تحديث التقييم",
     "submitting": "جارٍ الإرسال...",
+    "updating": "جارٍ التحديث...",
     "cancel": "إلغاء",
     "addReview": "إضافة تقييم",
     "yourReview": "تقييمك",
     "selectRating": "يرجى اختيار التقييم",
     "submitError": "حدث خطأ أثناء إرسال التقييم",
+    "updateError": "حدث خطأ أثناء تحديث التقييم",
     "deleteTitle": "حذف التقييم",
     "deleteDescription": "هل أنت متأكد من حذف هذا التقييم؟ لا يمكن التراجع عن هذا الإجراء.",
     "delete": "حذف",
-    "deleting": "جارٍ الحذف..."
+    "deleting": "جارٍ الحذف...",
+    "checkingReview": "جاري التحقق من التقييم..."
   }
 }

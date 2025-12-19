@@ -20,6 +20,11 @@ type ReviewDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onReviewSubmitted?: () => void;
+  existingReview?: {
+    id: number;
+    rating: number;
+    comment: string | null;
+  } | null;
 };
 
 export function ReviewDialog({
@@ -28,16 +33,19 @@ export function ReviewDialog({
   open,
   onOpenChange,
   onReviewSubmitted,
+  existingReview,
 }: ReviewDialogProps) {
   const t = useTranslations("Reviews");
   const locale = useLocale();
   const isAr = locale === "ar";
 
-  const [rating, setRating] = useState(0);
+  const [rating, setRating] = useState(existingReview?.rating || 0);
   const [hoveredRating, setHoveredRating] = useState(0);
-  const [comment, setComment] = useState("");
+  const [comment, setComment] = useState(existingReview?.comment || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const isEditing = !!existingReview;
 
   const handleSubmit = async () => {
     if (rating === 0) {
@@ -50,26 +58,50 @@ export function ReviewDialog({
 
     try {
       const sessionId = getOrCreateSessionId();
-      const response = await fetch("https://scrubstore.runasp.net/api/Reviews", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          orderItemId,
-          sessionId,
-          rating,
-          comment: comment.trim() || null,
-        }),
-      });
+      
+      if (isEditing && existingReview) {
+        // Update existing review using PUT
+        const response = await fetch("https://scrubstore.runasp.net/api/Reviews", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            reviewId: existingReview.id,
+            sessionId,
+            rating,
+            comment: comment.trim() || null,
+          }),
+        });
 
-      if (!response.ok) {
-        throw new Error("Failed to submit review");
+        if (!response.ok) {
+          throw new Error("Failed to update review");
+        }
+      } else {
+        // Create new review using POST
+        const response = await fetch("https://scrubstore.runasp.net/api/Reviews", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            orderItemId,
+            sessionId,
+            rating,
+            comment: comment.trim() || null,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to submit review");
+        }
       }
 
-      // Reset form
-      setRating(0);
-      setComment("");
+      // Reset form only if creating new review
+      if (!isEditing) {
+        setRating(0);
+        setComment("");
+      }
       onOpenChange(false);
       
       if (onReviewSubmitted) {
@@ -77,7 +109,7 @@ export function ReviewDialog({
       }
     } catch (err) {
       console.error("Error submitting review:", err);
-      setError(t("submitError"));
+      setError(isEditing ? t("updateError") : t("submitError"));
     } finally {
       setIsSubmitting(false);
     }
@@ -87,7 +119,7 @@ export function ReviewDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]" dir={isAr ? "rtl" : "ltr"}>
         <DialogHeader>
-          <DialogTitle>{t("title")}</DialogTitle>
+          <DialogTitle>{isEditing ? t("editTitle") : t("title")}</DialogTitle>
           <DialogDescription>{productName}</DialogDescription>
         </DialogHeader>
 
@@ -156,7 +188,10 @@ export function ReviewDialog({
               onClick={handleSubmit}
               disabled={isSubmitting || rating === 0}
             >
-              {isSubmitting ? t("submitting") : t("submit")}
+              {isSubmitting 
+                ? (isEditing ? t("updating") : t("submitting"))
+                : (isEditing ? t("update") : t("submit"))
+              }
             </Button>
           </div>
         </div>
