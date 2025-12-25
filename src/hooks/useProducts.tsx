@@ -11,6 +11,8 @@ import {
 export interface Product {
   id: number;
   name: string;
+  nameAr?: string;        // للبحث ثنائي اللغة
+  nameEn?: string;        // للبحث ثنائي اللغة
   category: string;       // اسم عرض
   price: string;          // "1000 جنيه" أو "1000 EGP"
   priceNum: number;       // 1000

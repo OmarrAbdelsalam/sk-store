@@ -31,6 +31,8 @@ interface FilterResponse {
 interface Product {
   id: number;
   name: string;
+  nameAr?: string;  // للبحث ثنائي اللغة
+  nameEn?: string;  // للبحث ثنائي اللغة
   price: string;
   priceNum: number;
   image: string;
@@ -39,11 +41,10 @@ interface Product {
   availableColors: Array<{ name: string; hex: string }>;
   category?: string;
   categoryIds?: Array<number | string>;
+  raw?: ProductApi;  // للـ ProductCard عشان يحسب الـ stock
 }
 
 /* ===================== Helpers ===================== */
-
-const DEFAULT_IMAGE = "/placeholder-product.png";
 
 const isDefaultFilters = (sp: SearchParamsLike) => {
   const priceFrom = Number(sp.get("priceFrom") ?? 0);
@@ -62,12 +63,15 @@ const isDefaultFilters = (sp: SearchParamsLike) => {
 
 /**
  * ✅ استخدم نفس الماب الرئيسي لكن نحوله لشكل ProductGrid المحلي
+ * مع إضافة nameAr و nameEn للبحث ثنائي اللغة
  */
 const mapServerToProduct = (p: ProductApi, locale: string): Product => {
   const ui = mapApiProductToUI(p, locale);
   return {
     id: ui.id,
     name: ui.name,
+    nameAr: p.nameAr ?? "",  // للبحث ثنائي اللغة
+    nameEn: p.nameEn ?? "",  // للبحث ثنائي اللغة
     price: ui.price,
     priceNum: ui.priceNum,
     image: ui.image,
@@ -76,6 +80,7 @@ const mapServerToProduct = (p: ProductApi, locale: string): Product => {
     availableColors: ui.availableColors,
     category: ui.category,
     categoryIds: ui.categoryIds,
+    raw: p,  // للـ ProductCard عشان يحسب الـ stock
   };
 };
 
@@ -251,9 +256,12 @@ const ProductGrid = () => {
   const filteredProducts = useMemo(() => {
     return afterCategory.filter((p) => {
       const okGender = matchesGender(p.gender);
+      // البحث ثنائي اللغة: يبحث في الاسم العربي والإنجليزي معاً
       const okSearch = !qRaw
         ? true
         : (p.name ?? "").toLowerCase().includes(qRaw) ||
+          (p.nameAr ?? "").toLowerCase().includes(qRaw) ||
+          (p.nameEn ?? "").toLowerCase().includes(qRaw) ||
           (p.description ?? "").toLowerCase().includes(qRaw);
       return okGender && okSearch;
     });

@@ -73,6 +73,7 @@ export function getMainImage(p: ProductApi): string | null {
 /**
  * ✅ mapApiProductToUI
  * بياخد الـ locale ويختار Ar/En حسب لغة الموقع
+ * مع إضافة nameAr و nameEn للبحث ثنائي اللغة
  */
 export function mapApiProductToUI(p: ProductApi, locale: string = "ar") {
   const isArabic = locale === "ar";
@@ -134,6 +135,8 @@ export function mapApiProductToUI(p: ProductApi, locale: string = "ar") {
   return {
     id: p.id,
     name: displayName,
+    nameAr: rawNameAr,  // للبحث ثنائي اللغة
+    nameEn: rawNameEn,  // للبحث ثنائي اللغة
     category: categoryName,
     price: priceLabel,
     priceNum,

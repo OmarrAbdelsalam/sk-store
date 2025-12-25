@@ -129,6 +129,11 @@ export const SearchAndFilters = () => {
                 placeholder={t("searchPlaceholder")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    apply();
+                  }
+                }}
                 className="pl-10"
               />
             </div>
