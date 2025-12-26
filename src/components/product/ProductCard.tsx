@@ -145,6 +145,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   }, [isHovered, availableImages, product.image]);
 
   const handleColorClick = React.useCallback((e: React.MouseEvent, colorId: number) => {
+    e.preventDefault();
     e.stopPropagation();
     setSelectedColorId(colorId);
   }, []);
@@ -168,13 +169,15 @@ const ProductCard: React.FC<ProductCardProps> = ({
   return (
     <IntlLink href={`/${product.id}`} prefetch={true}>
       <div
-        className="group cursor-pointer animate-slide-up flex flex-col h-full transition-all duration-300"
+        className="cursor-pointer animate-slide-up flex flex-col h-full transition-all duration-300"
         style={{ animationDelay: `${index * 0.1}s` }}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={() => setIsHovered(false)}
       >
         {/* Product Image */}
-        <div className="relative overflow-hidden bg-luxury-cream rounded-lg mb-4 aspect-[3/4]">
+        <div 
+          className="group relative overflow-hidden bg-luxury-cream rounded-lg mb-4 aspect-[3/4]"
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={() => setIsHovered(false)}
+        >
           <Image
             key={displayImage}
             src={displayImage}
@@ -184,7 +187,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
             className="object-cover transition-all duration-700 ease-in-out group-hover:scale-105"
             priority={index < 3}
           />
-          <div className="absolute inset-0 transition-colors duration-700 bg-black/0 group-hover:bg-black/10" />
+          
+          {/* View Details Button - visible on mobile, hover on desktop */}
+          <div className="absolute bottom-4 left-4 right-4 md:opacity-0 md:translate-y-4 md:group-hover:opacity-100 md:group-hover:translate-y-0 transition-all duration-300">
+            <div className="bg-white text-black font-medium text-sm md:text-base py-3 px-4 rounded-full text-center shadow-lg">
+              {t("viewDetails")}
+            </div>
+          </div>
           
           {/* Sold Out Badge */}
           {totalStock === 0 && (
@@ -202,7 +211,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       <div className="space-y-2 flex flex-col flex-1">
         <div className="flex-1 space-y-2">
           <div className="flex flex-col gap-1">
-            <h3 className="font-medium text-sm md:text-base group-hover:text-primary transition-colors line-clamp-2">
+            <h3 className="font-medium text-sm md:text-base transition-colors line-clamp-2">
               {product.name}
             </h3>
             <div className="flex items-center gap-2 text-start">
@@ -282,14 +291,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
               </div>
             )}
         </div>
-
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full transition-all duration-300 py-2 px-3 text-xs md:py-3 md:px-4 md:text-sm mt-3"
-        >
-          {t("viewDetails")}
-        </Button>
       </div>
     </div>
     </IntlLink>
