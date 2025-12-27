@@ -4,6 +4,11 @@ import { useState, useEffect } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import ProductCard from "@/components/product/ProductCard";
 import { getProductsPage, type ProductApi } from "@/lib/api/products";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel";
 
 interface RelatedProductsProps {
   currentProductId: number;
@@ -64,16 +69,47 @@ export default function RelatedProducts({
     };
   }, [currentProductId]);
 
+  const mapProduct = (product: ProductApi, index: number) => ({
+    id: product.id,
+    name: isAr ? (product.nameAr || product.nameEn || "") : (product.nameEn || product.nameAr || ""),
+    price: `${product.price} ${isAr ? 'جنيه' : 'EGP'}`,
+    priceNum: product.price,
+    image: product.photos?.[0]?.imageUrl || "/placeholder.png",
+    description: isAr ? (product.descriptionAr || product.descriptionEn || "") : (product.descriptionEn || product.descriptionAr || ""),
+    gender: product.genderType?.toLowerCase() === "men" ? "men" : product.genderType?.toLowerCase() === "women" ? "women" : "unisex",
+    availableColors: product.colors?.map(c => ({
+      name: isAr ? (c.colorNameAr || c.colorNameEn || "") : (c.colorNameEn || c.colorNameAr || ""),
+      hex: c.hexa || "#000000"
+    })) || [],
+    raw: {
+      beforePrice: product.beforePrice,
+      photos: product.photos,
+      colors: product.colors,
+      variants: product.variants
+    }
+  });
+
   if (loading) {
     return (
       <div className="mt-16">
         <h2 className="text-2xl font-semibold mb-6">
           {t("title")}
         </h2>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Mobile Loading */}
+        <div className="flex gap-4 overflow-hidden lg:hidden">
+          {[1, 2].map((i) => (
+            <div key={i} className="animate-pulse min-w-[60%]">
+              <div className="bg-gray-200 aspect-[3/4] rounded-lg mb-3"></div>
+              <div className="bg-gray-200 h-4 rounded mb-2"></div>
+              <div className="bg-gray-200 h-4 rounded w-2/3"></div>
+            </div>
+          ))}
+        </div>
+        {/* Desktop Loading */}
+        <div className="hidden lg:grid grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="animate-pulse">
-              <div className="bg-gray-200 aspect-square rounded-lg mb-3"></div>
+              <div className="bg-gray-200 aspect-[3/4] rounded-lg mb-3"></div>
               <div className="bg-gray-200 h-4 rounded mb-2"></div>
               <div className="bg-gray-200 h-4 rounded w-2/3"></div>
             </div>
@@ -95,36 +131,37 @@ export default function RelatedProducts({
         </h2>
       </div>
 
-      {/* عرض المنتجات */}
-      <div className="relative">
-        {/* عرض المنتجات - موحد للديسكتوب والموبايل */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-          {products.map((product, index) => (
-            <ProductCard
-              key={product.id}
-              index={index}
-              product={{
-                id: product.id,
-                name: isAr ? (product.nameAr || product.nameEn || "") : (product.nameEn || product.nameAr || ""),
-                price: `${product.price} ${isAr ? 'جنيه' : 'EGP'}`,
-                priceNum: product.price,
-                image: product.photos?.[0]?.imageUrl || "/placeholder.png",
-                description: isAr ? (product.descriptionAr || product.descriptionEn || "") : (product.descriptionEn || product.descriptionAr || ""),
-                gender: product.genderType?.toLowerCase() === "men" ? "men" : product.genderType?.toLowerCase() === "women" ? "women" : "unisex",
-                availableColors: product.colors?.map(c => ({
-                  name: isAr ? (c.colorNameAr || c.colorNameEn || "") : (c.colorNameEn || c.colorNameAr || ""),
-                  hex: c.hexa || "#000000"
-                })) || [],
-                raw: {
-                  beforePrice: product.beforePrice,
-                  photos: product.photos,
-                  colors: product.colors,
-                  variants: product.variants
-                }
-              }}
-            />
-          ))}
-        </div>
+      {/* Mobile Carousel */}
+      <div className="lg:hidden">
+        <Carousel
+          opts={{
+            align: "start",
+            direction: isAr ? "rtl" : "ltr",
+          }}
+          className="w-full"
+        >
+          <CarouselContent className="-ml-3">
+            {products.map((product, index) => (
+              <CarouselItem key={product.id} className="pl-3 basis-[65%]">
+                <ProductCard
+                  index={index}
+                  product={mapProduct(product, index)}
+                />
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+        </Carousel>
+      </div>
+
+      {/* Desktop Grid */}
+      <div className="hidden lg:grid grid-cols-4 gap-6">
+        {products.map((product, index) => (
+          <ProductCard
+            key={product.id}
+            index={index}
+            product={mapProduct(product, index)}
+          />
+        ))}
       </div>
     </div>
   );

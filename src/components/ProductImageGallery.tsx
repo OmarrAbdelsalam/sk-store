@@ -130,6 +130,49 @@ const ProductImageGallery = ({
     setCurrentImageIndex(index);
   };
 
+  // ✅ Touch swipe handling
+  const touchStartX = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchEndX.current = null;
+    touchStartX.current = e.targetTouches[0].clientX;
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.targetTouches[0].clientX;
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStartX.current || !touchEndX.current) return;
+    
+    const distance = touchStartX.current - touchEndX.current;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (currentImages.length > 1) {
+      // في العربي (RTL): سوايب يسار = السابقة، سوايب يمين = التالية
+      // في الإنجليزي (LTR): سوايب يسار = التالية، سوايب يمين = السابقة
+      if (locale === "ar") {
+        if (isLeftSwipe) {
+          prevImage();
+        } else if (isRightSwipe) {
+          nextImage();
+        }
+      } else {
+        if (isLeftSwipe) {
+          nextImage();
+        } else if (isRightSwipe) {
+          prevImage();
+        }
+      }
+    }
+
+    touchStartX.current = null;
+    touchEndX.current = null;
+  };
+
   const variants = {
     enter: (direction: number) => ({
       x: direction > 0 ? '100%' : '-100%',
@@ -248,6 +291,9 @@ const ProductImageGallery = ({
                 x: { type: "spring", stiffness: 300, damping: 30 },
                 opacity: { duration: 0.15 }
               }}
+              onTouchStart={onTouchStart}
+              onTouchMove={onTouchMove}
+              onTouchEnd={onTouchEnd}
               className="absolute inset-0"
             >
               <SafeImage
@@ -418,6 +464,9 @@ const ProductImageGallery = ({
                     x: { type: "spring", stiffness: 300, damping: 30 },
                     opacity: { duration: 0.15 }
                   }}
+                  onTouchStart={onTouchStart}
+                  onTouchMove={onTouchMove}
+                  onTouchEnd={onTouchEnd}
                   className="absolute inset-0 flex items-center justify-center p-8"
                 >
                   <SafeImage
