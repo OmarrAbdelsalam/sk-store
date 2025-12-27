@@ -99,10 +99,10 @@ export default function RelatedProducts({
       <div className="relative">
         {/* عرض المنتجات - موحد للديسكتوب والموبايل */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-          {products.map((product) => (
+          {products.map((product, index) => (
             <ProductCard
               key={product.id}
-              variant="related"
+              index={index}
               product={{
                 id: product.id,
                 name: isAr ? (product.nameAr || product.nameEn || "") : (product.nameEn || product.nameAr || ""),
