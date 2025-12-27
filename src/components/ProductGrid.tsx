@@ -392,7 +392,6 @@ const ProductGrid = () => {
                 key={String(product.id)}
                 product={product}
                 index={index}
-                variant="grid"
               />
             ))}
           </div>

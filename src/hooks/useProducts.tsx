@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useLocale } from "next-intl";
 import {
   getProductsPage,
@@ -56,68 +56,113 @@ export const useProducts = () => {
   });
   const [error, setError] = useState<string | null>(null);
   const fetchingRef = useRef(false);
+  const mountedRef = useRef(true);
 
-  useEffect(() => {
-    // Check cache first
-    const cached = productsCache[locale];
-    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-      setProducts(cached.products);
-      setLoading(false);
-      return;
-    }
+  // Fetch function that can be called on demand
+  const fetchProducts = useCallback(async (forceRefresh = false) => {
+    // Check cache first (unless force refresh)
+    if (!forceRefresh) {
+      const cached = productsCache[locale];
+      if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+        setProducts(cached.products);
+        setLoading(false);
+        return;
+      }
 
-    // If we have raw data cached, just re-map it for the new locale
-    if (productsCache.rawData && productsCache.rawData.length > 0) {
-      const mapped = productsCache.rawData.map((p) => mapApiProductToUI(p, locale));
-      productsCache[locale] = { products: mapped, timestamp: Date.now() };
-      setProducts(mapped);
-      setLoading(false);
-      return;
+      // If we have raw data cached, just re-map it for the new locale
+      if (productsCache.rawData && productsCache.rawData.length > 0) {
+        const mapped = productsCache.rawData.map((p) => mapApiProductToUI(p, locale));
+        productsCache[locale] = { products: mapped, timestamp: Date.now() };
+        setProducts(mapped);
+        setLoading(false);
+        return;
+      }
     }
 
     // Prevent duplicate fetches
     if (fetchingRef.current) return;
     fetchingRef.current = true;
 
-    let cancelled = false;
-    
-    (async () => {
-      try {
-        setLoading(true);
-        setError(null);
+    try {
+      setLoading(true);
+      setError(null);
 
-        const page = await getProductsPage(1, 100);
-        
-        if (cancelled) return;
-        
-        // Cache raw data
-        productsCache.rawData = page.items ?? [];
-        
-        const mapped = (page.items ?? []).map((p) =>
-          mapApiProductToUI(p, locale)
-        );
-        
-        // Cache mapped products
-        productsCache[locale] = { products: mapped, timestamp: Date.now() };
-        
-        setProducts(mapped);
-      } catch (e: any) {
-        if (cancelled) return;
-        console.error(e);
-        setError(e?.message || "Failed to load products");
-        setProducts([]);
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-          fetchingRef.current = false;
-        }
+      const page = await getProductsPage(1, 100);
+      
+      if (!mountedRef.current) return;
+      
+      // Cache raw data
+      productsCache.rawData = page.items ?? [];
+      
+      const mapped = (page.items ?? []).map((p) =>
+        mapApiProductToUI(p, locale)
+      );
+      
+      // Cache mapped products
+      productsCache[locale] = { products: mapped, timestamp: Date.now() };
+      
+      setProducts(mapped);
+    } catch (e: any) {
+      if (!mountedRef.current) return;
+      console.error(e);
+      setError(e?.message || "Failed to load products");
+      setProducts([]);
+    } finally {
+      if (mountedRef.current) {
+        setLoading(false);
+        fetchingRef.current = false;
       }
-    })();
+    }
+  }, [locale]);
+
+  // Initial fetch
+  useEffect(() => {
+    mountedRef.current = true;
+    fetchProducts();
     
     return () => {
-      cancelled = true;
+      mountedRef.current = false;
     };
-  }, [locale]);
+  }, [fetchProducts]);
+
+  // Handle back/forward navigation (bfcache)
+  useEffect(() => {
+    const handlePageShow = (event: PageTransitionEvent) => {
+      // persisted = true means page was restored from bfcache
+      if (event.persisted) {
+        // Re-fetch from cache (will use cached data if still valid)
+        const cached = productsCache[locale];
+        if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+          setProducts(cached.products);
+          setLoading(false);
+        } else {
+          fetchProducts();
+        }
+      }
+    };
+
+    // Handle popstate for client-side navigation
+    const handlePopState = () => {
+      // Small delay to let Next.js router settle
+      setTimeout(() => {
+        const cached = productsCache[locale];
+        if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+          setProducts(cached.products);
+          setLoading(false);
+        } else {
+          fetchProducts();
+        }
+      }, 50);
+    };
+
+    window.addEventListener('pageshow', handlePageShow);
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('pageshow', handlePageShow);
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [locale, fetchProducts]);
 
   return { products, loading, error };
 };

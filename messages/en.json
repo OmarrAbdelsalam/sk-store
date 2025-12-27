@@ -28,6 +28,8 @@
     "backToCart": "Back to Cart",
     "checkoutTitle": "Checkout",
     "processing": "Processing...",
+    "processingOrder": "Processing your order...",
+    "redirecting": "Redirecting to order page...",
     "confirmOrder": "Confirm Order - {total} {currency}",
     "orderSuccessTitle": "Order received successfully",
     "orderSuccessDesc": "Shipping: {shipping} {currency} — We will contact you to confirm the details",
@@ -300,7 +302,8 @@
     "whatsapp": "WhatsApp Number (optional)",
     "whatsappPlaceholder": "If empty, we'll use Phone Number",
     "firstName": "First Name",
-    "lastName": "Last Name"
+    "lastName": "Last Name",
+    "phoneError": "Please enter a valid phone number"
   },
   "ShippingAddress": {
     "title": "Shipping Address",

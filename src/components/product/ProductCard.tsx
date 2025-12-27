@@ -3,8 +3,6 @@
 import Image from "next/image";
 import { Link as IntlLink } from "@/i18n/navigation";
 import { useTranslations, useLocale } from "next-intl";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { prefetchProduct } from "@/hooks/useProduct";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -49,13 +47,13 @@ interface Product {
 interface ProductCardProps {
   product: Product;
   index?: number;
-  variant?: "grid" | "related";
+  hideViewDetails?: boolean;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({
   product,
   index = 0,
-  variant = "grid",
+  hideViewDetails = false,
 }) => {
   const locale = useLocale();
   const t = useTranslations("ProductCard");
@@ -67,55 +65,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
     }
   }, [product.id, index]);
 
-  if (variant === "related") {
-    return (
-      <IntlLink href={`/${product.id}`} prefetch={true}>
-        <Card className="group cursor-pointer hover:shadow-lg transition-all duration-300">
-          <CardContent className="p-4">
-            <div className="aspect-square bg-luxury-cream rounded-lg overflow-hidden mb-4 relative">
-              <Image
-                src={product.image}
-                alt={product.name}
-                fill
-                sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 100vw"
-                className="object-cover transition-transform duration-300 group-hover:scale-105"
-                priority={index < 3}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="font-medium text-sm line-clamp-2">{product.name}</h3>
-              <div className="flex items-center gap-2 text-start">
-                {product.raw?.beforePrice && (
-                  <p className="text-xs text-red-500 line-through font-medium">
-                    {product.raw.beforePrice} {locale === 'ar' ? 'جنيه' : 'EGP'}
-                  </p>
-                )}
-                <p className="font-semibold text-primary text-sm">
-                  {product.price}
-                </p>
-              </div>
-              <p className="text-xs text-muted-foreground line-clamp-2">
-                {product.description}
-              </p>
-
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full mt-3"
-              >
-                {t("viewDetails")}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </IntlLink>
-    );
-  }
-
-  const [selectedColorId, setSelectedColorId] = React.useState<number | null>(null);
   const [isHovered, setIsHovered] = React.useState(false);
   const [showStockBadge, setShowStockBadge] = React.useState(true);
+  const [selectedColorId, setSelectedColorId] = React.useState<number | null>(null);
 
   const photos = product.raw?.photos || [];
   const colors = product.raw?.colors || [];
@@ -189,11 +141,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
           />
           
           {/* View Details Button - visible on mobile, hover on desktop */}
-          <div className="absolute bottom-4 left-4 right-4 md:opacity-0 md:translate-y-4 md:group-hover:opacity-100 md:group-hover:translate-y-0 transition-all duration-300">
-            <div className="bg-white text-black font-medium text-sm md:text-base py-3 px-4 rounded-full text-center shadow-lg">
-              {t("viewDetails")}
+          {!hideViewDetails && (
+            <div className="absolute bottom-4 left-4 right-4 md:opacity-0 md:translate-y-4 md:group-hover:opacity-100 md:group-hover:translate-y-0 transition-all duration-300">
+              <div className="bg-white text-black font-medium text-sm md:text-base py-3 px-4 rounded-full text-center shadow-lg">
+                {t("viewDetails")}
+              </div>
             </div>
-          </div>
+          )}
           
           {/* Sold Out Badge */}
           {totalStock === 0 && (

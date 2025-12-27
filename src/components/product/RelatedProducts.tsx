@@ -146,6 +146,7 @@ export default function RelatedProducts({
                 <ProductCard
                   index={index}
                   product={mapProduct(product, index)}
+                  hideViewDetails
                 />
               </CarouselItem>
             ))}
@@ -160,6 +161,7 @@ export default function RelatedProducts({
             key={product.id}
             index={index}
             product={mapProduct(product, index)}
+            hideViewDetails
           />
         ))}
       </div>

@@ -28,6 +28,8 @@
     "backToCart": "العودة إلى السلة",
     "checkoutTitle": "إتمام الشراء",
     "processing": "جاري التنفيذ...",
+    "processingOrder": "جاري تنفيذ طلبك...",
+    "redirecting": "جاري التحويل لصفحة الطلب...",
     "confirmOrder": "تأكيد الطلب - {total} {currency}",
     "orderSuccessTitle": "تم استلام طلبك بنجاح",
     "orderSuccessDesc": "سعر الشحن: {shipping} {currency} — سنتواصل معك لتأكيد التفاصيل",
@@ -300,7 +302,8 @@
     "whatsapp": "رقم الواتساب (اختياري)",
     "whatsappPlaceholder": "إذا ترك فارغاً، سنستخدم رقم الهاتف",
     "firstName": "الاسم الأول",
-    "lastName": "اسم العائلة"
+    "lastName": "اسم العائلة",
+    "phoneError": "يرجى كتابة رقم الهاتف صحيحاً"
   },
   "ShippingAddress": {
     "title": "عنوان الشحن",

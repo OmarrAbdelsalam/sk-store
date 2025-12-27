@@ -24,6 +24,7 @@ export default function Checkout() {
   const { items, getTotalPrice, clearCart } = useCart();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [orderCompleted, setOrderCompleted] = useState(false);
   const [shippingPrice, setShippingPrice] = useState(0);
   const [selectedGovernorate, setSelectedGovernorate] = useState("");
   const [mounted, setMounted] = useState(false);
@@ -188,6 +189,9 @@ export default function Checkout() {
 
       try { localStorage.setItem('last_order_data', JSON.stringify(response.data)); } catch {}
       
+      // Mark order as completed before clearing cart to prevent EmptyCart flash
+      setOrderCompleted(true);
+      
       // Server automatically clears cart after order, just clear local state
       clearCart(); // Clear from local state
       router.push(`/${locale}/order-success`);
@@ -217,6 +221,20 @@ export default function Checkout() {
             <div className="h-10 w-32 bg-muted rounded" />
             <div className="h-8 w-48 bg-muted rounded" />
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading while order is being processed or completed (navigating to success page)
+  if (orderCompleted || isProcessing) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" dir={dir}>
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto" />
+          <p className="text-muted-foreground">
+            {orderCompleted ? t("redirecting") : t("processingOrder")}
+          </p>
         </div>
       </div>
     );
