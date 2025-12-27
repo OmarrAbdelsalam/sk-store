@@ -10,10 +10,15 @@ import { LanguageSwitcher } from "../Navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useCategories } from "@/hooks/useCategories";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export const MobileMenu = () => {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   
   // ✅ نستخدم try/catch زي ما عندك علشان لو ما فيش مزوّد للكارت ما يكسرش الصفحة
   let cartItemsCount = 0;
@@ -46,6 +51,15 @@ export const MobileMenu = () => {
     setOpen(false);
     router.push(`/${locale}?category=${encodeURIComponent(slug)}`);
   };
+
+  // Don't render Sheet until mounted to avoid hydration mismatch
+  if (!mounted) {
+    return (
+      <Button variant="ghost" size="sm" aria-label={t("openMenu")}>
+        <Menu className="h-5 w-5" />
+      </Button>
+    );
+  }
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>

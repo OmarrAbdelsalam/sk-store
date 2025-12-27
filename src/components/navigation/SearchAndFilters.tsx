@@ -20,6 +20,11 @@ export const SearchAndFilters = () => {
   const router = useRouter();
   const sp = useSearchParams();
   const [colors, setColors] = useState<ColorOption[]>([]);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // read initial state from URL
   const initial = useMemo(() => ({
@@ -103,6 +108,15 @@ export const SearchAndFilters = () => {
     params.delete("q");
     router.push(`/?${params.toString()}`);
   };
+
+  // Don't render Sheet until mounted to avoid hydration mismatch
+  if (!mounted) {
+    return (
+      <Button variant="ghost" size="sm" aria-label={t("openFilters")}>
+        <Search className="h-5 w-5" />
+      </Button>
+    );
+  }
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>

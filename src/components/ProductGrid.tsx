@@ -338,47 +338,32 @@ const ProductGrid = () => {
   return (
     <section id="products" className="py-4 md:py-12 bg-background">
       <div className="container mx-auto px-4">
-        <div
-          className={`md:mb-12 animate-fade-in ${
-            isMobile ? "text-start" : "text-center"
-          }`}
-        >
-          <h2
-            className={`font-medium ${
-              isMobile ? "text-2xl mb-2" : "text-4xl md:text-5xl mb-3"
-            }`}
-          >
+        <div className="md:mb-12 animate-fade-in text-start md:text-center">
+          <h2 className="font-medium text-2xl md:text-4xl lg:text-5xl mb-2 md:mb-3">
             {displayTitle}
           </h2>
-          {isMobile ? (
-            <>
-              <div className="h-0.5 w-32 bg-blue-600 mb-3"></div>
-              <p className="text-muted-foreground text-sm mb-6">
-                {t("ProductGrid.subtitle")}
-              </p>
-            </>
-          ) : (
-            <>
-              <p className="text-muted-foreground text-sm md:text-base mb-4">
-                {t("ProductGrid.subtitle")}
-              </p>
-              <div className="flex items-center justify-center gap-2 mb-6">
-                <div className="h-0.5 w-12 bg-gradient-to-r from-transparent to-blue-600"></div>
-                <div className="h-1 w-16 bg-blue-600 rounded-full"></div>
-                <div className="h-0.5 w-12 bg-gradient-to-l from-transparent to-blue-600"></div>
-              </div>
-            </>
-          )}
+          {/* Mobile: line under title */}
+          <div className="h-0.5 w-32 bg-blue-600 mb-3 md:hidden"></div>
+          <p className="text-muted-foreground text-sm md:text-base mb-4 md:mb-4">
+            {t("ProductGrid.subtitle")}
+          </p>
+          {/* Desktop: decorative lines */}
+          <div className="hidden md:flex items-center justify-center gap-2 mb-6">
+            <div className="h-0.5 w-12 bg-gradient-to-r from-transparent to-blue-600"></div>
+            <div className="h-1 w-16 bg-blue-600 rounded-full"></div>
+            <div className="h-0.5 w-12 bg-gradient-to-l from-transparent to-blue-600"></div>
+          </div>
         </div>
 
         {isBusy ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-10 lg:gap-12">
             {Array.from({ length: isMobile ? 6 : 8 }).map((_, i) => (
-              <div key={i} className="space-y-4 animate-pulse">
+              <div key={i} className="space-y-2 md:space-y-4 animate-pulse">
                 <div className="aspect-[3/4] w-full rounded-lg bg-muted" />
-                <div className="h-6 w-3/4 rounded bg-muted" />
-                <div className="h-4 w-1/2 rounded bg-muted" />
-                <div className="h-8 w-full rounded bg-muted" />
+                <div className="space-y-1.5 md:space-y-2">
+                  <div className="h-4 md:h-6 w-3/4 rounded bg-muted" />
+                  <div className="h-3 md:h-4 w-1/2 rounded bg-muted" />
+                </div>
               </div>
             ))}
           </div>
