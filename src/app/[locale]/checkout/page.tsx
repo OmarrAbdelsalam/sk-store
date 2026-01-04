@@ -4,7 +4,6 @@ import { useMemo, useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/useCart";
-import { useToast } from "@/components/ui/use-toast";
 import CheckoutOrderSummary from "@/components/checkout/CheckoutOrderSummary";
 import CheckoutForm from "@/components/checkout/CheckoutForm";
 import EmptyCart from "@/components/checkout/EmptyCart";
@@ -22,7 +21,6 @@ export default function Checkout() {
   const isAr = locale === "ar";
 
   const { items, getTotalPrice, clearCart } = useCart();
-  const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderCompleted, setOrderCompleted] = useState(false);
   const [shippingPrice, setShippingPrice] = useState(0);
@@ -195,18 +193,9 @@ export default function Checkout() {
       // Server automatically clears cart after order, just clear local state
       clearCart(); // Clear from local state
       router.push(`/${locale}/order-success`);
-      
-      // Show toast after navigation starts
-      setTimeout(() => {
-        toast({
-          title: t("orderSuccessTitle"),
-          description: t("orderSuccessDesc", { shipping: nf.format(shipping), currency: "EGP" }),
-          duration: 5000,
-        });
-      }, 100);
     } catch (error) {
       const message = error instanceof Error ? error.message : typeof error === "string" ? error : t("genericErrorDesc");
-      toast({ title: t("genericErrorTitle"), description: message, variant: "destructive" });
+      console.error('Order error:', message);
     } finally {
       setIsProcessing(false);
     }

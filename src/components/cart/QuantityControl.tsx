@@ -18,7 +18,7 @@ const QuantityControl = memo(({ quantity, onIncrease, onDecrease, disabled, disa
         variant="outline"
         size="sm"
         onClick={onDecrease}
-        disabled={quantity <= 1 || disabled}
+        disabled={disabled}
         aria-label="تقليل الكمية"
       >
         <Minus className="h-4 w-4" />

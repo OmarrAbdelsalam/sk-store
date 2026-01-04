@@ -5,8 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tag, Check, X, Loader2 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { Tag, X, Loader2, AlertCircle } from "lucide-react";
 import { applyDiscount, deleteDiscount } from "@/lib/api/discount";
 import { getOrCreateSessionId } from "@/lib/session";
 import DiscountBreakdown from "@/components/ui/DiscountBreakdown";
@@ -39,22 +38,19 @@ export default function PromoCodeInput({
   const t = useTranslations("PromoCode");
   const locale = useLocale();
   const isAr = locale === "ar";
-  const { toast } = useToast();
   
   const [promoCode, setPromoCode] = useState("");
   const [isApplying, setIsApplying] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleApplyPromoCode = async () => {
     if (!promoCode.trim()) {
-      toast({
-        title: t("error"),
-        description: t("enterCode"),
-        variant: "destructive",
-      });
+      setErrorMessage(t("enterCode"));
       return;
     }
 
+    setErrorMessage(null);
     setIsApplying(true);
     try {
       const sessionId = getOrCreateSessionId();
@@ -69,28 +65,14 @@ export default function PromoCodeInput({
           finalTotal: result.data.finalTotal
         });
         
-        toast({
-          title: t("success"),
-          description: t("applied", { 
-            code: promoCode.trim(),
-            amount: result.data.discountValue.toFixed(2)
-          }),
-        });
-        
         setPromoCode("");
+        setErrorMessage(null);
       } else {
-        toast({
-          title: t("error"),
-          description: result.message || t("invalidCode"),
-          variant: "destructive",
-        });
+        // عرض رسالة خطأ عامة
+        setErrorMessage(t("invalidCodeDesc"));
       }
     } catch (error) {
-      toast({
-        title: t("error"),
-        description: t("networkError"),
-        variant: "destructive",
-      });
+      setErrorMessage(t("networkError"));
     } finally {
       setIsApplying(false);
     }
@@ -98,29 +80,18 @@ export default function PromoCodeInput({
 
   const handleRemoveDiscount = async () => {
     setIsRemoving(true);
+    setErrorMessage(null);
     try {
       const sessionId = getOrCreateSessionId();
       const result = await deleteDiscount(sessionId);
 
       if (result.succeeded) {
         onDiscountRemoved();
-        toast({
-          title: t("removed"),
-          description: t("discountRemoved"),
-        });
       } else {
-        toast({
-          title: t("error"),
-          description: result.message || t("removeError"),
-          variant: "destructive",
-        });
+        setErrorMessage(result.message || t("removeError"));
       }
     } catch (error) {
-      toast({
-        title: t("error"),
-        description: t("networkError"),
-        variant: "destructive",
-      });
+      setErrorMessage(t("networkError"));
     } finally {
       setIsRemoving(false);
     }
@@ -132,8 +103,20 @@ export default function PromoCodeInput({
     }
   };
 
+  const clearError = () => {
+    if (errorMessage) setErrorMessage(null);
+  };
+
   return (
     <div className="space-y-3">
+      {/* رسالة الخطأ */}
+      {errorMessage && (
+        <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+          <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-red-600">{errorMessage}</p>
+        </div>
+      )}
+
       {/* عرض الخصم المطبق */}
       {appliedDiscount && (
         <div className="space-y-3">
@@ -181,7 +164,10 @@ export default function PromoCodeInput({
                 type="text"
                 placeholder={t("placeholder")}
                 value={promoCode}
-                onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                onChange={(e) => {
+                  setPromoCode(e.target.value.toUpperCase());
+                  clearError();
+                }}
                 onKeyPress={handleKeyPress}
                 disabled={isApplying || disabled}
                 className={`${isAr ? "pr-10" : "pl-10"} uppercase`}

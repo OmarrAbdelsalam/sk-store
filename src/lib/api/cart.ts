@@ -60,7 +60,7 @@ export async function updateItemQuantity(params: {
   sessionId: string;
   itemId: number;
   quantity: number;
-}) {
+}): Promise<{ success: boolean; stockError?: boolean; message?: string }> {
   const url = new URL(`${BASE}/api/Cart/Items/Quantity`);
   url.searchParams.set("SessionId", params.sessionId);
   url.searchParams.set("itemId", String(params.itemId));
@@ -71,11 +71,21 @@ export async function updateItemQuantity(params: {
     cache: "no-store",
     headers: { "Content-Type": "application/json" }
   });
+  
   if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`PUT /Cart/Items/Quantity ${res.status}: ${errorText}`);
+    try {
+      const errorData = await res.json();
+      // Check if it's a stock error
+      if (errorData.message?.toLowerCase().includes('stock') || 
+          errorData.message?.toLowerCase().includes('quantity')) {
+        return { success: false, stockError: true, message: errorData.message };
+      }
+      return { success: false, message: errorData.message };
+    } catch {
+      return { success: false, message: `Error ${res.status}` };
+    }
   }
-  return true;
+  return { success: true };
 }
 
 /** حذف عنصر واحد */

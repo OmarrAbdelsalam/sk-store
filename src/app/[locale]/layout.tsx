@@ -6,6 +6,7 @@ import Footer from '@/components/Footer';
 import { CartProvider } from '@/hooks/useCart';
 import { NavigationLoadingProvider } from '@/contexts/NavigationLoadingContext';
 import NavigationLoadingOverlay from '@/components/ui/NavigationLoadingOverlay';
+import { Toaster } from '@/components/ui/toaster';
 import { Cairo, Inter } from 'next/font/google';
 import { defaultMetadata } from '@/lib/metadata';
 import SEOHead from '@/components/SEOHead';
@@ -69,6 +70,7 @@ export default async function LocaleLayout({
               {children}
               <Footer />
               <NavigationLoadingOverlay />
+              <Toaster />
             </CartProvider>
           </NavigationLoadingProvider>
         </NextIntlClientProvider>

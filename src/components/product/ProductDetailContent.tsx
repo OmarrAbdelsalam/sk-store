@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useCart } from "@/hooks/useCart";
-import { useToast } from "@/components/ui/use-toast";
 import { getOrCreateSessionId } from "@/lib/session";
 import { addToCart as addToCartApi, getCart } from "@/lib/api/cart";
 import type { ProductApi } from "@/lib/api/products";
@@ -51,12 +50,12 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
   const t = useTranslations("ProductDetail");
 
   const { addToCart } = useCart();
-  const { toast } = useToast();
 
   const [quantity, setQuantity] = useState(1);
   const [selectedColorId, setSelectedColorId] = useState<number>(0);
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [busy, setBusy] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const allColors: Color[] = product?.colors ?? [];
   const variants: Variant[] = product?.variants ?? [];
@@ -224,23 +223,20 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
   const handleAddToCart = async () => {
     if (!product) return;
     const sessionId = getOrCreateSessionId();
+    setErrorMessage(null);
 
     if ((product.colors?.length ?? 0) > 0 && !selectedColorId) {
-      toast({ title: t("chooseColorFirst"), variant: "destructive" });
+      setErrorMessage(t("chooseColorFirst"));
       return;
     }
     if (product.hasSizes && !resolvedSizeId) {
-      toast({ title: t("chooseSizeFirst"), variant: "destructive" });
+      setErrorMessage(t("chooseSizeFirst"));
       return;
     }
     
     // التحقق من الكمية المتاحة
     if (quantity > availableStock) {
-      toast({ 
-        title: t("insufficientStock"), 
-        description: t("availableQuantity", { quantity: availableStock }),
-        variant: "destructive" 
-      });
+      setErrorMessage(t("availableQuantity", { quantity: availableStock }));
       return;
     }
 
@@ -269,15 +265,9 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
       // تحديث السلة بعد الإضافة
       const updatedCart = await getCart(sessionId);
       setCartItems(updatedCart.items || []);
-
-      toast({ title: t("addedToCart"), description: t("savedSelections") });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : t("unknownError");
-      toast({
-        title: t("addFailed"),
-        description: msg,
-        variant: "destructive",
-      });
+      setErrorMessage(msg);
     } finally {
       setBusy(false);
     }

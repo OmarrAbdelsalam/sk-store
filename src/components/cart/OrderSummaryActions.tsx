@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { memo, useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
 import { getCart, updateItemQuantity } from "@/lib/api/cart";
 import { getProductById } from "@/lib/api/products";
 import { getOrCreateSessionId } from "@/lib/session";
@@ -13,7 +12,6 @@ const OrderSummaryActions = memo(() => {
   const locale = useLocale();
   const t = useTranslations("OrderSummary");
   const tCart = useTranslations("Cart");
-  const { toast } = useToast();
   const [isValidating, setIsValidating] = useState(false);
 
   const validateStockAndCheckout = async () => {
@@ -93,23 +91,6 @@ const OrderSummaryActions = memo(() => {
           }
         }
 
-        // عرض رسالة للمستخدم
-        const outOfStockItems = updates.filter(u => u.newQuantity === 0);
-        const adjustedItems = updates.filter(u => u.newQuantity > 0);
-
-        let message = "";
-        if (outOfStockItems.length > 0) {
-          message = tCart("someItemsOutOfStock");
-        } else if (adjustedItems.length > 0) {
-          message = tCart("quantitiesAdjusted");
-        }
-
-        toast({
-          title: tCart("stockValidation"),
-          description: message,
-          variant: "default",
-        });
-
         // إعادة تحميل الصفحة لتحديث السلة
         window.location.reload();
       } else {
@@ -118,11 +99,6 @@ const OrderSummaryActions = memo(() => {
       }
     } catch (error) {
       console.error("Error validating stock:", error);
-      toast({
-        title: tCart("validationError"),
-        description: tCart("tryAgainLater"),
-        variant: "destructive",
-      });
     } finally {
       setIsValidating(false);
     }

@@ -1,9 +1,9 @@
 "use client";
-import { Trash2 } from "lucide-react";
+import { Trash2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { memo, useCallback, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import CartItemImage from "./CartItemImage";
 import CartItemDetails from "./CartItemDetails";
 import QuantityControl from "./QuantityControl";
@@ -22,27 +22,42 @@ interface CartItemProps {
     color?: string;
     colorName?: string;
     addOns?: string[];
+    isMaxStock?: boolean;
   };
-  onUpdateQuantity: (itemId: number, quantity: number) => void;
+  onUpdateQuantity: (itemId: number, quantity: number) => Promise<boolean>;
   onRemove: (itemId: number) => void;
   maxQuantity?: number;
 }
 
 const CartItem = memo(({ item, onUpdateQuantity, onRemove, maxQuantity }: CartItemProps) => {
   const [busy, setBusy] = useState(false);
+  const [isMaxReached, setIsMaxReached] = useState(item.isMaxStock || false);
   const t = useTranslations("CartItem");
+  const tCart = useTranslations("Cart");
+  const locale = useLocale();
+  const isAr = locale === "ar";
 
-  const canIncrease = maxQuantity === undefined || item.quantity < maxQuantity;
+  const canIncrease = !isMaxReached && (maxQuantity === undefined || item.quantity < maxQuantity);
 
-  const handleIncrease = useCallback(() => {
-    if (canIncrease) {
-      onUpdateQuantity(item.itemId, item.quantity + 1);
+  const handleIncrease = useCallback(async () => {
+    if (!canIncrease || busy) return;
+    
+    setBusy(true);
+    const success = await onUpdateQuantity(item.itemId, item.quantity + 1);
+    if (!success) {
+      setIsMaxReached(true);
     }
-  }, [item.itemId, item.quantity, onUpdateQuantity, canIncrease]);
+    setBusy(false);
+  }, [item.itemId, item.quantity, onUpdateQuantity, canIncrease, busy]);
 
-  const handleDecrease = useCallback(() => {
-    onUpdateQuantity(item.itemId, item.quantity - 1);
-  }, [item.itemId, item.quantity, onUpdateQuantity]);
+  const handleDecrease = useCallback(async () => {
+    if (busy) return;
+    setBusy(true);
+    // لو نقص الكمية، يمكن يقدر يزود تاني
+    setIsMaxReached(false);
+    await onUpdateQuantity(item.itemId, item.quantity - 1);
+    setBusy(false);
+  }, [item.itemId, item.quantity, onUpdateQuantity, busy]);
 
   const handleRemove = useCallback(() => {
     onRemove(item.itemId);
@@ -84,6 +99,19 @@ const CartItem = memo(({ item, onUpdateQuantity, onRemove, maxQuantity }: CartIt
               disabled={busy}
               disableIncrease={!canIncrease}
             />
+
+            {/* رسالة الحد الأقصى */}
+            {isMaxReached && (
+              <div className="flex items-center gap-2 text-red-600 text-sm">
+                <AlertCircle className="w-4 h-4" />
+                <span>
+                  {item.quantity === 1 
+                    ? (isAr ? "هذه القطعة الأخيرة المتاحة" : "This is the last available piece")
+                    : (isAr ? `هذه آخر ${item.quantity} قطع متاحة` : `These are the last ${item.quantity} pieces available`)
+                  }
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </CardContent>

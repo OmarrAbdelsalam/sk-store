@@ -1,6 +1,5 @@
 "use client"
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from 'react';
-import { useToast } from "@/components/ui/use-toast";
 import { getOrCreateSessionId } from "@/lib/session";
 import { getCart, deleteItem, updateItemQuantity, clearCart as clearCartAPI } from "@/lib/api/cart";
 
@@ -15,13 +14,16 @@ interface CartItem {
   colorName?: string;
   sizeId?: number;
   sizeName?: string;
+  availableStock?: number; // الكمية المتاحة في المخزون
+  isMaxStock?: boolean; // هل وصل للحد الأقصى
 }
 
 interface CartContextType {
   items: CartItem[];
+  isLoading: boolean;
   addToCart: (product: Omit<CartItem, 'quantity' | 'itemId'>, quantityToAdd?: number) => void;
   removeFromCart: (itemId: number) => void;
-  updateQuantity: (itemId: number, quantity: number) => void;
+  updateQuantity: (itemId: number, quantity: number) => Promise<boolean>;
   clearCart: () => void;
   getTotalItems: () => number;
   getTotalPrice: () => number;
@@ -33,7 +35,6 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
 
   // Load cart from server on mount
   const loadCartFromServer = useCallback(async () => {
@@ -82,6 +83,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             colorName: item.colorNameEn || item.colorNameAr,
             sizeId: item.sizeId,
             sizeName: item.sizeName,
+            availableStock: item.availableStock ?? item.stock ?? item.availableQuantity,
           };
         });
         
@@ -104,15 +106,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const addToCart = useCallback((product: Omit<CartItem, 'quantity' | 'itemId'>, quantityToAdd: number = 1) => {
     // This is called after API add, just refresh cart from server
     loadCartFromServer();
-    
-    setTimeout(() => {
-      toast({
-        title: "تم إضافة المنتج",
-        description: `تم إضافة ${product.name} إلى السلة`,
-        duration: 2000,
-      });
-    }, 0);
-  }, [loadCartFromServer, toast]);
+  }, [loadCartFromServer]);
 
   const removeFromCart = useCallback(async (itemId: number) => {
     try {
@@ -124,46 +118,45 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       
       // Refresh cart from server
       await loadCartFromServer();
-      
-      toast({
-        title: "تم حذف المنتج",
-        description: "تم حذف المنتج من السلة",
-        duration: 2000,
-      });
     } catch (error) {
       console.error('Failed to remove item from server:', error);
-      toast({
-        title: "فشل الحذف",
-        description: "حاول مرة أخرى",
-        variant: "destructive",
-      });
     }
-  }, [loadCartFromServer, toast]);
+  }, [loadCartFromServer]);
 
-  const updateQuantity = useCallback(async (itemId: number, quantity: number) => {
+  const updateQuantity = useCallback(async (itemId: number, quantity: number): Promise<boolean> => {
     if (quantity <= 0) {
       await removeFromCart(itemId);
-      return;
+      return true;
     }
     
     try {
       const sessionId = getOrCreateSessionId();
       
       // Update on server first
-      await updateItemQuantity({ sessionId, itemId, quantity });
+      const result = await updateItemQuantity({ sessionId, itemId, quantity });
+      
+      if (!result.success) {
+        // لو فشل بسبب المخزون، نحدث الـ item إنه وصل للحد الأقصى
+        if (result.stockError) {
+          setItems(prev => prev.map(item => 
+            item.itemId === itemId 
+              ? { ...item, isMaxStock: true }
+              : item
+          ));
+        }
+        return false;
+      }
+      
       console.log('Quantity updated on server');
       
       // Refresh cart from server
       await loadCartFromServer();
+      return true;
     } catch (error) {
       console.error('Failed to update quantity on server:', error);
-      toast({
-        title: "فشل التحديث",
-        description: "حاول مرة أخرى",
-        variant: "destructive",
-      });
+      return false;
     }
-  }, [loadCartFromServer, removeFromCart, toast]);
+  }, [loadCartFromServer, removeFromCart]);
 
   const clearCart = useCallback(async () => {
     try {
@@ -200,6 +193,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const value = useMemo(() => ({
     items,
+    isLoading,
     addToCart,
     removeFromCart,
     updateQuantity,
@@ -207,7 +201,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     getTotalItems,
     getTotalPrice,
     refreshCart
-  }), [items, addToCart, removeFromCart, updateQuantity, clearCart, getTotalItems, getTotalPrice, refreshCart]);
+  }), [items, isLoading, addToCart, removeFromCart, updateQuantity, clearCart, getTotalItems, getTotalPrice, refreshCart]);
 
   return (
     <CartContext.Provider value={value}>
