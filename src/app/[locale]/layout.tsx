@@ -7,7 +7,7 @@ import { CartProvider } from '@/hooks/useCart';
 import { NavigationLoadingProvider } from '@/contexts/NavigationLoadingContext';
 import NavigationLoadingOverlay from '@/components/ui/NavigationLoadingOverlay';
 import { Toaster } from '@/components/ui/toaster';
-import { Cairo, Inter } from 'next/font/google';
+import { Cairo, Inter, Playfair_Display } from 'next/font/google';
 import { defaultMetadata } from '@/lib/metadata';
 import SEOHead from '@/components/SEOHead';
 import { Analytics } from '@vercel/analytics/next';
@@ -15,14 +15,23 @@ import type { Metadata } from 'next';
 
 const cairo = Cairo({
   subsets: ['arabic'],
-  weight: ['400', '500', '600', '700'],
+  weight: ['400', '500', '600'],
   variable: '--font-cairo',
+  display: 'swap',
 });
 
 const inter = Inter({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
+  weight: ['400', '500', '600'],
   variable: '--font-inter',
+  display: 'swap',
+});
+
+const playfair = Playfair_Display({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  variable: '--font-playfair',
+  display: 'swap',
 });
 
 export const metadata: Metadata = defaultMetadata;
@@ -61,13 +70,15 @@ export default async function LocaleLayout({
         <meta name="twitter:image" content="https://scrubhousev1.vercel.app/yhouse-logo.png" />
         <meta name="twitter:card" content="summary_large_image" />
       </head>
-      <body className={locale === 'ar' ? cairo.className : inter.className}>    
+      <body className={`${cairo.variable} ${inter.variable} ${playfair.variable} ${locale === 'ar' ? 'font-cairo' : 'font-inter'}`}>    
         <SEOHead locale={locale} />
         <NextIntlClientProvider locale={locale}>
           <NavigationLoadingProvider>
             <CartProvider>
               <Navigation />
-              {children}
+              <main id="main-content">
+                {children}
+              </main>
               <Footer />
               <NavigationLoadingOverlay />
               <Toaster />

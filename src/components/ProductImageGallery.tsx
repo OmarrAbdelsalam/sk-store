@@ -274,8 +274,8 @@ const ProductImageGallery = ({
           className={clsx(
             // موبايل: نسبة أقصر (3/3.5 بدلاً من 3/4)
             "relative aspect-[3/3.5] bg-luxury-cream rounded-lg overflow-hidden cursor-zoom-in group",
-            // ديسكتوب: ارتفاع ثابت 70vh
-            "lg:aspect-auto lg:h-[70vh]"
+            // ديسكتوب: نسبة 2:3 (عرض:ارتفاع)
+            "lg:aspect-[2/3]"
           )}
           onClick={() => setIsLightboxOpen(true)}
         >

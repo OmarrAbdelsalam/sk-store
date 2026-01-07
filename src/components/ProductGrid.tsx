@@ -298,24 +298,14 @@ const ProductGrid = () => {
     indexOfLastProduct
   );
 
-  /* Prefetch visible products - immediately for instant loading */
+  /* Prefetch visible products - only first page */
   useEffect(() => {
-    if (currentProducts.length > 0) {
-      // Prefetch all current page products immediately
-      const productIds = currentProducts.map(p => p.id);
+    if (currentProducts.length > 0 && currentPage === 1) {
+      // Only prefetch first 4 products on initial load
+      const productIds = currentProducts.slice(0, 4).map(p => p.id);
       prefetchProducts(productIds);
-      
-      // Prefetch next page products if available
-      if (currentPage < totalPages) {
-        const nextPageStart = indexOfLastProduct;
-        const nextPageEnd = nextPageStart + productsPerPage;
-        const nextPageProducts = filteredProducts.slice(nextPageStart, nextPageEnd);
-        const nextPageIds = nextPageProducts.map(p => p.id);
-        // Delay slightly to prioritize current page
-        setTimeout(() => prefetchProducts(nextPageIds), 500);
-      }
     }
-  }, [currentProducts, currentPage, totalPages, indexOfLastProduct, productsPerPage, filteredProducts]);
+  }, [currentProducts, currentPage]);
 
   /* Actions */
   const showAll = () => {

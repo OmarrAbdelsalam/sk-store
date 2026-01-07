@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useTranslations, useLocale } from 'next-intl';
 import { useCategories } from "@/hooks/useCategories";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 const Footer = () => {
   const t = useTranslations();
@@ -108,11 +109,15 @@ const Footer = () => {
 
           {/* Footer Image */}
           <div className="flex items-center justify-center">
-            <img 
-              src="/footer.jpg" 
+            <Image 
+              src="/footer.webp" 
               alt="Footer decoration" 
+              width={300}
+              height={450}
               className={`w-full h-auto object-contain ${locale === 'ar' ? 'scale-x-[-1]' : ''}`}
               style={{ mixBlendMode: 'screen' }}
+              sizes="(max-width: 768px) 100vw, 25vw"
+              loading="lazy"
             />
           </div>
         </div>
@@ -128,6 +133,7 @@ const Footer = () => {
                 size="sm" 
                 className="text-primary-foreground/60 hover:text-white"
                 onClick={() => window.open("https://www.instagram.com/housescrub/", "_blank")}
+                aria-label="Instagram"
               >
                 <Instagram className="h-5 w-5" />
               </Button>
@@ -136,6 +142,7 @@ const Footer = () => {
                 size="sm" 
                 className="text-primary-foreground/60 hover:text-white"
                 onClick={() => window.open("https://www.facebook.com/housescrub/", "_blank")}
+                aria-label="Facebook"
               >
                 <Facebook className="h-5 w-5" />
               </Button>

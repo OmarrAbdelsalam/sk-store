@@ -46,6 +46,7 @@ export const CartButton = ({ isMobile = false, className = "" }: CartButtonProps
         size="sm" 
         className="relative"
         onMouseEnter={handleHover}
+        aria-label={cartItemsCount > 0 ? `Cart (${cartItemsCount} items)` : 'Cart'}
       >
         <ShoppingBag className="h-5 w-5" />
         {mounted && cartItemsCount > 0 && (

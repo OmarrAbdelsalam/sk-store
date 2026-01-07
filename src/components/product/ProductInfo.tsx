@@ -98,7 +98,7 @@ const ProductInfo = React.memo(function ProductInfo({
         )}
         <div className="flex items-center gap-3" aria-label={t("a11y.price")}>
           {beforePrice && (
-            <p className="text-lg text-red-500 line-through font-medium">
+            <p className="text-lg text-red-700 line-through font-medium">
               {beforePrice} {locale === 'ar' ? 'جنيه' : 'EGP'}
             </p>
           )}

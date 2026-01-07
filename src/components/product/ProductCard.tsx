@@ -4,8 +4,6 @@ import Image from "next/image";
 import { Link as IntlLink } from "@/i18n/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { prefetchProduct } from "@/hooks/useProduct";
-import { motion, AnimatePresence } from "framer-motion";
-
 import * as React from "react";
 
 interface Product {
@@ -58,13 +56,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const locale = useLocale();
   const t = useTranslations("ProductCard");
 
-  // Prefetch on mount for visible products
-  React.useEffect(() => {
-    if (index < 8) {
-      prefetchProduct(product.id);
-    }
-  }, [product.id, index]);
-
   const [isHovered, setIsHovered] = React.useState(false);
   const [showStockBadge, setShowStockBadge] = React.useState(true);
   const [selectedColorId, setSelectedColorId] = React.useState<number | null>(null);
@@ -104,11 +95,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   const handleMouseEnter = React.useCallback(() => {
     setIsHovered(true);
-    // Prefetch product data on hover
     prefetchProduct(product.id);
   }, [product.id]);
 
-  // Toggle between stock badge and description every 3 seconds
+  // Toggle stock badge - only for low stock items
   React.useEffect(() => {
     if (totalStock > 0 && totalStock <= 10) {
       const interval = setInterval(() => {
@@ -118,11 +108,18 @@ const ProductCard: React.FC<ProductCardProps> = ({
     }
   }, [totalStock]);
 
+  // Prefetch on mount for first 4 visible products only
+  React.useEffect(() => {
+    if (index < 4) {
+      prefetchProduct(product.id);
+    }
+  }, [product.id, index]);
+
   return (
-    <IntlLink href={`/${product.id}`} prefetch={true}>
+    <IntlLink href={`/${product.id}`} prefetch={index < 8}>
       <div
-        className="cursor-pointer animate-slide-up flex flex-col h-full transition-all duration-300"
-        style={{ animationDelay: `${index * 0.1}s` }}
+        className="cursor-pointer flex flex-col h-full transition-all duration-300"
+        style={{ animationDelay: `${Math.min(index, 4) * 0.05}s` }}
       >
         {/* Product Image */}
         <div 
@@ -135,12 +132,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
             src={displayImage}
             alt={product.name}
             fill
-            sizes="(min-width: 1280px) 20vw, (min-width: 1024px) 25vw, (min-width: 768px) 33vw, 100vw"
-            className="object-cover transition-all duration-700 ease-in-out group-hover:scale-105"
-            priority={index < 3}
+            sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            priority={index < 2}
+            loading={index < 4 ? "eager" : "lazy"}
           />
           
-          {/* View Details Button - visible on mobile, hover on desktop */}
+          {/* View Details Button */}
           {!hideViewDetails && (
             <div className="absolute bottom-4 left-4 right-4 md:opacity-0 md:translate-y-4 md:group-hover:opacity-100 md:group-hover:translate-y-0 transition-all duration-300">
               <div className="bg-white text-black font-medium text-sm md:text-base py-3 px-4 rounded-full text-center shadow-lg">
@@ -161,64 +159,49 @@ const ProductCard: React.FC<ProductCardProps> = ({
           )}
         </div>
 
-      {/* Product Info */}
-      <div className="space-y-2 flex flex-col flex-1">
-        <div className="flex-1 space-y-2">
-          <div className="flex flex-col gap-1">
-            <h3 className="font-medium text-sm md:text-base transition-colors line-clamp-2">
-              {product.name}
-            </h3>
-            <div className="flex items-center gap-2 text-start">
-              {product.raw?.beforePrice && (
-                <p className="text-xs md:text-sm text-red-500 line-through font-medium">
-                  {product.raw.beforePrice} {locale === 'ar' ? 'جنيه' : 'EGP'}
+        {/* Product Info */}
+        <div className="space-y-2 flex flex-col flex-1">
+          <div className="flex-1 space-y-2">
+            <div className="flex flex-col gap-1">
+              <h3 className="font-medium text-sm md:text-base transition-colors line-clamp-2">
+                {product.name}
+              </h3>
+              <div className="flex items-center gap-2 text-start">
+                {product.raw?.beforePrice && (
+                  <p className="text-xs md:text-sm text-red-700 line-through font-medium">
+                    {product.raw.beforePrice} {locale === 'ar' ? 'جنيه' : 'EGP'}
+                  </p>
+                )}
+                <p className="font-semibold text-sm md:text-base">
+                  {product.price}
+                </p>
+              </div>
+            </div>
+
+            {/* Stock/Description - Simple CSS transition instead of framer-motion */}
+            <div className="relative min-h-[2.5rem]">
+              {totalStock > 0 && totalStock <= 10 ? (
+                <p 
+                  className={`text-xs md:text-sm font-medium transition-opacity duration-300 ${
+                    showStockBadge ? 'text-red-600' : 'text-muted-foreground line-clamp-2'
+                  }`}
+                >
+                  {showStockBadge 
+                    ? (locale === 'ar' 
+                        ? `${totalStock === 1 ? 'قطعة واحدة متبقية!' : `${totalStock} قطع متبقية!`}`
+                        : `Only ${totalStock} piece${totalStock === 1 ? '' : 's'} left!`)
+                    : product.description
+                  }
+                </p>
+              ) : (
+                <p className="text-muted-foreground text-xs md:text-sm leading-relaxed line-clamp-2">
+                  {product.description}
                 </p>
               )}
-              <p className="font-semibold text-sm md:text-base">
-                {product.price}
-              </p>
             </div>
-          </div>
 
-          <div className="relative">
-            {totalStock > 0 && totalStock <= 10 ? (
-              <AnimatePresence mode="wait">
-                {showStockBadge ? (
-                  <motion.p
-                    key="stock-badge"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.4, ease: "easeInOut" }}
-                    className="text-red-600 text-xs md:text-sm font-medium"
-                  >
-                    {locale === 'ar' 
-                      ? `${totalStock === 1 ? 'قطعة واحدة متبقية!' : `${totalStock} قطع متبقية!`}`
-                      : `Only ${totalStock} piece${totalStock === 1 ? '' : 's'} left!`
-                    }
-                  </motion.p>
-                ) : (
-                  <motion.p
-                    key="description"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.4, ease: "easeInOut" }}
-                    className="text-muted-foreground text-xs md:text-sm leading-relaxed line-clamp-2"
-                  >
-                    {product.description}
-                  </motion.p>
-                )}
-              </AnimatePresence>
-            ) : (
-              <p className="text-muted-foreground text-xs md:text-sm leading-relaxed line-clamp-2">
-                {product.description}
-              </p>
-            )}
-          </div>
-
-          {Array.isArray(product.availableColors) &&
-            product.availableColors.length > 0 && (
+            {/* Color Options */}
+            {Array.isArray(product.availableColors) && product.availableColors.length > 0 && (
               <div className="flex items-center gap-2">
                 <div className="flex gap-1.5">
                   {product.availableColors.map((color, i) => {
@@ -244,11 +227,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 </div>
               </div>
             )}
+          </div>
         </div>
       </div>
-    </div>
     </IntlLink>
   );
 };
 
-export default ProductCard;
+export default React.memo(ProductCard);
