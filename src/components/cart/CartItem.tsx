@@ -30,7 +30,6 @@ interface CartItemProps {
 }
 
 const CartItem = memo(({ item, onUpdateQuantity, onRemove, maxQuantity }: CartItemProps) => {
-  const [busy, setBusy] = useState(false);
   const [isMaxReached, setIsMaxReached] = useState(item.isMaxStock || false);
   const t = useTranslations("CartItem");
   const tCart = useTranslations("Cart");
@@ -39,25 +38,23 @@ const CartItem = memo(({ item, onUpdateQuantity, onRemove, maxQuantity }: CartIt
 
   const canIncrease = !isMaxReached && (maxQuantity === undefined || item.quantity < maxQuantity);
 
-  const handleIncrease = useCallback(async () => {
-    if (!canIncrease || busy) return;
+  const handleIncrease = useCallback(() => {
+    if (!canIncrease) return;
     
-    setBusy(true);
-    const success = await onUpdateQuantity(item.itemId, item.quantity + 1);
-    if (!success) {
-      setIsMaxReached(true);
-    }
-    setBusy(false);
-  }, [item.itemId, item.quantity, onUpdateQuantity, canIncrease, busy]);
+    // Fire and forget - الـ UI هيتحدث فوراً من الـ optimistic update
+    onUpdateQuantity(item.itemId, item.quantity + 1).then(success => {
+      if (!success) {
+        setIsMaxReached(true);
+      }
+    });
+  }, [item.itemId, item.quantity, onUpdateQuantity, canIncrease]);
 
-  const handleDecrease = useCallback(async () => {
-    if (busy) return;
-    setBusy(true);
+  const handleDecrease = useCallback(() => {
     // لو نقص الكمية، يمكن يقدر يزود تاني
     setIsMaxReached(false);
-    await onUpdateQuantity(item.itemId, item.quantity - 1);
-    setBusy(false);
-  }, [item.itemId, item.quantity, onUpdateQuantity, busy]);
+    // Fire and forget - الـ UI هيتحدث فوراً من الـ optimistic update
+    onUpdateQuantity(item.itemId, item.quantity - 1);
+  }, [item.itemId, item.quantity, onUpdateQuantity]);
 
   const handleRemove = useCallback(() => {
     onRemove(item.itemId);
@@ -83,7 +80,6 @@ const CartItem = memo(({ item, onUpdateQuantity, onRemove, maxQuantity }: CartIt
                 variant="ghost"
                 size="sm"
                 onClick={handleRemove}
-                disabled={busy}
                 className="text-destructive hover:text-destructive/80"
                 title={t("remove")}
                 aria-label={t("remove")}
@@ -96,7 +92,6 @@ const CartItem = memo(({ item, onUpdateQuantity, onRemove, maxQuantity }: CartIt
               quantity={item.quantity}
               onIncrease={handleIncrease}
               onDecrease={handleDecrease}
-              disabled={busy}
               disableIncrease={!canIncrease}
             />
 

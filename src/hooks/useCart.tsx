@@ -129,13 +129,26 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       return true;
     }
     
+    // حفظ الحالة القديمة للـ rollback
+    const previousItems = items;
+    
+    // Optimistic Update - نحدث الـ UI فوراً
+    setItems(prev => prev.map(item => 
+      item.itemId === itemId 
+        ? { ...item, quantity, isMaxStock: false }
+        : item
+    ));
+    
     try {
       const sessionId = getOrCreateSessionId();
       
-      // Update on server first
+      // API call في الخلفية
       const result = await updateItemQuantity({ sessionId, itemId, quantity });
       
       if (!result.success) {
+        // Rollback لو فشل
+        setItems(previousItems);
+        
         // لو فشل بسبب المخزون، نحدث الـ item إنه وصل للحد الأقصى
         if (result.stockError) {
           setItems(prev => prev.map(item => 
@@ -147,16 +160,14 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         return false;
       }
       
-      console.log('Quantity updated on server');
-      
-      // Refresh cart from server
-      await loadCartFromServer();
       return true;
     } catch (error) {
+      // Rollback لو حصل error
+      setItems(previousItems);
       console.error('Failed to update quantity on server:', error);
       return false;
     }
-  }, [loadCartFromServer, removeFromCart]);
+  }, [items, removeFromCart]);
 
   const clearCart = useCallback(async () => {
     try {
