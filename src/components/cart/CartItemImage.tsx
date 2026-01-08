@@ -7,16 +7,19 @@ interface CartItemImageProps {
 
 export default function CartItemImage({ src, alt }: CartItemImageProps) {
   return (
-    <div className="relative w-24 h-24 bg-luxury-cream rounded-lg overflow-hidden flex-shrink-0">
+    <div className="relative w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-br from-luxury-cream to-luxury-platinum 
+      rounded-xl overflow-hidden flex-shrink-0 group/image shadow-sm">
       <Image
         src={src}
         alt={alt}
         fill
-        sizes="96px"
-        className="object-cover"
+        sizes="(max-width: 640px) 96px, 128px"
+        className="object-cover transition-transform duration-500 group-hover/image:scale-110"
         loading="lazy"
-        quality={75}
+        quality={80}
       />
+      {/* تأثير hover على الصورة */}
+      <div className="absolute inset-0 bg-black/0 group-hover/image:bg-black/5 transition-colors duration-300" />
     </div>
   );
 }

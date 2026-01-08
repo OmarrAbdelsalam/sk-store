@@ -243,17 +243,47 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
     try {
       setBusy(true);
 
-      const cartPayload = {
-        sessionId,
-        productId: product.id,
-        colorId: selectedColorId ?? 0,
-        sizeId: resolvedSizeId ?? 0,
-        quantity,
-      };
-      
-      console.log('Adding to cart API:', cartPayload);
-      await addToCartApi(cartPayload);
-      console.log('Successfully added to cart API');
+      // التحقق لو المنتج موجود في السلة بنفس اللون والمقاس
+      const existingItem = cartItems.find(item => {
+        const isSameProduct = item.productId === product.id;
+        const isSameColor = item.colorId === (selectedColorId || 0);
+        const isSameSize = item.sizeId === (resolvedSizeId || 0);
+        return isSameProduct && isSameColor && isSameSize;
+      });
+
+      if (existingItem) {
+        // لو موجود، نزود الكمية بدل ما نضيف item جديد
+        const { updateItemQuantity } = await import("@/lib/api/cart");
+        const newQuantity = existingItem.quantity + quantity;
+        
+        const result = await updateItemQuantity({
+          sessionId,
+          itemId: existingItem.cartItemId,
+          quantity: newQuantity,
+        });
+
+        if (!result.success) {
+          if (result.stockError) {
+            setErrorMessage(isAr ? "الكمية المطلوبة غير متاحة في المخزون" : "Requested quantity not available in stock");
+          } else {
+            setErrorMessage(result.message || (isAr ? "حدث خطأ" : "An error occurred"));
+          }
+          return;
+        }
+      } else {
+        // لو مش موجود، نضيف item جديد
+        const cartPayload = {
+          sessionId,
+          productId: product.id,
+          colorId: selectedColorId ?? 0,
+          sizeId: resolvedSizeId ?? 0,
+          quantity,
+        };
+        
+        console.log('Adding to cart API:', cartPayload);
+        await addToCartApi(cartPayload);
+        console.log('Successfully added to cart API');
+      }
 
       addToCart({
         id: product.id,

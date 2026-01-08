@@ -237,6 +237,23 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  /* Cart Item Animations */
+  .cart-item-enter {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  
+  .cart-item-enter-active {
+    opacity: 1;
+    transform: translateX(0);
+    transition: all 0.3s ease-out;
+  }
+
+  /* Delay animation helper */
+  .delay-150 {
+    animation-delay: 150ms;
+  }
 }
 /* Navigation Loading Animations */
 @keyframes navigation-pulse {

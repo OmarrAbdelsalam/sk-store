@@ -5,8 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { ArrowLeft, ArrowRight, ShoppingCart } from "lucide-react";
 
 const CartItem = lazy(() => import("@/components/cart/CartItem"));
 const EmptyCart = lazy(() => import("@/components/cart/EmptyCart"));
@@ -15,52 +14,47 @@ const OrderSummary = lazy(() => import("@/components/cart/OrderSummary"));
 // Skeleton للكارت وقت التحميل
 function CartSkeleton() {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
       <div className="lg:col-span-2 space-y-4">
         <Skeleton className="h-10 w-48 mb-6" />
         <div className="space-y-4">
           {[...Array(2)].map((_, i) => (
-            <Card key={i}>
-              <CardContent className="p-6">
-                <div className="flex gap-4">
-                  <Skeleton className="w-24 h-24 rounded-lg" />
-                  <div className="flex-1 space-y-3">
-                    <Skeleton className="h-5 w-3/4" />
-                    <Skeleton className="h-4 w-1/2" />
-                    <Skeleton className="h-4 w-1/3" />
-                    <div className="flex items-center gap-3 pt-2">
-                      <Skeleton className="h-9 w-9" />
-                      <Skeleton className="h-6 w-12" />
-                      <Skeleton className="h-9 w-9" />
-                    </div>
+            <div key={i} className="bg-white dark:bg-card rounded-2xl border border-border/50 p-6">
+              <div className="flex gap-4 sm:gap-6">
+                <Skeleton className="w-24 h-24 sm:w-32 sm:h-32 rounded-xl" />
+                <div className="flex-1 space-y-3">
+                  <Skeleton className="h-5 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                  <div className="flex gap-2">
+                    <Skeleton className="h-6 w-16 rounded-full" />
+                    <Skeleton className="h-6 w-16 rounded-full" />
+                  </div>
+                  <div className="flex items-center justify-between pt-2">
+                    <Skeleton className="h-9 w-28 rounded-full" />
+                    <Skeleton className="h-6 w-24" />
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))}
         </div>
       </div>
       <div className="lg:col-span-1">
-        <Card>
-          <CardContent className="p-6 space-y-4">
-            <Skeleton className="h-6 w-32" />
+        <div className="bg-white dark:bg-card rounded-2xl border border-border/50 overflow-hidden">
+          <Skeleton className="h-16 w-full" />
+          <div className="p-6 space-y-4">
             <div className="space-y-3">
-              <div className="flex justify-between">
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-4 w-16" />
-              </div>
-              <div className="flex justify-between">
-                <Skeleton className="h-4 w-16" />
-                <Skeleton className="h-4 w-20" />
-              </div>
-              <div className="flex justify-between pt-2 border-t">
-                <Skeleton className="h-5 w-16" />
-                <Skeleton className="h-5 w-24" />
-              </div>
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="flex justify-between">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-20" />
+                </div>
+              ))}
             </div>
-            <Skeleton className="h-11 w-full" />
-          </CardContent>
-        </Card>
+            <Skeleton className="h-12 w-full rounded-xl" />
+            <Skeleton className="h-11 w-full rounded-xl" />
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -73,6 +67,7 @@ export default function CartPageClient() {
   const locale = useLocale();
   const router = useRouter();
   const dir = locale === "ar" ? "rtl" : "ltr";
+  const isAr = locale === "ar";
 
   // عرض skeleton وقت التحميل
   if (isLoading) {
@@ -93,43 +88,68 @@ export default function CartPageClient() {
   }
 
   return (
-    <div dir={dir}>
+    <div dir={dir} className="animate-fade-in">
+      {/* زر الرجوع */}
       <Button 
         variant="ghost" 
         onClick={() => router.push(`/${locale}`)} 
-        className="mb-8" 
+        className="mb-6 hover:bg-secondary/50 rounded-xl group" 
         aria-label={tOrderSummary("continueShopping")}
       >
-        <ArrowLeft className="h-4 w-4 mr-2" />
+        {isAr ? (
+          <ArrowRight className="h-4 w-4 me-2 group-hover:translate-x-1 transition-transform" />
+        ) : (
+          <ArrowLeft className="h-4 w-4 me-2 group-hover:-translate-x-1 transition-transform" />
+        )}
         {tOrderSummary("continueShopping")}
       </Button>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-4">
-          <h1 className="text-2xl md:text-3xl font-bold mb-6">{t("title")}</h1>
-        <div className="space-y-4">
-          <Suspense fallback={
-            <div className="space-y-4">
-              {[...Array(3)].map((_, i) => (
-                <Skeleton key={i} className="h-32 w-full" />
-              ))}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+        {/* قائمة المنتجات */}
+        <div className="lg:col-span-2">
+          {/* العنوان مع عدد المنتجات */}
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 bg-primary/10 rounded-full">
+              <ShoppingCart className="w-6 h-6 text-primary" />
             </div>
-          }>
-            {items.map((item) => (
-              <CartItem
-                key={item.itemId}
-                item={item}
-                onUpdateQuantity={updateQuantity}
-                onRemove={removeFromCart}
-                maxQuantity={item.availableStock}
-              />
-            ))}
-          </Suspense>
-        </div>
-      </div>
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold">{t("title")}</h1>
+              <p className="text-sm text-muted-foreground">
+                {getTotalItems()} {isAr ? "منتج" : "items"}
+              </p>
+            </div>
+          </div>
 
+          {/* المنتجات */}
+          <div className="space-y-4">
+            <Suspense fallback={
+              <div className="space-y-4">
+                {[...Array(3)].map((_, i) => (
+                  <Skeleton key={i} className="h-40 w-full rounded-2xl" />
+                ))}
+              </div>
+            }>
+              {items.map((item, index) => (
+                <div 
+                  key={item.itemId}
+                  className="animate-fade-in"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  <CartItem
+                    item={item}
+                    onUpdateQuantity={updateQuantity}
+                    onRemove={removeFromCart}
+                    maxQuantity={item.availableStock}
+                  />
+                </div>
+              ))}
+            </Suspense>
+          </div>
+        </div>
+
+        {/* ملخص الطلب */}
         <div className="lg:col-span-1">
-          <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+          <Suspense fallback={<Skeleton className="h-96 w-full rounded-2xl" />}>
             <OrderSummary
               totalItemsFallback={getTotalItems()}
               totalPriceFallback={getTotalPrice()}

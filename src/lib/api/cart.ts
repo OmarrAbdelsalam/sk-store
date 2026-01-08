@@ -60,25 +60,38 @@ export async function updateItemQuantity(params: {
   sessionId: string;
   itemId: number;
   quantity: number;
-}): Promise<{ success: boolean; stockError?: boolean; message?: string }> {
+}): Promise<{
+  success: boolean;
+  stockError?: boolean;
+  message?: string;
+  availableQuantity?: number;
+}> {
   const url = new URL(`${BASE}/api/Cart/Items/Quantity`);
   url.searchParams.set("SessionId", params.sessionId);
   url.searchParams.set("itemId", String(params.itemId));
   url.searchParams.set("Quantity", String(params.quantity));
 
-  const res = await fetch(url.toString(), { 
-    method: "PUT", 
+  const res = await fetch(url.toString(), {
+    method: "PUT",
     cache: "no-store",
-    headers: { "Content-Type": "application/json" }
+    headers: { "Content-Type": "application/json" },
   });
-  
+
   if (!res.ok) {
     try {
       const errorData = await res.json();
       // Check if it's a stock error
-      if (errorData.message?.toLowerCase().includes('stock') || 
-          errorData.message?.toLowerCase().includes('quantity')) {
-        return { success: false, stockError: true, message: errorData.message };
+      if (
+        errorData.message?.toLowerCase().includes("stock") ||
+        errorData.message?.toLowerCase().includes("quantity") ||
+        errorData.message?.toLowerCase().includes("available")
+      ) {
+        return {
+          success: false,
+          stockError: true,
+          message: errorData.message,
+          availableQuantity: errorData.availableQuantity ?? errorData.data?.availableQuantity,
+        };
       }
       return { success: false, message: errorData.message };
     } catch {

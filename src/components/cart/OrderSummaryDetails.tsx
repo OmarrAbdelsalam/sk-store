@@ -1,5 +1,6 @@
 import { useTranslations, useLocale } from "next-intl";
 import { useMemo } from "react";
+import { Package, Truck, Tag, Receipt } from "lucide-react";
 
 interface OrderSummaryDetailsProps {
   items: number;
@@ -34,38 +35,56 @@ export default function OrderSummaryDetails({
   );
 
   return (
-    <div className="space-y-3">
-      <div className="flex justify-between">
-        <span>{t("itemsCount", { count: items })}</span>
-        <span>
+    <div className="space-y-4">
+      {/* عدد المنتجات */}
+      <div className="flex items-center justify-between py-2">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Package className="w-4 h-4" />
+          <span>{t("itemsCount", { count: items })}</span>
+        </div>
+        <span className="font-medium">
           {nf.format(subtotal)} {currency}
         </span>
       </div>
 
-      <div className="flex flex-col gap-1">
-        <div className="flex justify-between">
+      {/* الشحن */}
+      <div className="flex items-center justify-between py-2">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Truck className="w-4 h-4" />
           <span>{t("shipping")}</span>
-          <span className="text-muted-foreground text-sm">
-            {t("shippingNote")}
-          </span>
         </div>
+        <span className="text-sm text-muted-foreground bg-secondary/50 px-2 py-0.5 rounded-full">
+          {t("shippingNote")}
+        </span>
       </div>
 
+      {/* الخصم */}
       {discount && (
-        <div className="flex justify-between text-green-600">
-          <span>{tPromo("discount")} ({discount.percentage}%)</span>
-          <span>
+        <div className="flex items-center justify-between py-2 bg-green-50 dark:bg-green-950/20 
+          -mx-2 px-2 rounded-lg">
+          <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+            <Tag className="w-4 h-4" />
+            <span>{tPromo("discount")} ({discount.percentage}%)</span>
+          </div>
+          <span className="font-medium text-green-600 dark:text-green-400">
             -{nf.format(discount.amount)} {currency}
           </span>
         </div>
       )}
 
-      <div className="border-t pt-3">
-        <div className="flex justify-between font-semibold text-lg">
-          <span>{t("total")}</span>
-          <span>
-            {nf.format(total)} {currency}
-          </span>
+      {/* الإجمالي */}
+      <div className="border-t-2 border-dashed border-border/50 pt-4 mt-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Receipt className="w-5 h-5 text-primary" />
+            <span className="font-semibold text-lg">{t("total")}</span>
+          </div>
+          <div className="text-end">
+            <span className="text-2xl font-bold text-primary">
+              {nf.format(total)}
+            </span>
+            <span className="text-sm text-muted-foreground ms-1">{currency}</span>
+          </div>
         </div>
       </div>
     </div>

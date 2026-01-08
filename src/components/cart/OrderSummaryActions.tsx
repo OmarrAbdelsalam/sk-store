@@ -6,6 +6,7 @@ import { memo, useState } from "react";
 import { getCart, updateItemQuantity } from "@/lib/api/cart";
 import { getProductById } from "@/lib/api/products";
 import { getOrCreateSessionId } from "@/lib/session";
+import { ArrowLeft, ArrowRight, ShoppingBag, Loader2 } from "lucide-react";
 
 const OrderSummaryActions = memo(() => {
   const router = useRouter();
@@ -13,6 +14,7 @@ const OrderSummaryActions = memo(() => {
   const t = useTranslations("OrderSummary");
   const tCart = useTranslations("Cart");
   const [isValidating, setIsValidating] = useState(false);
+  const isAr = locale === "ar";
 
   const validateStockAndCheckout = async () => {
     setIsValidating(true);
@@ -29,12 +31,10 @@ const OrderSummaryActions = memo(() => {
       let hasChanges = false;
       const updates: Array<{ itemId: number; newQuantity: number; productName: string }> = [];
 
-      // التحقق من كل منتج في السلة
       for (const item of cartItems) {
         try {
           const product = await getProductById(item.productId);
           
-          // إيجاد الـ variant المطابق
           let availableStock = 0;
           
           if (product.hasSizes && item.sizeId) {
@@ -49,7 +49,6 @@ const OrderSummaryActions = memo(() => {
             availableStock = product.variants[0]?.quantity ?? 0;
           }
 
-          // إذا الكمية المطلوبة أكبر من المتاح
           if (item.quantity > availableStock) {
             hasChanges = true;
             const productName = locale === 'ar' 
@@ -57,14 +56,12 @@ const OrderSummaryActions = memo(() => {
               : (product.nameEn || product.nameAr || `Product ${item.productId}`);
 
             if (availableStock === 0) {
-              // المنتج غير متوفر نهائياً
               updates.push({ 
                 itemId: item.itemId, 
                 newQuantity: 0, 
                 productName 
               });
             } else {
-              // تعديل الكمية للمتاح
               updates.push({ 
                 itemId: item.itemId, 
                 newQuantity: availableStock, 
@@ -77,7 +74,6 @@ const OrderSummaryActions = memo(() => {
         }
       }
 
-      // تطبيق التحديثات
       if (hasChanges) {
         for (const update of updates) {
           try {
@@ -90,11 +86,8 @@ const OrderSummaryActions = memo(() => {
             console.error(`Error updating item ${update.itemId}:`, error);
           }
         }
-
-        // إعادة تحميل الصفحة لتحديث السلة
         window.location.reload();
       } else {
-        // كل شيء تمام، متابعة للـ checkout
         router.push(`/${locale}/checkout`);
       }
     } catch (error) {
@@ -105,25 +98,42 @@ const OrderSummaryActions = memo(() => {
   };
 
   return (
-    <>
+    <div className="space-y-3">
       <Button
         size="lg"
-        className="w-full"
+        className="w-full h-12 text-base font-semibold rounded-xl shadow-md 
+          hover:shadow-lg transition-all duration-300 group"
         onClick={validateStockAndCheckout}
         disabled={isValidating}
         aria-label={t("goCheckout")}
       >
-        {isValidating ? tCart("validating") : t("goCheckout")}
+        {isValidating ? (
+          <>
+            <Loader2 className="w-5 h-5 me-2 animate-spin" />
+            {tCart("validating")}
+          </>
+        ) : (
+          <>
+            <ShoppingBag className="w-5 h-5 me-2" />
+            {t("goCheckout")}
+            {isAr ? (
+              <ArrowLeft className="w-4 h-4 ms-2 group-hover:-translate-x-1 transition-transform" />
+            ) : (
+              <ArrowRight className="w-4 h-4 ms-2 group-hover:translate-x-1 transition-transform" />
+            )}
+          </>
+        )}
       </Button>
       <Button
         variant="outline"
-        className="w-full"
+        size="lg"
+        className="w-full h-11 rounded-xl hover:bg-secondary/50 transition-colors"
         onClick={() => router.push(`/${locale}`)}
         aria-label={t("continueShopping")}
       >
         {t("continueShopping")}
       </Button>
-    </>
+    </div>
   );
 });
 
