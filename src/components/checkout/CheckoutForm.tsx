@@ -7,6 +7,7 @@ import ShippingAddressForm from "./ShippingAddressForm";
 import { egyptGovernoratesAr, egyptGovernoratesEn, type CheckoutFormData, emptyFormData } from "@/lib/checkout-utils";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
+import { ShoppingBag, Loader2 } from "lucide-react";
 
 type Props = {
   onSubmit: (data: CheckoutFormData) => Promise<void>;
@@ -55,7 +56,7 @@ export default function CheckoutForm({ onSubmit, isProcessing, totalAmount, isLo
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
       {!isLoggedIn && (
         <PersonalInfoForm formData={formData} onInputChange={handleInputChange} />
       )}
@@ -69,11 +70,22 @@ export default function CheckoutForm({ onSubmit, isProcessing, totalAmount, isLo
       <Button 
         type="submit" 
         size="lg" 
-        className="w-full" 
+        className="w-full h-12 sm:h-14 text-base sm:text-lg font-semibold rounded-xl shadow-md 
+          hover:shadow-lg transition-all duration-300 group" 
         disabled={isProcessing}
         onMouseEnter={() => router.prefetch(`/${locale}/order-success`)}
       >
-        {isProcessing ? t("processing") : t("confirmOrder", { total: totalAmount, currency: "EGP" })}
+        {isProcessing ? (
+          <>
+            <Loader2 className="w-5 h-5 me-2 animate-spin" />
+            {t("processing")}
+          </>
+        ) : (
+          <>
+            <ShoppingBag className="w-5 h-5 me-2" />
+            {t("confirmOrder", { total: totalAmount, currency: "EGP" })}
+          </>
+        )}
       </Button>
     </form>
   );

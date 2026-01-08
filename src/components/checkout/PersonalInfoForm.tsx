@@ -1,7 +1,6 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User } from "lucide-react";
+import { User, Phone } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { memo, useState, useCallback } from "react";
 
@@ -40,23 +39,30 @@ const PersonalInfoForm = memo(({ formData, onInputChange }: PersonalInfoFormProp
   }, [onInputChange]);
   
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <User className="h-5 w-5" />
-          {t("title")}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className="bg-white dark:bg-card rounded-2xl border border-border/50 shadow-sm overflow-hidden">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 px-4 sm:px-6 py-3 sm:py-4 border-b border-border/50">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="p-1.5 sm:p-2 bg-primary/10 rounded-full">
+            <User className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+          </div>
+          <h3 className="text-base sm:text-lg font-semibold">{t("title")}</h3>
+        </div>
+      </div>
+
+      <div className="p-4 sm:p-6 space-y-4">
         <div>
-          <Label htmlFor="phone">{t("phone")}</Label>
+          <Label htmlFor="phone" className="text-sm font-medium flex items-center gap-2 mb-2">
+            <Phone className="w-3.5 h-3.5 text-muted-foreground" />
+            {t("phone")}
+          </Label>
           <Input
             id="phone"
             type="tel"
             inputMode="tel"
             value={formData.phone}
             onChange={(e) => handlePhoneChange("phone", e.target.value)}
-            className={phoneError ? "border-red-500 focus-visible:ring-red-500" : ""}
+            className={`h-11 rounded-xl ${phoneError ? "border-red-500 focus-visible:ring-red-500" : ""}`}
             required
           />
           {phoneError && (
@@ -65,14 +71,17 @@ const PersonalInfoForm = memo(({ formData, onInputChange }: PersonalInfoFormProp
         </div>
 
         <div>
-          <Label htmlFor="whatsapp">{t("whatsapp")}</Label>
+          <Label htmlFor="whatsapp" className="text-sm font-medium flex items-center gap-2 mb-2">
+            <Phone className="w-3.5 h-3.5 text-muted-foreground" />
+            {t("whatsapp")}
+          </Label>
           <Input
             id="whatsapp"
             type="tel"
             inputMode="tel"
             value={formData.whatsAppNumber}
             onChange={(e) => handlePhoneChange("whatsAppNumber", e.target.value)}
-            className={whatsappError ? "border-red-500 focus-visible:ring-red-500" : ""}
+            className={`h-11 rounded-xl ${whatsappError ? "border-red-500 focus-visible:ring-red-500" : ""}`}
             placeholder={t("whatsappPlaceholder")}
           />
           {whatsappError && (
@@ -82,26 +91,28 @@ const PersonalInfoForm = memo(({ formData, onInputChange }: PersonalInfoFormProp
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="firstName">{t("firstName")}</Label>
+            <Label htmlFor="firstName" className="text-sm font-medium mb-2 block">{t("firstName")}</Label>
             <Input
               id="firstName"
               value={formData.firstName}
               onChange={(e) => onInputChange("firstName", e.target.value)}
+              className="h-11 rounded-xl"
               required
             />
           </div>
           <div>
-            <Label htmlFor="lastName">{t("lastName")}</Label>
+            <Label htmlFor="lastName" className="text-sm font-medium mb-2 block">{t("lastName")}</Label>
             <Input
               id="lastName"
               value={formData.lastName}
               onChange={(e) => onInputChange("lastName", e.target.value)}
+              className="h-11 rounded-xl"
               required
             />
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 });
 

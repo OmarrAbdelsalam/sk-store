@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ArrowRight, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/useCart";
 import CheckoutOrderSummary from "@/components/checkout/CheckoutOrderSummary";
@@ -233,15 +233,32 @@ export default function Checkout() {
 
   return (
     <div className="min-h-screen" dir={dir}>
-      <div className="container mx-auto px-4 py-8">
-        <Button variant="ghost" onClick={() => router.push("/cart")} className="mb-8" aria-label={t("backToCart")}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
+      <div className="container mx-auto px-4 py-2 sm:py-8">
+        {/* زر الرجوع */}
+        <Button 
+          variant="ghost" 
+          onClick={() => router.push("/cart")} 
+          className="mb-2 sm:mb-6 hover:bg-secondary/50 rounded-xl group" 
+          aria-label={t("backToCart")}
+        >
+          {isAr ? (
+            <ArrowRight className="h-4 w-4 me-2 group-hover:translate-x-1 transition-transform" />
+          ) : (
+            <ArrowLeft className="h-4 w-4 me-2 group-hover:-translate-x-1 transition-transform" />
+          )}
           {t("backToCart")}
         </Button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="space-y-6">
-            <h1 className="text-2xl md:text-3xl font-bold">{t("checkoutTitle")}</h1>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
+          <div className="space-y-3 sm:space-y-6">
+            {/* العنوان */}
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-1.5 sm:p-2 bg-primary/10 rounded-full">
+                <CreditCard className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+              </div>
+              <h1 className="text-lg sm:text-2xl md:text-3xl font-bold">{t("checkoutTitle")}</h1>
+            </div>
+            
             <CheckoutForm
               onSubmit={handleSubmit}
               isProcessing={isProcessing}

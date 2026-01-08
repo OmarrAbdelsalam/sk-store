@@ -35,7 +35,7 @@ const OrderSummary = memo(
     );
 
     return (
-      <div className="sticky top-8" dir={dir}>
+      <div className="sticky top-[100px]" dir={dir}>
         {/* كارد ملخص الطلب */}
         <div className="bg-white dark:bg-card rounded-2xl border border-border/50 shadow-lg overflow-hidden">
           {/* Header */}

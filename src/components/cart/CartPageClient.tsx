@@ -93,7 +93,7 @@ export default function CartPageClient() {
       <Button 
         variant="ghost" 
         onClick={() => router.push(`/${locale}`)} 
-        className="mb-6 hover:bg-secondary/50 rounded-xl group" 
+        className="mb-2 sm:mb-6 hover:bg-secondary/50 rounded-xl group" 
         aria-label={tOrderSummary("continueShopping")}
       >
         {isAr ? (
@@ -104,28 +104,28 @@ export default function CartPageClient() {
         {tOrderSummary("continueShopping")}
       </Button>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-8">
         {/* قائمة المنتجات */}
         <div className="lg:col-span-2">
           {/* العنوان مع عدد المنتجات */}
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-primary/10 rounded-full">
-              <ShoppingCart className="w-6 h-6 text-primary" />
+          <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-6">
+            <div className="p-1.5 sm:p-2 bg-primary/10 rounded-full">
+              <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
             </div>
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold">{t("title")}</h1>
-              <p className="text-sm text-muted-foreground">
+              <h1 className="text-lg sm:text-2xl md:text-3xl font-bold">{t("title")}</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 {getTotalItems()} {isAr ? "منتج" : "items"}
               </p>
             </div>
           </div>
 
           {/* المنتجات */}
-          <div className="space-y-4">
+          <div className="space-y-2 sm:space-y-4">
             <Suspense fallback={
-              <div className="space-y-4">
+              <div className="space-y-2 sm:space-y-4">
                 {[...Array(3)].map((_, i) => (
-                  <Skeleton key={i} className="h-40 w-full rounded-2xl" />
+                  <Skeleton key={i} className="h-36 sm:h-40 w-full rounded-2xl" />
                 ))}
               </div>
             }>
