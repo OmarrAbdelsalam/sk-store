@@ -37,23 +37,31 @@ const productsCache: {
   rawData: null,
 };
 
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const CACHE_DURATION = 2 * 60 * 1000; // تقليل من 5 دقائق لـ 2 دقيقة
 
 export const useProducts = () => {
   const locale = useLocale() as 'ar' | 'en';
-  const [products, setProducts] = useState<Product[]>(() => {
-    // Initialize from cache if available
+  
+  // Check cache immediately
+  const getCachedProducts = () => {
     const cached = productsCache[locale];
     if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
       return cached.products;
     }
+    // Try to remap from raw data if available
+    if (productsCache.rawData && productsCache.rawData.length > 0) {
+      const mapped = productsCache.rawData.map((p) => mapApiProductToUI(p, locale));
+      productsCache[locale] = { products: mapped, timestamp: Date.now() };
+      return mapped;
+    }
     return [];
-  });
-  const [loading, setLoading] = useState(() => {
-    // Don't show loading if we have cached data
-    const cached = productsCache[locale];
-    return !(cached && Date.now() - cached.timestamp < CACHE_DURATION);
-  });
+  };
+
+  const initialProducts = getCachedProducts();
+  const hasCache = initialProducts.length > 0;
+  
+  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [loading, setLoading] = useState(!hasCache); // Only show loading if no cache
   const [error, setError] = useState<string | null>(null);
   const fetchingRef = useRef(false);
   const mountedRef = useRef(true);
@@ -87,7 +95,7 @@ export const useProducts = () => {
       setLoading(true);
       setError(null);
 
-      const page = await getProductsPage(1, 100);
+      const page = await getProductsPage(1, 30); // تقليل العدد من 100 لـ 30
       
       if (!mountedRef.current) return;
       

@@ -17,6 +17,23 @@ import {
 import { prefetchProducts } from "@/hooks/useProduct";
 import { Stethoscope } from "lucide-react";
 
+// Custom hook for debouncing
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
 /* ===================== Types ===================== */
 
 type SearchParamsLike = {
@@ -165,7 +182,7 @@ const ProductGrid = () => {
       colorName,
       sizeName,
       pageNumber: 1,
-      pageSize: 100, // ← قللنا من 200 لـ 100
+      pageSize: 50, // تقليل من 100 لـ 50
     })
       .then((res: unknown) => {
         const { items } = (res as FilterResponse) ?? {};
@@ -205,8 +222,9 @@ const ProductGrid = () => {
     );
   }, [baseList, activeFilter]);
 
-  /* q & gender tokens */
+  /* q & gender tokens with debouncing */
   const qRaw = (searchParams.get("q") ?? "").toLowerCase().trim();
+  const debouncedQuery = useDebounce(qRaw, 300); // 300ms debounce for search
   const genderParamRaw = (searchParams.get("gender") ?? "all")
     .toLowerCase()
     .trim();
@@ -257,15 +275,15 @@ const ProductGrid = () => {
     return afterCategory.filter((p) => {
       const okGender = matchesGender(p.gender);
       // البحث ثنائي اللغة: يبحث في الاسم العربي والإنجليزي معاً
-      const okSearch = !qRaw
+      const okSearch = !debouncedQuery
         ? true
-        : (p.name ?? "").toLowerCase().includes(qRaw) ||
-          (p.nameAr ?? "").toLowerCase().includes(qRaw) ||
-          (p.nameEn ?? "").toLowerCase().includes(qRaw) ||
-          (p.description ?? "").toLowerCase().includes(qRaw);
+        : (p.name ?? "").toLowerCase().includes(debouncedQuery) ||
+          (p.nameAr ?? "").toLowerCase().includes(debouncedQuery) ||
+          (p.nameEn ?? "").toLowerCase().includes(debouncedQuery) ||
+          (p.description ?? "").toLowerCase().includes(debouncedQuery);
       return okGender && okSearch;
     });
-  }, [afterCategory, qRaw, matchesGender]);
+  }, [afterCategory, debouncedQuery, matchesGender]);
 
   /* Reset page on filter changes */
   useEffect(() => {
@@ -298,14 +316,27 @@ const ProductGrid = () => {
     indexOfLastProduct
   );
 
-  /* Prefetch visible products - only first page */
+  /* Prefetch visible products - first 8 products */
   useEffect(() => {
     if (currentProducts.length > 0 && currentPage === 1) {
-      // Only prefetch first 4 products on initial load
-      const productIds = currentProducts.slice(0, 4).map(p => p.id);
+      // Prefetch first 8 products on initial load
+      const productIds = currentProducts.slice(0, 8).map(p => p.id);
       prefetchProducts(productIds);
     }
   }, [currentProducts, currentPage]);
+
+  /* Prefetch next page products when near end of current page */
+  useEffect(() => {
+    if (currentProducts.length > 0 && currentPage > 1) {
+      // Prefetch next page products when user is on page 2+
+      const nextPageStart = currentPage * productsPerPage;
+      const nextPageProducts = currentProducts.slice(nextPageStart, nextPageStart + 4);
+      if (nextPageProducts.length > 0) {
+        const productIds = nextPageProducts.map(p => p.id);
+        prefetchProducts(productIds);
+      }
+    }
+  }, [currentProducts, currentPage, productsPerPage]);
 
   /* Actions */
   const showAll = () => {
@@ -345,7 +376,7 @@ const ProductGrid = () => {
           </div>
         </div>
 
-        {isBusy ? (
+        {isBusy && currentProducts.length === 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-10 lg:gap-12">
             {Array.from({ length: isMobile ? 6 : 8 }).map((_, i) => (
               <div key={i} className="space-y-2 md:space-y-4 animate-pulse">

@@ -57,7 +57,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const t = useTranslations("ProductCard");
 
   const [isHovered, setIsHovered] = React.useState(false);
-  const [showStockBadge, setShowStockBadge] = React.useState(true);
   const [selectedColorId, setSelectedColorId] = React.useState<number | null>(null);
 
   const photos = product.raw?.photos || [];
@@ -98,19 +97,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
     prefetchProduct(product.id);
   }, [product.id]);
 
-  // Toggle stock badge - only for low stock items
+  // Prefetch on mount for first 8 visible products only
   React.useEffect(() => {
-    if (totalStock > 0 && totalStock <= 10) {
-      const interval = setInterval(() => {
-        setShowStockBadge(prev => !prev);
-      }, 3000);
-      return () => clearInterval(interval);
-    }
-  }, [totalStock]);
-
-  // Prefetch on mount for first 4 visible products only
-  React.useEffect(() => {
-    if (index < 4) {
+    if (index < 8) {
       prefetchProduct(product.id);
     }
   }, [product.id, index]);
@@ -135,13 +124,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
             sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
             className="object-cover transition-transform duration-500 group-hover:scale-105"
             priority={index < 2}
-            loading={index < 4 ? "eager" : "lazy"}
+            loading={index < 8 ? "eager" : "lazy"}
           />
           
-          {/* View Details Button */}
+          {/* View Details Button - Hidden on mobile */}
           {!hideViewDetails && (
-            <div className="absolute bottom-4 left-4 right-4 md:opacity-0 md:translate-y-4 md:group-hover:opacity-100 md:group-hover:translate-y-0 transition-all duration-300">
-              <div className="bg-white text-black font-medium text-sm md:text-base py-3 px-4 rounded-full text-center shadow-lg">
+            <div className="absolute bottom-4 left-4 right-4 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 hidden md:block">
+              <div className="bg-white text-black font-medium text-base py-3 px-4 rounded-full text-center shadow-lg">
                 {t("viewDetails")}
               </div>
             </div>
@@ -149,19 +138,17 @@ const ProductCard: React.FC<ProductCardProps> = ({
           
           {/* Sold Out Badge */}
           {totalStock === 0 && (
-            <div className="absolute top-0 right-0 z-10">
-              <div className="relative w-0 h-0 border-t-[70px] md:border-t-[80px] border-t-red-600 border-l-[70px] md:border-l-[80px] border-l-transparent shadow-lg">
-                <span className={`absolute -top-[60px] md:-top-[68px] text-white font-bold text-[11px] text-center leading-tight rotate-45 w-12 ${locale === 'ar' ? 'right-[0px] md:right-[2px] md:text-[12px]' : 'right-[10px] md:right-[13px] -mr-2 mt-2'}`}>
-                  {t("soldOut")}
-                </span>
-              </div>
+            <div className="absolute top-2 left-2 z-10">
+              <span className="bg-red-600 text-white text-[10px] md:text-xs font-semibold px-2 py-1 rounded">
+                {t("soldOut")}
+              </span>
             </div>
           )}
         </div>
 
         {/* Product Info */}
-        <div className="space-y-2 flex flex-col flex-1">
-          <div className="flex-1 space-y-2">
+        <div className="space-y-1.5 flex flex-col flex-1">
+          <div className="flex-1 space-y-1.5">
             <div className="flex flex-col gap-1">
               <h3 className="font-medium text-sm md:text-base transition-colors line-clamp-2">
                 {product.name}
@@ -178,31 +165,20 @@ const ProductCard: React.FC<ProductCardProps> = ({
               </div>
             </div>
 
-            {/* Stock/Description - Simple CSS transition instead of framer-motion */}
-            <div className="relative min-h-[2.5rem]">
-              {totalStock > 0 && totalStock <= 10 ? (
-                <p 
-                  className={`text-xs md:text-sm font-medium transition-opacity duration-300 ${
-                    showStockBadge ? 'text-red-600' : 'text-muted-foreground line-clamp-2'
-                  }`}
-                >
-                  {showStockBadge 
-                    ? (locale === 'ar' 
-                        ? `${totalStock === 1 ? 'قطعة واحدة متبقية!' : `${totalStock} قطع متبقية!`}`
-                        : `Only ${totalStock} piece${totalStock === 1 ? '' : 's'} left!`)
-                    : product.description
-                  }
-                </p>
-              ) : (
-                <p className="text-muted-foreground text-xs md:text-sm leading-relaxed line-clamp-2">
-                  {product.description}
+            {/* Stock info only - Description removed */}
+            <div className="">
+              {totalStock > 0 && totalStock <= 10 && (
+                <p className="text-xs md:text-sm font-medium text-red-600">
+                  {locale === 'ar' 
+                    ? `${totalStock === 1 ? 'قطعة واحدة متبقية!' : `${totalStock} قطع متبقية!`}`
+                    : `Only ${totalStock} piece${totalStock === 1 ? '' : 's'} left!`}
                 </p>
               )}
             </div>
 
             {/* Color Options */}
             {Array.isArray(product.availableColors) && product.availableColors.length > 0 && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 mt-1">
                 <div className="flex gap-1.5">
                   {product.availableColors.map((color, i) => {
                     const colorId = colors[i]?.id;

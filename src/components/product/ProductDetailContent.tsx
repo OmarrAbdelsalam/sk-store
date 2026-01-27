@@ -318,7 +318,7 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
 
   return (
     <>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12">
         {/* العمود الأيسر: الصور + المواصفات */}
         <div className={`order-1 lg:order-1 ${isAr ? "lg:col-start-1" : ""}`}>
           <div className="space-y-8">
@@ -396,18 +396,21 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
             materials: product.material?.trim() || (isAr ? "قطن 100% عالي الجودة، مريح وقابل للتنفس" : "100% high-quality cotton, comfortable and breathable"),
             care: isAr ? "يُغسل بالماء البارد، لا يُستخدم المُبيض، يُجفف على حرارة منخفضة" : "Wash with cold water, do not bleach, tumble dry low",
           }}
+          description={isAr ? (product.descriptionAr || product.descriptionEn || "") : (product.descriptionEn || product.descriptionAr || "")}
         />
       </div>
 
-      {/* قسم المراجعات */}
-      <ProductReviews 
-        reviews={product?.reviews || []}
-        averageRating={product?.averageRating || 0}
-        totalReviews={product?.reviews?.length || 0}
-        productId={product?.id}
-        sessionId={getOrCreateSessionId()}
-        canAddReview={false}
-      />
+      {/* قسم المراجعات - يختفي لو مفيش reviews */}
+      {product?.reviews && product.reviews.length > 0 && (
+        <ProductReviews 
+          reviews={product.reviews}
+          averageRating={product?.averageRating || 0}
+          totalReviews={product.reviews.length}
+          productId={product?.id}
+          sessionId={getOrCreateSessionId()}
+          canAddReview={false}
+        />
+      )}
 
       {/* المنتجات ذات الصلة */}
       <RelatedProducts 

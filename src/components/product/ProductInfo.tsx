@@ -88,11 +88,11 @@ const ProductInfo = React.memo(function ProductInfo({
     <div className="space-y-4 md:space-y-8">
       {/* الاسم + الوصف + السعر */}
       <div>
-        <h1 className="font-luxury text-3xl md:text-4xl font-medium mb-2" aria-label={t("a11y.productName")}>
+        <h1 className="text-3xl md:text-4xl font-semibold mb-2" aria-label={t("a11y.productName")}>
           {name}
         </h1>
         {description && (
-          <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+          <p className="text-sm text-muted-foreground leading-relaxed mb-3 hidden md:block">
             {description}
           </p>
         )}

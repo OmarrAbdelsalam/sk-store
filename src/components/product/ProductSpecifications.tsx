@@ -17,17 +17,42 @@ interface ProductSpecificationsProps {
     returnExchange?: string;
     category: string;
   };
+  /** Optional description to show as first accordion item (for mobile) */
+  description?: string;
+  /** Default open item - defaults to "description" if description is provided */
+  defaultOpen?: string;
 }
 
-export default function ProductSpecifications({ product }: ProductSpecificationsProps) {
+export default function ProductSpecifications({ 
+  product, 
+  description,
+  defaultOpen 
+}: ProductSpecificationsProps) {
   const t = useTranslations("ProductSpecifications");
   const locale = useLocale();
   const dir = locale === "ar" ? "rtl" : "ltr";
 
+  // Default open to description if provided
+  const defaultValue = defaultOpen || (description ? "description" : undefined);
+
   return (
-    <div className="mt-12" dir={dir}>
-      <Accordion type="single" collapsible className="w-full" defaultValue="materials-care">
-        {/* Materials & Care - مفتوح افتراضياً */}
+    <div className="mt-6 lg:mt-12" dir={dir}>
+      <Accordion type="single" collapsible className="w-full" defaultValue={defaultValue}>
+        {/* Description - Only show if provided (mobile) */}
+        {description && (
+          <AccordionItem value="description">
+            <AccordionTrigger className="text-lg font-semibold">
+              {locale === "ar" ? "الوصف" : "Description"}
+            </AccordionTrigger>
+            <AccordionContent>
+              <p className="text-muted-foreground leading-relaxed">
+                {description}
+              </p>
+            </AccordionContent>
+          </AccordionItem>
+        )}
+
+        {/* Materials & Care - مقفولة افتراضياً */}
         <AccordionItem value="materials-care">
           <AccordionTrigger className="text-lg font-semibold">
             {t("materialsCareTitle")}

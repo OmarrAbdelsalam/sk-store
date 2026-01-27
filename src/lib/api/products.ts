@@ -156,7 +156,7 @@ export async function getProductsPage(pageNumber = 1, pageSize = 12) {
   const url = `${API_BASE}/api/Product?pageNumber=${pageNumber}&pageSize=${pageSize}`;
   const res = await fetch(url, { 
     headers: { accept: "*/*" }, 
-    next: { revalidate: 300 } // Cache for 5 minutes
+    next: { revalidate: 180 } // تقليل من 300 لـ 180 ثانية (3 دقائق)
   });
   if (!res.ok) throw new Error(`Failed to load products page (HTTP ${res.status})`);
   const json = (await res.json()) as Envelope<{
