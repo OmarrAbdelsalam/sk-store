@@ -1,7 +1,26 @@
 import Image from "next/image";
 import ProductGrid from "@/components/ProductGrid";
+import { getProductsPage, mapApiProductToUI } from "@/lib/api/products";
 
-const Index = () => {
+// Server-side data fetching for faster initial load
+async function getInitialProducts(locale: string) {
+  try {
+    const page = await getProductsPage(1, 30);
+    return (page.items ?? []).map((p) => mapApiProductToUI(p, locale));
+  } catch (error) {
+    console.error("Failed to fetch initial products:", error);
+    return [];
+  }
+}
+
+interface PageProps {
+  params: Promise<{ locale: string }>;
+}
+
+const Index = async ({ params }: PageProps) => {
+  const { locale } = await params;
+  const initialProducts = await getInitialProducts(locale);
+
   return (
     <div className="min-h-screen">
       {/* SEO Content - Hidden visually but accessible for SEO */}
@@ -35,9 +54,10 @@ const Index = () => {
           className="object-contain h-24 md:h-36 w-auto"
         />
       </section>
-      <ProductGrid />
+      <ProductGrid initialProducts={initialProducts} />
     </div>
   );
 };
 
 export default Index;
+

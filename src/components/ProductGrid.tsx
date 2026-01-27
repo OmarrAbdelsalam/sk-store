@@ -103,7 +103,12 @@ const mapServerToProduct = (p: ProductApi, locale: string): Product => {
 
 /* ===================== Component ===================== */
 
-const ProductGrid = () => {
+interface ProductGridProps {
+  /** Products pre-fetched on the server for faster initial load */
+  initialProducts?: Product[];
+}
+
+const ProductGrid = ({ initialProducts }: ProductGridProps) => {
   const [activeFilter, setActiveFilter] = useState<string>("All");
   const [currentPage, setCurrentPage] = useState(1);
   const [categories, setCategories] = useState<CategoryOption[]>([]);
@@ -114,7 +119,12 @@ const ProductGrid = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const isMobile = useIsMobile();
-  const { products, loading } = useProducts();
+  
+  // Use initialProducts if available, otherwise fetch from hook
+  const { products: hookProducts, loading: hookLoading } = useProducts();
+  const products = initialProducts && initialProducts.length > 0 ? initialProducts : hookProducts;
+  const loading = initialProducts && initialProducts.length > 0 ? false : hookLoading;
+  
   const t = useTranslations();
   const locale = useLocale();
 
