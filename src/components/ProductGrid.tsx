@@ -361,7 +361,7 @@ const ProductGrid = ({ isFullPage = false }: ProductGridProps) => {
 
   /* Render */
   return (
-    <section id="products" className={`${isFullPage ? 'pt-2 pb-8' : 'py-8'} md:py-12 bg-background`}>
+    <section id="products" className={`${isFullPage ? 'pt-2 pb-8' : 'py-16'} bg-background`}>
       <div className="container mx-auto px-4">
         {isFullPage ? (
           <>

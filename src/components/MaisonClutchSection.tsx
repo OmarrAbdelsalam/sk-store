@@ -25,7 +25,7 @@ const MaisonClutchSection = () => {
   };
 
   return (
-    <section className="py-16 md:py-24 bg-white overflow-hidden">
+    <section className="py-16 bg-white overflow-hidden">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           {/* Text Content */}
@@ -53,7 +53,7 @@ const MaisonClutchSection = () => {
           </div>
 
           {/* Video Content */}
-          <div className="order-1 lg:order-2 w-full h-[500px] lg:h-[700px] relative bg-gray-100">
+          <div className="order-1 lg:order-2 w-full h-[500px] lg:h-[700px] relative bg-gray-100 rounded-xl overflow-hidden">
             <video
               className="absolute inset-0 w-full h-full object-cover"
               autoPlay

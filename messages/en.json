@@ -329,8 +329,14 @@
     "tops": "Tops & Shirts",
     "shopNow": "Shop Now"
   },
+  "CategoryBanners": {
+    "title": "Shop by Category"
+  },
   "DiscoverSection": {
     "title": "More to Discover"
+  },
+  "ReelsShowcase": {
+    "title": "As Seen On Social"
   },
   "MaisonClutch": {
     "title": "The Maison Clutch",

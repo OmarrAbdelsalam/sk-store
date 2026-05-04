@@ -333,8 +333,14 @@
     "tops": "بلوزات وقمصان",
     "shopNow": "تسوق الآن"
   },
+  "CategoryBanners": {
+    "title": "تسوق حسب الفئة"
+  },
   "DiscoverSection": {
     "title": "اكتشف المزيد"
+  },
+  "ReelsShowcase": {
+    "title": "شاهدونا على السوشيال"
   },
   "MaisonClutch": {
     "title": "مجموعة ميزون كليتش",

@@ -15,9 +15,9 @@ export interface HeroSettings {
 
 // Default values if no settings exist
 export const DEFAULT_HERO: Omit<HeroSettings, 'id' | 'created_at' | 'updated_at'> = {
-  title: 'The Maison Clutch',
-  subtitle: 'Introducing The Maison Clutch — a celebration of refined simplicity and timeless design.',
-  description: "Handwoven with precision, kissed by soft beige tones, and crafted to complement every mood and moment, for autumn vibes. It's not just an accessory, it's the definition of effortless sophistication.",
+  title: 'Crafted for Every Moment',
+  subtitle: '',
+  description: 'Discover our curated collection of handcrafted bags and accessories — where timeless elegance meets everyday luxury.',
   button_text: 'SHOP NOW',
   button_link: '/products',
   image_url: '/hero.webp',

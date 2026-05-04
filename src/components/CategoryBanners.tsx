@@ -25,7 +25,7 @@ const CategoryBanner = ({
 
   return (
     <div 
-      className={`relative group overflow-hidden ${className} h-full w-full rounded-2xl cursor-pointer`}
+      className={`relative group overflow-hidden ${className} h-full w-full rounded-xl cursor-pointer`}
       onClick={onClick}
     >
       <div className="absolute inset-0 bg-gray-200">
@@ -62,6 +62,7 @@ export const BagShowcase = () => {
 };
 
 export const ClothingShowcase = () => {
+  const t = useTranslations('CategoryBanners');
   const { categories, isLoading } = useCategories();
   const locale = useLocale();
   const router = useRouter();
@@ -117,6 +118,14 @@ export const ClothingShowcase = () => {
   return (
     <section className="py-16">
       <div className="container mx-auto px-4">
+        {/* Header */}
+        <div className="text-center mb-10">
+          <h2 className="font-playfair text-3xl md:text-4xl text-gray-900 mb-2">
+            {t('title')}
+          </h2>
+          <div className="w-24 h-[1px] bg-black mx-auto mt-3"></div>
+        </div>
+
         <div className="flex flex-row gap-3 h-[300px] md:h-[400px]">
           {displayCategories.length >= 3 ? (
             <>

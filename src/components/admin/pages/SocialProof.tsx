@@ -1,12 +1,8 @@
-import ComingSoon from "./ComingSoon";
+import CustomerLove from "./CustomerLove";
 
+// Social Proof page now delegates to CustomerLove management
 const SocialProofPage = () => {
-  return (
-    <ComingSoon 
-      title="الأدلة الاجتماعية"
-      description="إدارة الأدلة الاجتماعية غير متاحة في النسخة التجريبية."
-    />
-  );
+  return <CustomerLove />;
 };
 
 export default SocialProofPage;

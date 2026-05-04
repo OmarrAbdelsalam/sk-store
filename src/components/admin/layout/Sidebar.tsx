@@ -13,6 +13,7 @@ import {
   FolderTree,
   Package,
   Home,
+  Heart,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { clearAuth, getAccessToken } from "@/services/admin/auth";
@@ -27,6 +28,7 @@ const mainMenuItems = [
 
 const settingsMenuItems = [
   { icon: Home, label: "الصفحة الرئيسية", path: "/admin/homepage" },
+  { icon: Heart, label: "Customer Love", path: "/admin/customer-love" },
   { icon: Tag, label: "العروض", path: "/admin/promotions" },
 ];
 

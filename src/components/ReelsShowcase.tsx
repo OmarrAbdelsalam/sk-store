@@ -6,7 +6,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { getFeaturedSocialProofs, type SocialProofVideo } from "@/api/socialProof";
 import { getProductById } from "@/lib/api/products";
 
@@ -17,11 +17,12 @@ interface SocialProofVideoWithPrice extends SocialProofVideo {
 }
 
 export const ReelsShowcase = () => {
+  const t = useTranslations("ReelsShowcase");
   const [emblaRef] = useEmblaCarousel({
     align: "start",
     loop: false,
     dragFree: true,
-    containScroll: "trimSnaps"
+    skipSnaps: false
   });
 
   const [selectedReel, setSelectedReel] = useState<SocialProofVideoWithPrice | null>(null);
@@ -123,13 +124,15 @@ export const ReelsShowcase = () => {
 
   if (loading) {
     return (
-      <section className="container mx-auto px-4 pt-8 pb-12 md:pt-16 md:pb-16">
-        <div className="flex gap-4">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="flex-[0_0_85%] md:flex-[0_0_45%] lg:flex-[0_0_30%]">
-              <div className="aspect-[9/16] bg-gray-200 rounded-xl animate-pulse" />
-            </div>
-          ))}
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="flex gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="flex-[0_0_60%] md:flex-[0_0_40%] lg:flex-[0_0_30%]">
+                <div className="aspect-[2/3] bg-gray-200 rounded-xl animate-pulse" />
+              </div>
+            ))}
+          </div>
         </div>
       </section>
     );
@@ -140,17 +143,25 @@ export const ReelsShowcase = () => {
   }
 
   return (
-    <section className="container mx-auto px-4 pt-4 pb-12 md:pt-8 md:pb-16">
+    <section className="py-16 bg-white">
+      <div className="container mx-auto px-4">
+        {/* Header */}
+        <div className="text-center mb-10">
+          <h2 className="font-playfair text-3xl md:text-4xl text-gray-900 mb-2">
+            {t('title')}
+          </h2>
+          <div className="w-24 h-[1px] bg-black mx-auto mt-3"></div>
+        </div>
 
       <div className="overflow-hidden" ref={emblaRef}>
         <div className="flex -ml-4">
           {videos.map((video) => (
             <div 
               key={video.id} 
-              className="flex-[0_0_85%] md:flex-[0_0_45%] lg:flex-[0_0_30%] pl-4 min-w-0"
+              className="flex-[0_0_60%] md:flex-[0_0_40%] lg:flex-[0_0_30%] pl-4 min-w-0"
               onClick={() => setSelectedReel(video)}
             >
-              <div className="relative aspect-[9/16] bg-gray-200 rounded-xl overflow-hidden group cursor-pointer shadow-sm">
+              <div className="relative aspect-[2/3] bg-gray-200 rounded-xl overflow-hidden group cursor-pointer shadow-sm">
                 {/* Video Thumbnail */}
                 {getThumbnail(video) ? (
                   <Image
@@ -180,6 +191,7 @@ export const ReelsShowcase = () => {
             </div>
           ))}
         </div>
+      </div>
       </div>
 
       {/* Reel Modal */}
