@@ -1,12 +1,13 @@
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
-import Navigation from '@/components/Navigation';
-import Footer from '@/components/Footer';
+
+import ScrollToTop from '@/components/ScrollToTop';
 import { CartProvider } from '@/hooks/useCart';
 import { NavigationLoadingProvider } from '@/contexts/NavigationLoadingContext';
 import NavigationLoadingOverlay from '@/components/ui/NavigationLoadingOverlay';
 import { Toaster } from '@/components/ui/toaster';
+import CommonLayout from '@/components/CommonLayout';
 import { Cairo, Inter, Playfair_Display } from 'next/font/google';
 import { defaultMetadata } from '@/lib/metadata';
 import SEOHead from '@/components/SEOHead';
@@ -72,14 +73,13 @@ export default async function LocaleLayout({
       </head>
       <body className={`${cairo.variable} ${inter.variable} ${playfair.variable} ${locale === 'ar' ? 'font-cairo' : 'font-inter'}`}>    
         <SEOHead locale={locale} />
+        <ScrollToTop />
         <NextIntlClientProvider locale={locale}>
           <NavigationLoadingProvider>
             <CartProvider>
-              <Navigation />
-              <main id="main-content">
+              <CommonLayout>
                 {children}
-              </main>
-              <Footer />
+              </CommonLayout>
               <NavigationLoadingOverlay />
               <Toaster />
             </CartProvider>

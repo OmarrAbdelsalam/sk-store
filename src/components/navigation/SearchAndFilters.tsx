@@ -8,7 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
-import { getColors, type ColorOption } from "@/api/colors";
+import { useProducts } from "@/hooks/useProducts";
+
+type ColorOption = {
+  id: string;
+  colorNameAr: string;
+  colorNameEn: string;
+  hexa: string;
+};
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Check, ChevronsUpDown } from "lucide-react";
@@ -19,8 +26,28 @@ export const SearchAndFilters = () => {
   const locale = useLocale();
   const router = useRouter();
   const sp = useSearchParams();
-  const [colors, setColors] = useState<ColorOption[]>([]);
   const [mounted, setMounted] = useState(false);
+  
+  // Get colors from products instead of separate API call
+  const { products } = useProducts();
+  const colors = useMemo(() => {
+    const colorMap = new Map<string, ColorOption>();
+    
+    products.forEach(product => {
+      product.availableColors?.forEach(color => {
+        if (!colorMap.has(color.hex)) {
+          colorMap.set(color.hex, {
+            id: color.hex, // Use hex as ID since we don't have separate color IDs
+            colorNameAr: color.name, // This will be the localized name
+            colorNameEn: color.name, // This will be the localized name
+            hexa: color.hex
+          });
+        }
+      });
+    });
+    
+    return Array.from(colorMap.values());
+  }, [products]);
 
   useEffect(() => {
     setMounted(true);
@@ -44,12 +71,7 @@ export const SearchAndFilters = () => {
   const [genderOpen, setGenderOpen] = useState(false);
   const [colorOpen, setColorOpen] = useState(false);
 
-  // Load colors from API
-  useEffect(() => {
-    getColors()
-      .then(setColors)
-      .catch(() => setColors([]));
-  }, []);
+  // Colors are now extracted from products, no separate API call needed
 
   // sync when URL changes elsewhere
   useEffect(() => {
@@ -95,7 +117,7 @@ export const SearchAndFilters = () => {
     params.delete("categoryId");
     params.delete("category");
 
-    router.push(`/?${params.toString()}`);
+    router.push(`/${locale}/products?${params.toString()}`);
     setOpen(false);
   };
 
@@ -106,7 +128,7 @@ export const SearchAndFilters = () => {
     params.delete("colorName");
     params.delete("gender");
     params.delete("q");
-    router.push(`/?${params.toString()}`);
+    router.push(`/${locale}/products?${params.toString()}`);
   };
 
   // Don't render Sheet until mounted to avoid hydration mismatch
@@ -153,9 +175,9 @@ export const SearchAndFilters = () => {
             </div>
           </div>
 
-          {/* Gender */}
+          {/* Badges */}
           <div className="space-y-3">
-            <Label className="font-medium">{t("genderLabel")}</Label>
+            <Label className="font-medium">{locale === 'ar' ? 'التصنيف' : 'Badge'}</Label>
             <Popover open={genderOpen} onOpenChange={setGenderOpen}>
               <PopoverTrigger asChild>
                 <Button
@@ -164,26 +186,43 @@ export const SearchAndFilters = () => {
                   aria-expanded={genderOpen}
                   className="w-full justify-between"
                 >
-                  {selectedGender ? t(selectedGender) : t("selectGender")}
+                  {selectedGender ? (
+                    locale === 'ar' 
+                      ? (selectedGender === 'best_seller' ? 'الأكثر مبيعاً' 
+                        : selectedGender === 'new' ? 'جديد' 
+                        : selectedGender === 'sale' ? 'تخفيض'
+                        : selectedGender === 'featured' ? 'مميز'
+                        : 'اختر التصنيف')
+                      : (selectedGender === 'best_seller' ? 'Best Seller' 
+                        : selectedGender === 'new' ? 'New' 
+                        : selectedGender === 'sale' ? 'Sale'
+                        : selectedGender === 'featured' ? 'Featured'
+                        : 'Select badge')
+                  ) : (locale === 'ar' ? 'اختر التصنيف' : 'Select badge')}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-full p-0">
                 <Command>
                   <CommandGroup>
-                    {["unisex", "men", "women"].map((gender) => (
+                    {[
+                      { value: 'best_seller', labelEn: 'Best Seller', labelAr: 'الأكثر مبيعاً' },
+                      { value: 'new', labelEn: 'New', labelAr: 'جديد' },
+                      { value: 'sale', labelEn: 'Sale', labelAr: 'تخفيض' },
+                      { value: 'featured', labelEn: 'Featured', labelAr: 'مميز' },
+                    ].map((badge) => (
                       <CommandItem
-                        key={gender}
-                        value={gender}
-                        onSelect={() => selectGender(gender)}
+                        key={badge.value}
+                        value={badge.value}
+                        onSelect={() => selectGender(badge.value)}
                       >
                         <Check
                           className={cn(
                             "mr-2 h-4 w-4",
-                            selectedGender === gender ? "opacity-100" : "opacity-0"
+                            selectedGender === badge.value ? "opacity-100" : "opacity-0"
                           )}
                         />
-                        {t(gender)}
+                        {locale === 'ar' ? badge.labelAr : badge.labelEn}
                       </CommandItem>
                     ))}
                   </CommandGroup>

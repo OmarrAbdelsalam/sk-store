@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import ProductCard from "@/components/product/ProductCard";
-import { getProductsPage, type ProductApi } from "@/lib/api/products";
+import { getProductsPage, getMainImage, type ProductApi } from "@/lib/api/products";
 import {
   Carousel,
   CarouselContent,
@@ -11,8 +11,8 @@ import {
 } from "@/components/ui/carousel";
 
 interface RelatedProductsProps {
-  currentProductId: number;
-  relatedProducts?: { id: number; nameAr?: string; nameEn?: string }[];
+  currentProductId: number | string;
+  relatedProducts?: { id: number | string; nameAr?: string; nameEn?: string }[];
   categoryId?: string;
 }
 
@@ -74,7 +74,7 @@ export default function RelatedProducts({
     name: isAr ? (product.nameAr || product.nameEn || "") : (product.nameEn || product.nameAr || ""),
     price: `${product.price} ${isAr ? 'جنيه' : 'EGP'}`,
     priceNum: product.price,
-    image: product.photos?.[0]?.imageUrl || "/placeholder.png",
+    image: getMainImage(product) || "/placeholder.png",
     description: isAr ? (product.descriptionAr || product.descriptionEn || "") : (product.descriptionEn || product.descriptionAr || ""),
     gender: product.genderType?.toLowerCase() === "men" ? "men" : product.genderType?.toLowerCase() === "women" ? "women" : "unisex",
     availableColors: product.colors?.map(c => ({

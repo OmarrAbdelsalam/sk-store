@@ -2,23 +2,24 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, X, ZoomIn } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, X, ZoomIn, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import clsx from "clsx";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { motion, AnimatePresence } from "framer-motion";
+import { useDropboxImage } from "@/hooks/useDropboxImage";
 
 type Photo = {
-  id: number;
+  id: string | number;
   imageUrl: string;
-  colorId: number;
+  colorId: string | number;
   isMain: boolean;
 };
 
 interface ProductImageGalleryProps {
   photos: Photo[];
-  selectedColorId: number;
+  selectedColorId: string | number;
   thumbSide?: "left" | "right";
 }
 
@@ -46,7 +47,28 @@ function SafeImage({
   loading?: "lazy" | "eager";
 }) {
   const [failed, setFailed] = useState(false);
-  const effectiveSrc = failed ? FALLBACK : src || FALLBACK;
+  
+  // Use Dropbox hook for paths starting with / (Dropbox paths)
+  const isDropboxPath = src?.startsWith('/') && !src.startsWith('/placeholder');
+  const { url: dropboxUrl, loading: dropboxLoading } = useDropboxImage(isDropboxPath ? src : undefined);
+  
+  // Determine the effective source
+  let effectiveSrc = src || FALLBACK;
+  if (isDropboxPath) {
+    effectiveSrc = dropboxUrl;
+  }
+  if (failed) {
+    effectiveSrc = FALLBACK;
+  }
+
+  // Show loader while loading Dropbox URL
+  if (isDropboxPath && dropboxLoading) {
+    return (
+      <div className={clsx("flex items-center justify-center bg-gray-100", className)} style={{ width: fill ? '100%' : width, height: fill ? '100%' : height }}>
+        <Loader2 className="animate-spin text-gray-400" size={24} />
+      </div>
+    );
+  }
 
   return (
     <Image
@@ -369,71 +391,11 @@ const ProductImageGallery = ({
           )}
         </div>
 
-        {/* ======== ثَمبنيلز أسفل الصورة — موبايل فقط (زي ما كانت) ======== */}
-        {currentImages.length > 1 && (
-          <div className="flex gap-2 overflow-x-auto mt-4 lg:hidden scrollbar-hide">
-            {currentImages.map((img, index) => (
-              <button
-                key={img.id ?? index}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  selectImage(index);
-                }}
-                className={clsx(
-                  "flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden border-2 transition-all duration-200",
-                  index === currentImageIndex
-                    ? "border-primary shadow-md scale-105"
-                    : "border-gray-200 hover:border-gray-300"
-                )}
-                title={t("thumbTitle", { index: index + 1 })}
-                aria-label={t("thumbTitle", { index: index + 1 })}
-              >
-                <SafeImage
-                  src={img.imageUrl}
-                  alt={t("thumbAlt", { index: index + 1 })}
-                  className="object-cover w-full h-full"
-                  width={80}
-                  height={80}
-                  loading="lazy"
-                />
-              </button>
-            ))}
-          </div>
-        )}
+        {/* ======== ثَمبنيلز أسفل الصورة — موبايل (مخفية) ======== */}
+        {/* Thumbnails hidden - users can swipe to change images */}
 
-        {/* ======== ثَمبنيلز أسفل الصورة — ديسكتوب (Grid بدون كاروسيل) ======== */}
-        {currentImages.length > 1 && (
-          <div className="hidden lg:grid mt-4 gap-2"
-               // 6 أعمدة افتراضيًا، وتقل على الشاشات الأكبر/الأصغر حسب الحاجة
-               style={{ gridTemplateColumns: "repeat(6, minmax(0, 1fr))" }}>
-            {currentImages.map((img, index) => (
-              <button
-                key={img.id ?? index}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  selectImage(index);
-                }}
-                className={clsx(
-                  "w-full aspect-square rounded-lg overflow-hidden border-2 transition-all duration-200",
-                  index === currentImageIndex
-                    ? "border-primary shadow-md scale-105"
-                    : "border-gray-200 hover:border-gray-300 hover:scale-105"
-                )}
-                title={t("thumbTitle", { index: index + 1 })}
-                aria-label={t("thumbTitle", { index: index + 1 })}
-              >
-                <SafeImage
-                  src={img.imageUrl}
-                  alt={t("thumbAlt", { index: index + 1 })}
-                  className="object-cover w-full h-full"
-                  width={120}
-                  height={120}
-                  loading="lazy"
-                />
-              </button>
-            ))}
-          </div>
-        )}
+        {/* ======== ثَمبنيلز أسفل الصورة — ديسكتوب (مخفية) ======== */}
+        {/* Thumbnails hidden - users can click arrows to change images */}
       </div>
 
       {/* ======== Lightbox Dialog ======== */}

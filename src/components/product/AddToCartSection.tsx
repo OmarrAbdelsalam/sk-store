@@ -9,7 +9,7 @@ import React from "react";
 interface AddToCartSectionProps {
   totalPrice: number;
   onAddToCart: () => void;
-  onBuyNow: () => void;
+  onBuyNow?: () => void;
   disabled?: boolean;
 }
 
@@ -24,19 +24,22 @@ const AddToCartSection = React.memo(({
   const dir = locale === "ar" ? "rtl" : "ltr";
   const router = useRouter();
 
-  // Prefetch cart page on hover (for both buttons now)
+  // Prefetch cart page on hover
   const handleCartHover = React.useCallback(() => {
     router.prefetch(`/${locale}/cart`);
   }, [locale, router]);
 
   return (
-    <div className="space-y-6" dir={dir}>
-      {/* أزرار الشراء */}
-      <div className="grid grid-cols-2 gap-3">
+    <>
+      
+      {/* Fixed Add to Cart button at bottom - Mobile only */}
+      <div 
+        className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border p-4 lg:hidden shadow-lg"
+        dir={dir}
+      >
         <Button
           size="lg"
-          variant="outline"
-          className="w-full text-lg py-6"
+          className="w-full text-lg py-6 bg-black hover:bg-black/90 text-white"
           onClick={onAddToCart}
           onMouseEnter={handleCartHover}
           disabled={disabled}
@@ -44,29 +47,25 @@ const AddToCartSection = React.memo(({
           <ShoppingBag className={`h-5 w-5 ${dir === "rtl" ? "ml-2" : "mr-2"}`} />
           {t("addToCart")}
         </Button>
-        
+      </div>
+
+      {/* Desktop - Regular button */}
+      <div className="hidden lg:block" dir={dir}>
         <Button
           size="lg"
-          className="w-full text-lg py-6 bg-primary hover:bg-primary/90"
-          onClick={onBuyNow}
+          className="w-full text-lg py-6 bg-black hover:bg-black/90 text-white"
+          onClick={onAddToCart}
           onMouseEnter={handleCartHover}
           disabled={disabled}
         >
-          {t("buyNow")}
+          <ShoppingBag className={`h-5 w-5 ${dir === "rtl" ? "ml-2" : "mr-2"}`} />
+          {t("addToCart")}
         </Button>
       </div>
-
-      {/* زر التواصل عبر واتساب */}
-      <Button
-        size="lg"
-        variant="outline"
-        className="w-full text-lg py-6 border-green-500 text-green-600 hover:bg-green-50"
-        onClick={() => window.open("https://wa.me/+201501881005", "_blank")}
-      >
-        {t("contactSeller")}
-      </Button>
-    </div>
+    </>
   );
 });
+
+AddToCartSection.displayName = "AddToCartSection";
 
 export default AddToCartSection;

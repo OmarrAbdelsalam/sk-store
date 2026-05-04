@@ -30,13 +30,13 @@ export function useDiscount() {
       const sessionId = getOrCreateSessionId();
       const result = await applyDiscount(sessionId, code.trim());
 
-      if (result.succeeded && result.data) {
+      if (result.succeeded) {
         const discountData: DiscountData = {
-          amount: result.data.discountValue,
-          percentage: result.data.discountPercentage,
+          amount: result.discountValue || 0,
+          percentage: result.discountPercentage || 0,
           code: code.trim(),
-          originalTotal: result.data.originalTotal,
-          finalTotal: result.data.finalTotal
+          originalTotal: result.originalTotal || 0,
+          finalTotal: result.finalTotal || 0
         };
         
         setDiscount(discountData);

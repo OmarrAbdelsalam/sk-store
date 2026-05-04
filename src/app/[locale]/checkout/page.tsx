@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { getOrCreateSessionId } from "@/lib/session";
 import { useLocale, useTranslations } from "next-intl";
 import { getShippingPrice, type CheckoutFormData } from "@/lib/checkout-utils";
+import { API_ROUTES } from "@/lib/api-routes";
 // clearCartAPI not needed - server clears cart automatically after order
 
 export default function Checkout() {
@@ -77,7 +78,7 @@ export default function Checkout() {
     [locale]
   );
 
-  const handleSubmit = async (formData: CheckoutFormData) => {
+  const handleSubmit = async (formData: CheckoutFormData & { paymentMethod: string }) => {
     setIsProcessing(true);
     const shipping = getShippingPrice(formData.governorate, formData.city);
     setShippingPrice(shipping);
@@ -92,87 +93,53 @@ export default function Checkout() {
       
       console.log('Cart items before order:', items);
       
-      // Validate stock before placing order
-      const { getCart } = await import("@/lib/api/cart");
-      const { getProductById } = await import("@/lib/api/products");
-      
-      const cartData = await getCart(sessionId);
-      const cartItems = cartData.items || [];
-      
-      const stockIssues: Array<{ name: string; requested: number; available: number }> = [];
-      
-      for (const item of cartItems) {
-        try {
-          const product = await getProductById(item.productId);
-          
-          let availableStock = 0;
-          if (product.hasSizes && item.sizeId) {
-            const variant = product.variants.find(
-              v => v.colorId === item.colorId && v.sizeId === item.sizeId
-            );
-            availableStock = variant?.quantity ?? 0;
-          } else if (item.colorId) {
-            const variant = product.variants.find(v => v.colorId === item.colorId);
-            availableStock = variant?.quantity ?? 0;
-          } else if (product.variants.length > 0) {
-            availableStock = product.variants[0]?.quantity ?? 0;
-          }
-          
-          if (item.quantity > availableStock) {
-            const productName = isAr 
-              ? (product.nameAr || product.nameEn || `Product ${item.productId}`)
-              : (product.nameEn || product.nameAr || `Product ${item.productId}`);
-            
-            stockIssues.push({
-              name: productName,
-              requested: item.quantity,
-              available: availableStock
-            });
-          }
-        } catch (error) {
-          console.error(`Error validating product ${item.productId}:`, error);
-        }
-      }
-      
-      if (stockIssues.length > 0) {
-        const messages = stockIssues.map(issue => {
-          if (issue.available === 0) {
-            return isAr 
-              ? `${issue.name}: غير متوفر (نفذت الكمية)`
-              : `${issue.name}: Out of stock`;
-          } else {
-            return isAr
-              ? `${issue.name}: طلبت ${issue.requested} لكن المتاح فقط ${issue.available}`
-              : `${issue.name}: Requested ${issue.requested} but only ${issue.available} available`;
-          }
-        });
-        
-        throw new Error(
-          isAr 
-            ? `بعض المنتجات غير متوفرة بالكمية المطلوبة:\n${messages.join('\n')}`
-            : `Some products are not available in requested quantity:\n${messages.join('\n')}`
-        );
-      }
+      // Calculate totals
+      const subtotal = getTotalPrice();
+      const discountAmt = discount?.amount || 0;
+      const total = subtotal + shipping - discountAmt;
       
       const payload = {
         sessionId,
-        customerName: `${formData.firstName} ${formData.lastName}`.trim(),
+        customerName: formData.name,
         phoneNumber: formData.phone,
-        whatsAppNumber: formData.whatsAppNumber || formData.phone,
         government: formData.governorate,
         city: formData.city,
-        area: formData.area,
-        street: formData.street || formData.detailedAddress,
-        buildingNo: formData.buildingNo,
-        apartment: formData.apartment,
+        detailedAddress: formData.detailedAddress,
         notes: formData.notes,
+        paymentMethod: formData.paymentMethod,
+        // Include cart details
+        items: items.map(item => ({
+          productId: item.productId,
+          name: item.name,
+          nameAr: item.nameAr,
+          image: item.image,
+          colorId: item.colorId,
+          colorName: item.colorName,
+          sizeId: item.sizeId,
+          sizeName: item.sizeName,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+        subtotal,
+        shippingCost: shipping,
+        discountAmount: discountAmt,
+        discountCode: discount?.code,
+        total,
       };
 
       console.log('Sending order payload:', payload);
 
-      const res = await fetch("https://scrubstore.runasp.net/api/Orders", {
+      const idempotencyKey = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+
+      const res = await fetch(API_ROUTES.orders.create(), {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Idempotency-Key": idempotencyKey
+        },
         body: JSON.stringify(payload),
       });
 

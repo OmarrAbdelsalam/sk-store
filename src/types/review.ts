@@ -1,10 +1,10 @@
 export interface Review {
-  reviewId: number;
+  reviewId: number | string;
   sessionId: string;
   rating: number;
   comment: string;
-  productId?: number;
-  orderId?: number;
+  productId?: number | string;
+  orderId?: number | string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -15,7 +15,7 @@ export interface ReviewFormData {
 }
 
 export interface ReviewApiRequest {
-  reviewId: number;
+  reviewId: number | string;
   sessionId: string;
   rating: number;
   comment: string;

@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { useProducts } from "@/hooks/useProducts";
 import ProductCard from "@/components/product/ProductCard";
 import ProductPagination from "@/components/product/ProductPagination";
@@ -15,7 +15,7 @@ import {
   type ProductApi,
 } from "@/lib/api/products";
 import { prefetchProducts } from "@/hooks/useProduct";
-import { Stethoscope } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
 
 /* ===================== Types ===================== */
 
@@ -29,7 +29,7 @@ interface FilterResponse {
 }
 
 interface Product {
-  id: number;
+  id: string | number;
   name: string;
   nameAr?: string;  // للبحث ثنائي اللغة
   nameEn?: string;  // للبحث ثنائي اللغة
@@ -66,7 +66,7 @@ const isDefaultFilters = (sp: SearchParamsLike) => {
  * مع إضافة nameAr و nameEn للبحث ثنائي اللغة
  */
 const mapServerToProduct = (p: ProductApi, locale: string): Product => {
-  const ui = mapApiProductToUI(p, locale);
+  const ui = mapApiProductToUI(p, locale as 'ar' | 'en');
   return {
     id: ui.id,
     name: ui.name,
@@ -86,7 +86,12 @@ const mapServerToProduct = (p: ProductApi, locale: string): Product => {
 
 /* ===================== Component ===================== */
 
-const ProductGrid = () => {
+interface ProductGridProps {
+  isFullPage?: boolean;
+}
+
+const ProductGrid = ({ isFullPage = false }: ProductGridProps) => {
+  const [mounted, setMounted] = useState(false);
   const [activeFilter, setActiveFilter] = useState<string>("All");
   const [currentPage, setCurrentPage] = useState(1);
   const [categories, setCategories] = useState<CategoryOption[]>([]);
@@ -96,12 +101,16 @@ const ProductGrid = () => {
 
   const searchParams = useSearchParams();
   const router = useRouter();
-  const isMobile = useIsMobile();
-  const { products, loading } = useProducts();
+  const { products, isLoading: loading } = useProducts();
   const t = useTranslations();
   const locale = useLocale();
 
-  const productsPerPage = isMobile ? 14 : 16;
+  const productsPerPage = 16; // Fixed value to prevent hydration mismatch
+
+  // Mount state to avoid hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   /* Load categories */
   useEffect(() => {
@@ -160,12 +169,10 @@ const ProductGrid = () => {
     setServerError(null);
 
     filterProducts({
-      priceFrom,
-      priceTo,
-      colorName,
-      sizeName,
-      pageNumber: 1,
-      pageSize: 100, // ← قللنا من 200 لـ 100
+      minPrice: priceFrom,
+      maxPrice: priceTo,
+      page: 1,
+      pageSize: 100,
     })
       .then((res: unknown) => {
         const { items } = (res as FilterResponse) ?? {};
@@ -267,10 +274,14 @@ const ProductGrid = () => {
     });
   }, [afterCategory, qRaw, matchesGender]);
 
-  /* Reset page on filter changes */
+  /* View All / Expansion Logic */
+  const [isExpanded, setIsExpanded] = useState(isFullPage);
+
+  /* Reset expansion on filter changes */
   useEffect(() => {
     setCurrentPage(1);
-  }, [activeFilter, searchParams]);
+    setIsExpanded(isFullPage);
+  }, [activeFilter, searchParams, isFullPage]);
 
   /* Title */
   const displayTitle = useMemo(() => {
@@ -288,24 +299,27 @@ const ProductGrid = () => {
     return legacyTitles[activeFilter] || t("ProductGrid.ourCollections");
   }, [activeFilter, categories, t, locale]);
 
-  /* Pagination */
+  /* Pagination & Display Logic */
   const totalPages =
     Math.ceil((filteredProducts.length || 0) / productsPerPage) || 1;
-  const indexOfLastProduct = currentPage * productsPerPage;
-  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
-  const currentProducts = filteredProducts.slice(
-    indexOfFirstProduct,
-    indexOfLastProduct
-  );
+  
+  const displayedProducts = useMemo(() => {
+    if (!isExpanded) {
+      return filteredProducts.slice(0, 6);
+    }
+    const indexOfLastProduct = currentPage * productsPerPage;
+    const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
+    return filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
+  }, [isExpanded, filteredProducts, currentPage, productsPerPage]);
 
   /* Prefetch visible products - only first page */
   useEffect(() => {
-    if (currentProducts.length > 0 && currentPage === 1) {
+    if (displayedProducts.length > 0 && currentPage === 1) {
       // Only prefetch first 4 products on initial load
-      const productIds = currentProducts.slice(0, 4).map(p => p.id);
+      const productIds = displayedProducts.slice(0, 4).map(p => p.id);
       prefetchProducts(productIds);
     }
-  }, [currentProducts, currentPage]);
+  }, [displayedProducts, currentPage]);
 
   /* Actions */
   const showAll = () => {
@@ -324,30 +338,108 @@ const ProductGrid = () => {
 
   const isBusy = loading || serverLoading;
 
-  /* Render */
-  return (
-    <section id="products" className="py-4 md:py-12 bg-background">
-      <div className="container mx-auto px-4">
-        <div className="md:mb-12 animate-fade-in text-start md:text-center">
-          <h2 className="font-medium text-2xl md:text-4xl lg:text-5xl mb-2 md:mb-3">
-            {displayTitle}
-          </h2>
-          {/* Mobile: line under title */}
-          <div className="h-0.5 w-32 bg-blue-600 mb-3 md:hidden"></div>
-          <p className="text-muted-foreground text-sm md:text-base mb-4 md:mb-4">
-            {t("ProductGrid.subtitle")}
-          </p>
-          {/* Desktop: decorative lines */}
-          <div className="hidden md:flex items-center justify-center gap-2 mb-6">
-            <div className="h-0.5 w-12 bg-gradient-to-r from-transparent to-blue-600"></div>
-            <div className="h-1 w-16 bg-blue-600 rounded-full"></div>
-            <div className="h-0.5 w-12 bg-gradient-to-l from-transparent to-blue-600"></div>
+  // Don't render until mounted to avoid hydration mismatch
+  if (!mounted) {
+    return (
+      <section id="products" className="py-2 md:py-6 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-6">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="space-y-2 md:space-y-4 animate-pulse">
+                <div className="aspect-[3/4] w-full rounded-lg bg-muted" />
+                <div className="space-y-2">
+                  <div className="h-4 bg-muted rounded w-3/4" />
+                  <div className="h-4 bg-muted rounded w-1/2" />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
+      </section>
+    );
+  }
+
+  /* Render */
+  return (
+    <section id="products" className={`${isFullPage ? 'pt-2 pb-8' : 'py-8'} md:py-12 bg-background`}>
+      <div className="container mx-auto px-4">
+        {isFullPage ? (
+          <>
+            {/* Breadcrumb - Desktop/Tablet only */}
+            <nav className="hidden md:flex items-center gap-2 text-sm mb-6">
+              <Link href="/" className="text-muted-foreground hover:text-foreground transition-colors">
+                {locale === 'ar' ? 'الرئيسية' : 'Home'}
+              </Link>
+              <span className="text-muted-foreground">/</span>
+              {activeFilter !== "All" ? (
+                <>
+                  <Link href={`/${locale}/products`} className="text-muted-foreground hover:text-foreground transition-colors">
+                    {locale === 'ar' ? 'المنتجات' : 'Products'}
+                  </Link>
+                  <span className="text-muted-foreground">/</span>
+                  <span className="font-medium text-foreground">
+                    {(() => {
+                      const cat = categories.find((c) => String(c.key) === String(activeFilter));
+                      return cat ? (locale === 'ar' ? cat.arabicName : cat.englishName) : activeFilter;
+                    })()}
+                  </span>
+                </>
+              ) : (
+                <span className="font-medium text-foreground">
+                  {locale === 'ar' ? 'كل المنتجات' : 'All Products'}
+                </span>
+              )}
+            </nav>
+
+            {/* Category Tabs - Mobile only */}
+            <div className="md:hidden mb-6 overflow-x-auto scrollbar-hide">
+              <div className="flex gap-2 min-w-max pb-2">
+                <button
+                  onClick={() => {
+                    setActiveFilter("All");
+                    router.push(`/${locale}/products`);
+                  }}
+                  className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${
+                    activeFilter === "All"
+                      ? "bg-black text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  {locale === 'ar' ? 'كل المنتجات' : 'All Products'}
+                </button>
+                {categories.map((cat) => (
+                  <button
+                    key={cat.key}
+                    onClick={() => {
+                      setActiveFilter(String(cat.key));
+                      const slug = (cat.englishName || '').toLowerCase().replace(/\s+/g, '-');
+                      sessionStorage.setItem(`category_${slug}`, String(cat.key));
+                      router.push(`/${locale}/products?category=${slug}`);
+                    }}
+                    className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${
+                      String(activeFilter) === String(cat.key)
+                        ? "bg-black text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    {locale === 'ar' ? cat.arabicName : cat.englishName}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="text-center mb-10">
+            <h2 className="font-playfair text-3xl md:text-4xl text-gray-900 mb-2">
+              {displayTitle}
+            </h2>
+            <div className="w-24 h-[1px] bg-black mx-auto mt-3"></div>
+          </div>
+        )}
 
         {isBusy ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-10 lg:gap-12">
-            {Array.from({ length: isMobile ? 6 : 8 }).map((_, i) => (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-6 items-stretch">
+            {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="space-y-2 md:space-y-4 animate-pulse">
                 <div className="aspect-[3/4] w-full rounded-lg bg-muted" />
                 <div className="space-y-1.5 md:space-y-2">
@@ -357,10 +449,10 @@ const ProductGrid = () => {
               </div>
             ))}
           </div>
-        ) : currentProducts.length === 0 ? (
-          <div className="text-center py-20">
+        ) : displayedProducts.length === 0 ? (
+          <div className="text-center pt-4 md:pt-8 pb-20">
             <div className="flex justify-center mb-6">
-              <Stethoscope className="w-24 h-24 text-muted-foreground/30" strokeWidth={1.5} />
+              <ShoppingBag className="w-24 h-24 text-muted-foreground/30" strokeWidth={1.5} />
             </div>
             <h3 className="text-2xl font-medium mb-2">
               {t("ProductGrid.notFound")}
@@ -376,22 +468,38 @@ const ProductGrid = () => {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-10 lg:gap-12 items-stretch">
-            {currentProducts.map((product, index) => (
-              <ProductCard
-                key={String(product.id)}
-                product={product}
-                index={index}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-6 items-stretch">
+              {displayedProducts.map((product, index) => (
+                <ProductCard
+                  key={String(product.id)}
+                  product={product}
+                  index={index}
+                />
+              ))}
+            </div>
+
+            {/* View All Button */}
+            {!isFullPage && (
+              <div className="text-center mt-12">
+                <Button 
+                  onClick={() => router.push(`/${locale}/products`)}
+                  className="px-10 py-6 bg-black text-white hover:bg-gray-800 rounded-none tracking-[0.2em] uppercase text-sm transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1"
+                >
+                  {t("ProductGrid.viewAll") || "View All"}
+                </Button>
+              </div>
+            )}
+          </>
         )}
 
-        <ProductPagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-        />
+        {isExpanded && (
+          <ProductPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        )}
       </div>
     </section>
   );

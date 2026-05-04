@@ -1,4 +1,18 @@
 {
+  "TopBanner": {
+    "freeShipping": "FREE SHIPPING ON ORDERS OVER 900 EGP",
+    "newCollection": "NEW COLLECTION | PREMIUM MEDICAL SCRUBS",
+    "shopNow": "SHOP NOW | FAST DELIVERY ACROSS EGYPT",
+    "previousMessage": "Previous message",
+    "nextMessage": "Next message",
+    "close": "Close",
+    "goToMessage": "Go to message"
+  },
+  "Hero": {
+    "title": "Artistry in Every Stitch",
+    "description": "Experience the perfect blend of traditional craftsmanship and modern design. Our handmade collection defines new standards of luxury.",
+    "shopBags": "Shop Bags"
+  },
   "Pagination": {
     "previous": "Previous",
     "next": "Next",
@@ -239,16 +253,11 @@
       "currentQty": "Current quantity {qty}"
     }
   },
-  "Hero": {
-    "specialists": "For Healthcare Professionals",
-    "title": "Elevate Your Professional Look",
-    "desc": "Discover luxury medical wear designed for modern healthcare professionals. Where luxury meets function.",
-    "shop": "Shop Collection"
-  },
+
   "Footer": {
-    "brand": "HOUSE SCRUB",
-    "slogan": "Luxury Medical Wear for Professionals",
-    "brandDesc": "Luxury medical wear for professionals who value style and function in their work.",
+    "brand": "SK Bags",
+    "slogan": "Handcrafted Quality for Every Occasion",
+    "brandDesc": "Handcrafted crochet bags that blend elegance with everyday functionality. Each piece is unique, just like you.",
     "shop": "Shop",
     "tops": "Scrub Tops",
     "pants": "Scrub Pants",
@@ -270,17 +279,13 @@
     "sustainability": "Sustainability",
     "jobs": "Jobs",
     "press": "Press",
-    "copyright": "2025 House Scrub. All rights reserved.",
-    "returnsDesc": "Returns & Exchange: Available within 14 days of receipt, provided the item is in its original condition.",
-    "contactUs": "Contact Us Via:",
-    "whatsapp": "WhatsApp",
-    "facebook": "Facebook",
-    "instagram": "Instagram"
+    "copyright": "2025 SK Bags. All rights reserved.",
+    "returnsDesc": "Returns & Exchange: Available within 14 days of receipt, provided the item is in its original condition."
   },
   "Nav": {
     "home": "Home",
     "allProducts": "All Products",
-    "logo": "House Scrub"
+    "logo": "SK bags"
   },
   "ProductGrid": {
     "all": "All",
@@ -295,7 +300,60 @@
     "showAll": "Show all products",
     "scrubTops": "Scrub Tops",
     "scrubPants": "Scrub Pants",
-    "loading": "Loading products…"
+    "loading": "Loading products…",
+    "viewAll": "View All"
+  },
+  "NewArrivals": {
+    "title": "New Arrivals",
+    "viewAll": "View All"
+  },
+  "Handbags": {
+    "title": "Handbags",
+    "viewAll": "View All"
+  },
+  "ReviewsGallery": {
+    "title": "Customer Love",
+    "subtitle": "See what our customers are saying about their SK Bags",
+    "shareYours": "Share your SK Bags moment with us!",
+    "tagUs": "Tag us on Instagram"
+  },
+  "BestSellers": {
+    "title": "Best Sellers",
+    "subtitle": "Our most loved pieces that everyone is talking about",
+    "viewAll": "View All"
+  },
+  "Banners": {
+    "shoulderBags": "Shoulder Bags",
+    "crossbodyBags": "Crossbody Bags",
+    "dresses": "Dresses",
+    "tops": "Tops & Shirts",
+    "shopNow": "Shop Now"
+  },
+  "DiscoverSection": {
+    "title": "More to Discover"
+  },
+  "MaisonClutch": {
+    "title": "The Maison Clutch",
+    "p1": "Introducing The Maison Clutch — a celebration of refined simplicity and timeless design.",
+    "p2": "Handwoven with precision, kissed by soft beige tones, and crafted to complement every mood and moment, for autumn vibes. It’s not just an accessory, it’s the definition of effortless sophistication.",
+    "shopButton": "Shop Now"
+  },
+  "Features": {
+    "sectionTitle": "Why Choose Us",
+    "freeShippingTitle": "FREE SHIPPING",
+    "freeShippingDesc": "Free shipping on all orders over 900 EGP",
+    "paymentTitle": "Flexible Payment",
+    "paymentDesc": "Pay with Multiple Payment Methods",
+    "returnsTitle": "Returns",
+    "returnsDesc": "Within 14 days of purchase",
+    "supportTitle": "Online Support",
+    "supportDesc": "24/7 available"
+  },
+  "Ticker": {
+    "freeShipping": "Free Shipping over 900 EGP",
+    "shippingEgypt": "Shipping Across All Egypt",
+    "handmade": "100% Handmade Products",
+    "premiumQuality": "Premium Quality Materials"
   },
   "PersonalInfo": {
     "title": "Personal Information",

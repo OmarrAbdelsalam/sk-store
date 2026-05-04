@@ -21,11 +21,9 @@ export default function ProductDetailPage() {
 
   const params = useParams<{ id: string }>();
   const id = Array.isArray(params?.id) ? params?.id[0] : params?.id;
-  const numericId = Number.parseInt(id ?? "0", 10);
-
-  const { product, isLoading, error } = useProduct(
-    Number.isFinite(numericId) ? numericId : undefined
-  );
+  
+  // Use string ID directly - updated to handle UUIDs
+  const { product, isLoading, error } = useProduct(id);
 
   // Prefetch cart and checkout pages in background
   useEffect(() => {

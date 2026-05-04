@@ -79,31 +79,19 @@ export function getShippingPrice(governorate: string, city: string): number {
 }
 
 export type CheckoutFormData = {
-  firstName: string;
-  lastName: string;
+  name: string;
   phone: string;
-  whatsAppNumber: string;
   governorate: string;
   city: string;
-  area: string;
-  street: string;
-  buildingNo: string;
-  apartment: string;
   detailedAddress: string;
   notes: string;
 };
 
 export const emptyFormData: CheckoutFormData = {
-  firstName: "",
-  lastName: "",
+  name: "",
   phone: "",
-  whatsAppNumber: "",
   governorate: "",
   city: "",
-  area: "",
-  street: "",
-  buildingNo: "",
-  apartment: "",
   detailedAddress: "",
   notes: ""
 };

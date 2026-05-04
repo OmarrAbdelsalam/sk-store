@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getOrCreateSessionId } from "@/lib/session";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { OrderItemReview } from "@/components/orders/OrderItemReview";
+import { API_ROUTES } from "@/lib/api-routes";
 
 type OrderItem = {
   id: number;
@@ -28,17 +29,13 @@ type OrderItem = {
 };
 
 type Order = {
-  id: number;
+  id: string;
   sessionId: string;
   customerName: string;
   phoneNumber: string;
-  whatsAppNumber: string;
   government: string;
   city: string;
-  area: string;
-  street: string;
-  buildingNo: string;
-  apartment: string;
+  detailedAddress: string;
   notes: string;
   paymentMethod: string;
   orderStatus: string;
@@ -62,15 +59,13 @@ export default function MyOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [openOrderId, setOpenOrderId] = useState<number | null>(null);
+  const [openOrderId, setOpenOrderId] = useState<string | null>(null);
 
   const fetchOrders = async (sessionId: string) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(
-        `https://scrubstore.runasp.net/api/Orders/user?sessionId=${sessionId}`
-      );
+      const res = await fetch(API_ROUTES.orders.bySessionId(sessionId));
 
       if (!res.ok) {
         throw new Error(`Failed to fetch orders: ${res.status}`);
@@ -78,8 +73,10 @@ export default function MyOrdersPage() {
 
       const response = await res.json();
       if (response.succeeded && Array.isArray(response.data)) {
-        // Sort orders ascending by id (1, 2, 3...)
-        const sortedOrders = response.data.sort((a: Order, b: Order) => a.id - b.id);
+        // Sort orders by created_at (newest first)
+        const sortedOrders = response.data.sort((a: Order, b: Order) => 
+          new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime()
+        );
         setOrders(sortedOrders);
       } else {
         setOrders([]);
@@ -295,13 +292,16 @@ export default function MyOrdersPage() {
                             <strong>{t("phone")}:</strong> {order.phoneNumber}
                           </p>
                           <p>
-                            <strong>{t("address")}:</strong> {order.street}, {order.area},{" "}
-                            {order.city}, {order.government}
+                            <strong>{isAr ? "المحافظة" : "Governorate"}:</strong> {order.government}
                           </p>
                           <p>
-                            <strong>{t("building")}:</strong> {order.buildingNo},{" "}
-                            {t("apartment")}: {order.apartment}
+                            <strong>{isAr ? "المدينة" : "City"}:</strong> {order.city}
                           </p>
+                          {order.detailedAddress && (
+                            <p>
+                              <strong>{t("address")}:</strong> {order.detailedAddress}
+                            </p>
+                          )}
                           {order.notes && (
                             <p>
                               <strong>{t("notes")}:</strong> {order.notes}

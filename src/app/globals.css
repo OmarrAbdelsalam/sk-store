@@ -304,3 +304,20 @@
 .smooth-spinner {
   animation: smooth-spin 1s linear infinite;
 }
+
+@keyframes ticker {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-ticker {
+  animation: ticker 25s linear infinite;
+}
+
+.animate-marquee {
+  animation: ticker 25s linear infinite;
+}

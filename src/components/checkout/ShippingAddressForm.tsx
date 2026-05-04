@@ -1,6 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { MapPin, Check, ChevronsUpDown, Building, Home, FileText } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { MapPin, Check, ChevronsUpDown, Building, FileText } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { memo, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -22,10 +23,6 @@ interface ShippingAddressFormProps {
   formData: {
     governorate: string;
     city: string;
-    area: string;
-    street: string;
-    buildingNo: string;
-    apartment: string;
     detailedAddress: string;
     notes: string;
   };
@@ -109,53 +106,18 @@ const ShippingAddressForm = memo(({ formData, egyptGovernorates, onInputChange }
         </div>
 
         <div>
-          <Label htmlFor="area" className="text-sm font-medium mb-2 block">{t("area")}</Label>
-          <Input
-            id="area"
-            placeholder={t("areaPlaceholder")}
-            value={formData.area}
-            onChange={(e) => onInputChange("area", e.target.value)}
-            className="h-11 rounded-xl"
+          <Label htmlFor="detailedAddress" className="text-sm font-medium flex items-center gap-2 mb-2">
+            <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
+            {t("detailedAddress")}
+          </Label>
+          <Textarea
+            id="detailedAddress"
+            placeholder={t("detailedAddressPlaceholder")}
+            value={formData.detailedAddress}
+            onChange={(e) => onInputChange("detailedAddress", e.target.value)}
+            className="min-h-[80px] rounded-xl resize-none"
             required
           />
-        </div>
-
-        <div>
-          <Label htmlFor="street" className="text-sm font-medium mb-2 block">{t("street")}</Label>
-          <Input
-            id="street"
-            placeholder={t("streetPlaceholder")}
-            value={formData.street}
-            onChange={(e) => onInputChange("street", e.target.value)}
-            className="h-11 rounded-xl"
-            required
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="buildingNo" className="text-sm font-medium flex items-center gap-2 mb-2">
-              <Home className="w-3.5 h-3.5 text-muted-foreground" />
-              {t("buildingNo")}
-            </Label>
-            <Input
-              id="buildingNo"
-              placeholder={t("buildingPlaceholder")}
-              value={formData.buildingNo}
-              onChange={(e) => onInputChange("buildingNo", e.target.value)}
-              className="h-11 rounded-xl"
-            />
-          </div>
-          <div>
-            <Label htmlFor="apartment" className="text-sm font-medium mb-2 block">{t("apartment")}</Label>
-            <Input
-              id="apartment"
-              placeholder={t("apartmentPlaceholder")}
-              value={formData.apartment}
-              onChange={(e) => onInputChange("apartment", e.target.value)}
-              className="h-11 rounded-xl"
-            />
-          </div>
         </div>
 
         <div>
@@ -163,12 +125,12 @@ const ShippingAddressForm = memo(({ formData, egyptGovernorates, onInputChange }
             <FileText className="w-3.5 h-3.5 text-muted-foreground" />
             {t("notes")}
           </Label>
-          <Input
+          <Textarea
             id="notes"
             placeholder={t("notesPlaceholder")}
             value={formData.notes}
             onChange={(e) => onInputChange("notes", e.target.value)}
-            className="h-11 rounded-xl"
+            className="min-h-[60px] rounded-xl resize-none"
           />
         </div>
       </div>

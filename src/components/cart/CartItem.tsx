@@ -9,9 +9,9 @@ import QuantityControl from "./QuantityControl";
 
 interface CartItemProps {
   item: {
-    id: number;
-    itemId: number;
-    productId?: number;
+    id: string | number;
+    itemId: string;
+    productId?: string | number;
     name: string;
     nameAr?: string;
     nameEn?: string;
@@ -27,8 +27,8 @@ interface CartItemProps {
     addOns?: string[];
     isMaxStock?: boolean;
   };
-  onUpdateQuantity: (itemId: number, quantity: number) => Promise<boolean>;
-  onRemove: (itemId: number) => void;
+  onUpdateQuantity: (itemId: string, quantity: number) => Promise<boolean>;
+  onRemove: (itemId: string) => void;
   maxQuantity?: number;
 }
 
@@ -73,25 +73,23 @@ const CartItem = memo(({ item, onUpdateQuantity, onRemove, maxQuantity }: CartIt
   }, [item.itemId, onRemove]);
 
   // حساب السعر الإجمالي للمنتج
-  const numericPrice = parseFloat(item.price.replace(/[^\d.]/g, ""));
+  const priceStr = item.price || '0';
+  const numericPrice = parseFloat(String(priceStr).replace(/[^\d.]/g, "")) || 0;
   const totalPrice = (numericPrice * item.quantity).toFixed(2);
-  const currency = item.price.includes("EGP")
+  const currency = String(priceStr).includes("EGP")
     ? "EGP"
-    : item.price.replace(/[\d.,\s]/g, "").trim() || "EGP";
+    : String(priceStr).replace(/[\d.,\s]/g, "").trim() || "EGP";
 
   return (
     <div
-      className={`group relative bg-white dark:bg-card rounded-2xl border border-border/50 
-        shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden
+      className={`group relative bg-background rounded-xl border border-border/50 
+        hover:border-border transition-all duration-300 overflow-hidden
         ${isRemoving ? "opacity-0 scale-95 -translate-x-4" : "opacity-100 scale-100 translate-x-0"}`}
     >
-      {/* شريط علوي ملون */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/60 via-primary to-primary/60" />
-
-      <div className="p-4 sm:p-6">
+      <div className="p-4">
         {/* Desktop Layout */}
         <div className="hidden sm:block">
-          <div className="flex gap-6">
+          <div className="flex gap-4">
             <CartItemImage src={item.image} alt={displayName} />
             <div className="flex-1 min-w-0">
               <div className="flex justify-between items-start gap-2">
@@ -106,7 +104,7 @@ const CartItem = memo(({ item, onUpdateQuantity, onRemove, maxQuantity }: CartIt
                   variant="ghost"
                   size="icon"
                   onClick={handleRemove}
-                  className="h-9 w-9 rounded-full text-muted-foreground hover:text-destructive 
+                  className="h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive 
                     hover:bg-destructive/10 transition-all duration-200 flex-shrink-0"
                   title={t("remove")}
                   aria-label={t("remove")}
@@ -125,7 +123,7 @@ const CartItem = memo(({ item, onUpdateQuantity, onRemove, maxQuantity }: CartIt
                   <span className="text-sm text-muted-foreground">
                     {isAr ? "الإجمالي:" : "Total:"}
                   </span>
-                  <span className="text-xl font-bold text-primary">
+                  <span className="text-lg font-bold text-foreground">
                     {totalPrice} {currency}
                   </span>
                 </div>
@@ -169,7 +167,7 @@ const CartItem = memo(({ item, onUpdateQuantity, onRemove, maxQuantity }: CartIt
               variant="ghost"
               size="icon"
               onClick={handleRemove}
-              className="h-8 w-8 rounded-full text-muted-foreground hover:text-destructive 
+              className="h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive 
                 hover:bg-destructive/10 transition-all duration-200 flex-shrink-0 -me-1"
               title={t("remove")}
               aria-label={t("remove")}
@@ -179,7 +177,7 @@ const CartItem = memo(({ item, onUpdateQuantity, onRemove, maxQuantity }: CartIt
           </div>
 
           {/* الكمية والسعر في صف واحد */}
-          <div className="flex items-center justify-between mt-4 px-2">
+          <div className="flex items-center justify-between mt-4">
             <QuantityControl
               quantity={item.quantity}
               onIncrease={handleIncrease}
@@ -190,7 +188,7 @@ const CartItem = memo(({ item, onUpdateQuantity, onRemove, maxQuantity }: CartIt
               <span className="text-xs text-muted-foreground">
                 {isAr ? "الإجمالي:" : "Total:"}
               </span>
-              <span className="text-base font-bold text-primary">
+              <span className="text-base font-bold text-foreground">
                 {totalPrice} {currency}
               </span>
             </div>

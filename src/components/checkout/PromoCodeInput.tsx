@@ -56,13 +56,13 @@ export default function PromoCodeInput({
       const sessionId = getOrCreateSessionId();
       const result = await applyDiscount(sessionId, promoCode.trim());
 
-      if (result.succeeded && result.data) {
+      if (result.succeeded) {
         onDiscountApplied({
-          amount: result.data.discountValue,
-          percentage: result.data.discountPercentage,
+          amount: result.discountValue || 0,
+          percentage: result.discountPercentage || 0,
           code: promoCode.trim(),
-          originalTotal: result.data.originalTotal,
-          finalTotal: result.data.finalTotal
+          originalTotal: result.originalTotal || 0,
+          finalTotal: result.finalTotal || 0
         });
         
         setPromoCode("");

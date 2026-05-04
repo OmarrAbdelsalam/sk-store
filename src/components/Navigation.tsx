@@ -8,6 +8,8 @@ import { useTranslations, useLocale } from 'next-intl';
 import { usePathname } from 'next/navigation';
 import { Link } from "@/i18n/navigation";
 import { Globe } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 export const LanguageSwitcher = () => {
   const locale = useLocale();
@@ -32,26 +34,29 @@ const Navigation = () => {
   const locale = useLocale();
 
   return (
-    <header className="w-full bg-background/95 backdrop-blur-sm border-b border-border sticky top-0 z-50">
+    <header className="w-full bg-background border-b border-border sticky top-0 z-50">
       {/* Main Navigation */}
-      <div className="container mx-auto px-4 py-2 md:py-4">
+      <div className="container mx-auto px-4 py-3 md:py-4">
         {/* Mobile Layout - يظهر فقط على الموبايل */}
         <div className="md:hidden">
           <div className="flex items-center justify-between">
-            {/* Left: Menu Button */}
-            <MobileMenu />
-            
-            {/* Center: Logo */}
-            <div className={`absolute left-1/2 transform -translate-x-1/2 ${locale === 'ar' ? '-mr-5' : '-ml-5'}`}>
-              <Link href="/" className="font-luxury text-lg font-semibold tracking-wider hover:text-primary transition-colors">
-                {t('Nav.logo')}
+            {/* Left: Menu Button & Logo */}
+            <div className="flex items-center gap-2">
+              <MobileMenu />
+              <Link href="/" className="font-luxury text-xl font-bold tracking-widest hover:text-primary transition-colors">
+                SK Bags
               </Link>
             </div>
             
-            {/* Right: Cart & Search */}
-            <div className="flex items-center gap-1">
-              <CartButton isMobile={true} />
+            {/* Right: Icons (Search, User, Heart, Cart) */}
+            <div className="flex items-center gap-0.5">
               <SearchAndFilters />
+              
+
+              
+
+
+              <CartButton isMobile={true} />
             </div>
           </div>
         </div>
@@ -59,19 +64,23 @@ const Navigation = () => {
         {/* Desktop Layout - يظهر فقط على الكمبيوتر */}
         <div className="hidden md:flex items-center justify-between">
           {/* Logo + Separator + Categories */}
-          <div className="flex items-center gap-4">
-            <Link href="/" className="font-luxury text-2xl font-semibold tracking-wider hover:text-primary transition-colors">
-              {t('Nav.logo')}
+          <div className="flex items-center gap-6">
+            <Link href="/" className="font-luxury text-3xl font-bold tracking-widest hover:text-primary transition-colors">
+              SK Bags
             </Link>
-            <div className="h-6 w-px bg-border"></div>
             <DesktopMenu />
           </div>
 
           {/* Right Icons + Language Switcher */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
             <SearchAndFilters />
+            
+
+            
+
+            
             <CartButton isMobile={false} />
-            <LanguageSwitcher />
+            {/* Language switcher hidden for now */}
           </div>
         </div>
       </div>

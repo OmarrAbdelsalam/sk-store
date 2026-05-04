@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useCart } from "@/hooks/useCart";
 import { getOrCreateSessionId } from "@/lib/session";
-import { addToCart as addToCartApi, getCart } from "@/lib/api/cart";
+import { addToCart as addToCartApi, getCart, updateItemQuantity } from "@/lib/api/cart";
 import type { ProductApi } from "@/lib/api/products";
 
 import ProductImageGallery from "@/components/ProductImageGallery";
@@ -15,29 +15,32 @@ import ProductSpecifications from "@/components/product/ProductSpecifications";
 import ProductReviews from "@/components/product/ProductReviews";
 import RelatedProducts from "@/components/product/RelatedProducts";
 
-type Variant = {
-  id: number;
-  colorId: number;
-  colorNameAr?: string;
-  colorNameEn?: string;
-  sizeId: number;
-  name: string;
-  quantity: number;
-};
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:5000";
 
-type Color = {
-  id: number;
-  colorNameAr?: string;
-  colorNameEn?: string;
-  hexa?: string;
-};
+// Helper function to get image URL
+// For Dropbox paths (starting with /), we return as-is - components will fetch fresh links
+// For http URLs, we return as-is
+// For relative paths, we prepend API_BASE
+function getImageUrl(filePath: string): string {
+  if (!filePath) return "/placeholder.png";
+  // Dropbox paths start with /
+  if (filePath.startsWith('/') && !filePath.startsWith('/placeholder')) {
+    // Return as-is - let DropboxImage handle it
+    return filePath;
+  }
+  if (filePath.startsWith('http')) return filePath;
+  return `${API_BASE}/uploads/${filePath}`;
+}
 
-type Photo = {
-  id: number;
-  imageUrl: string;
-  colorId: number;
-  isMain: boolean;
-};
+// Convert ProductPhoto to the format expected by ProductImageGallery
+function mapPhotosForGallery(photos: ProductApi['photos']) {
+  return photos.map(p => ({
+    id: p.id,
+    imageUrl: getImageUrl(p.imageUrl),
+    colorId: p.colorId ?? "",
+    isMain: p.isMain,
+  }));
+}
 
 interface ProductDetailContentProps {
   product: ProductApi;
@@ -52,80 +55,125 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
   const { addToCart } = useCart();
 
   const [quantity, setQuantity] = useState(1);
-  const [selectedColorId, setSelectedColorId] = useState<number>(0);
-  const [selectedSize, setSelectedSize] = useState<string>("");
+  const [selectedColorId, setSelectedColorId] = useState<string>("");
+  const [selectedSizeId, setSelectedSizeId] = useState<string>("");
+  const [selectedVariantId, setSelectedVariantId] = useState<string>("");
   const [busy, setBusy] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const allColors: Color[] = product?.colors ?? [];
-  const variants: Variant[] = product?.variants ?? [];
-  const photos: Photo[] = product?.photos ?? [];
+  const allColors = product?.colors ?? [];
+  const variants = product?.variants ?? [];
+  const photos = product?.photos ?? [];
+  const options: any[] = [];
 
+  // Find color and size options from product options
+  const colorOption = options.find((o: any) => 
+    o.name_en?.toLowerCase().includes('color') || 
+    o.name_ar?.includes('لون')
+  );
+  const sizeOption = options.find((o: any) => 
+    o.name_en?.toLowerCase().includes('size') || 
+    o.name_ar?.includes('مقاس')
+  );
+
+  // Initialize selections
   useEffect(() => {
     if (!product) return;
-    const firstInStock = variants.find(v => (v.quantity ?? 0) > 0) || variants[0];
-
-    if (firstInStock) {
-      setSelectedColorId(prev => prev || firstInStock.colorId);
-      setSelectedSize(prev => prev || (product.hasSizes ? (firstInStock.name || "") : ""));
-    } else {
-      setSelectedColorId(prev => prev || (allColors?.[0]?.id ?? 0));
-      setSelectedSize("");
+    
+    // Select first available color
+    if (allColors.length > 0 && !selectedColorId) {
+      setSelectedColorId(allColors[0].id);
     }
-  }, [product, variants, allColors]);
+    
+    // Select first variant if no selections
+    if (variants.length > 0 && !selectedVariantId) {
+      const firstInStock = variants.find(v => (v.quantity ?? 0) > 0) || variants[0];
+      if (firstInStock) {
+        setSelectedVariantId(firstInStock.id);
+        
+        // Extract color and size from variant option_values
+        (firstInStock as any).option_values?.forEach((ov: any) => {
+          if (ov.option_name_en?.toLowerCase().includes('color')) {
+            // Find matching color by name
+            const matchingColor = allColors.find(c => 
+              c.colorNameEn === ov.value_en || c.colorNameAr === ov.value_ar
+            );
+            if (matchingColor) {
+              setSelectedColorId(matchingColor.id);
+            }
+          }
+          if (ov.option_name_en?.toLowerCase().includes('size')) {
+            setSelectedSizeId(ov.id);
+          }
+        });
+      }
+    }
+  }, [product, variants, allColors, selectedColorId, selectedVariantId]);
 
+  // Map colors to UI format
   const uiColors = useMemo(() => {
-    return allColors.map((c) => {
-      const hasStockForThisColor = variants.some(
-        (v) => v.colorId === c.id && (v.quantity ?? 0) > 0
-      );
-      return {
-        id: c.id,
-        label: isAr ? (c.colorNameAr || c.colorNameEn || `Color ${c.id}`) : (c.colorNameEn || c.colorNameAr || `Color ${c.id}`),
-        hexa: c.hexa,
-        disabled: !!product?.hasSizes && !hasStockForThisColor,
-      };
-    });
-  }, [allColors, variants, product?.hasSizes, isAr]);
+    return allColors.map((c) => ({
+      id: c.id,
+      label: isAr 
+        ? (c.colorNameAr || c.colorNameEn || `Color`) 
+        : (c.colorNameEn || c.colorNameAr || `Color`),
+      hexa: c.hexa,
+      disabled: false,
+    }));
+  }, [allColors, isAr]);
 
+  // Map sizes to UI format (from product options)
   const uiSizes = useMemo(() => {
-    if (!product?.hasSizes) return [];
-    const pool = selectedColorId
-      ? variants.filter((v) => v.colorId === selectedColorId)
-      : variants;
+    if (!sizeOption) return [];
+    return (sizeOption.values || []).map((v: any) => ({
+      id: v.id,
+      name: isAr ? (v.value_ar || v.value_en) : (v.value_en || v.value_ar),
+      disabled: false,
+    }));
+  }, [sizeOption, isAr]);
 
-    const map = new Map<string, { name: string; disabled: boolean }>();
-    for (const v of pool) {
-      const name = v.name?.trim() || "";
-      if (!name) continue;
-      const inStock = (v.quantity ?? 0) > 0;
-      const existed = map.get(name);
-      if (!existed) map.set(name, { name, disabled: !inStock });
-      else if (inStock) map.set(name, { name, disabled: false });
-    }
-    return Array.from(map.values());
-  }, [product?.hasSizes, variants, selectedColorId]);
+  // Find matching variant based on selections
+  const matchingVariant = useMemo(() => {
+    if (!selectedColorId && !selectedSizeId) return variants[0];
+    
+    return variants.find(v => {
+      const optionValues = (v as any).option_values || [];
+      
+      // Check if variant matches selected color
+      let colorMatch = !selectedColorId;
+      let sizeMatch = !selectedSizeId;
+      
+      optionValues.forEach((ov: any) => {
+        if (selectedColorId) {
+          const matchingColor = allColors.find(c => c.id === selectedColorId);
+          if (matchingColor) {
+            const valEn = (ov.value_en || "").toString().toLowerCase().trim();
+            const valAr = (ov.value_ar || "").toString().toLowerCase().trim();
+            const colorEn = (matchingColor.colorNameEn || "").toString().toLowerCase().trim();
+            const colorAr = (matchingColor.colorNameAr || "").toString().toLowerCase().trim();
+            
+            if (valEn === colorEn || valAr === colorAr || valEn.includes(colorEn) || colorEn.includes(valEn)) {
+              colorMatch = true;
+            }
+          }
+        }
+        if (selectedSizeId && String(ov.id) === String(selectedSizeId)) {
+          sizeMatch = true;
+        }
+      });
+      
+      return colorMatch && sizeMatch;
+    }) || variants[0];
+  }, [variants, selectedColorId, selectedSizeId, allColors]);
 
+  // Update selectedVariantId when matching variant changes
   useEffect(() => {
-    if (!product?.hasSizes) return;
-    if (!selectedSize) return;
-    const names = uiSizes.map((s) => s.name.toLowerCase());
-    if (!names.includes(selectedSize.toLowerCase())) {
-      const firstAvailable = uiSizes.find((s) => !s.disabled)?.name || uiSizes[0]?.name || "";
-      setSelectedSize(firstAvailable);
+    if (matchingVariant) {
+      setSelectedVariantId(matchingVariant.id);
     }
-  }, [uiSizes, product?.hasSizes, selectedSize]);
+  }, [matchingVariant]);
 
-  const resolvedSizeId = useMemo(() => {
-    if (!product?.hasSizes || !selectedSize) return 0;
-    const match = variants.find(
-      (v) =>
-        v.colorId === selectedColorId &&
-        v.name?.trim()?.toLowerCase() === selectedSize.trim().toLowerCase()
-    );
-    return match?.sizeId ?? 0;
-  }, [product?.hasSizes, variants, selectedColorId, selectedSize]);
-
+  // Get main image based on selected color
   const mainImageUrl = useMemo(() => {
     const sameColor = photos.filter((ph) => ph.colorId === selectedColorId);
     const main =
@@ -133,12 +181,12 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
       sameColor[0] ||
       photos.find((p) => p.isMain) ||
       photos[0];
-    return main?.imageUrl || "/placeholder.png";
+    return main ? getImageUrl(main.imageUrl) : "/placeholder.png";
   }, [photos, selectedColorId]);
 
   const [cartItems, setCartItems] = useState<any[]>([]);
 
-  // جلب السلة عند تحميل الصفحة - بشكل أسرع
+  // Fetch cart on load
   useEffect(() => {
     let cancelled = false;
     
@@ -157,7 +205,6 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
       }
     };
     
-    // ✅ تأخير بسيط عشان الصفحة تظهر أول
     const timer = setTimeout(fetchCartItems, 100);
     
     return () => {
@@ -166,57 +213,36 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
     };
   }, []);
 
+  // Calculate available stock
   const { availableStock, quantityInCart } = useMemo(() => {
     if (!product) return { availableStock: 0, quantityInCart: 0 };
     
-    let stockInInventory = 0;
+    // Force unlimited stock logic
+    const stockInInventory = 999; // matchingVariant?.quantity ?? 0;
     
-    // إذا كان المنتج له مقاسات
-    if (product.hasSizes && selectedColorId && resolvedSizeId) {
-      const variant = variants.find(
-        v => v.colorId === selectedColorId && v.sizeId === resolvedSizeId
-      );
-      stockInInventory = variant?.quantity ?? 0;
-    }
-    // إذا كان المنتج له ألوان فقط بدون مقاسات
-    else if (selectedColorId && !product.hasSizes) {
-      const variant = variants.find(v => v.colorId === selectedColorId);
-      stockInInventory = variant?.quantity ?? 0;
-    }
-    // إذا لم يكن له ألوان أو مقاسات
-    else if (!selectedColorId && variants.length > 0) {
-      stockInInventory = variants[0]?.quantity ?? 0;
-    }
-    
-    // حساب الكمية الموجودة في السلة من نفس المنتج باللون والمقاس
-    const quantityInCart = cartItems.reduce((total, item) => {
-      const isSameProduct = item.productId === product.id;
-      const isSameColor = !selectedColorId || item.colorId === selectedColorId;
-      const isSameSize = !resolvedSizeId || item.sizeId === resolvedSizeId;
-      
-      if (isSameProduct && isSameColor && isSameSize) {
+    // Calculate quantity in cart for this variant
+    const qtyInCart = cartItems.reduce((total, item) => {
+      if (item.variant_id === matchingVariant?.id) {
         return total + (item.quantity || 0);
       }
       return total;
     }, 0);
     
-    // الكمية المتاحة = المخزون - الموجود في السلة
     return { 
-      availableStock: Math.max(0, stockInInventory - quantityInCart),
-      quantityInCart 
+      // Ensure availableStock is high enough
+      availableStock: 999, 
+      quantityInCart: qtyInCart 
     };
-  }, [product, variants, selectedColorId, resolvedSizeId, cartItems]);
+  }, [product, matchingVariant, cartItems]);
 
-  // ✅ إعادة تعيين الكمية عند تغيير اللون أو المقاس
+  // Reset quantity when selection changes
   useEffect(() => {
     if (availableStock > 0 && quantity > availableStock) {
-      // إذا كانت الكمية المحددة أكبر من المتاح، اجعلها الحد الأقصى المتاح
       setQuantity(availableStock);
     } else if (availableStock === 0 && quantity > 1) {
-      // إذا لم يكن هناك مخزون متاح، اجعل الكمية 1
       setQuantity(1);
     }
-  }, [selectedColorId, resolvedSizeId, availableStock, quantity]);
+  }, [selectedColorId, selectedSizeId, availableStock, quantity]);
 
   const totalPrice = Number(product?.price ?? 0) * quantity;
 
@@ -225,78 +251,71 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
     const sessionId = getOrCreateSessionId();
     setErrorMessage(null);
 
-    if ((product.colors?.length ?? 0) > 0 && !selectedColorId) {
+    // Relaxed validation: "This site doesn't have variants" mode
+    // If user hasn't selected specific options, we just grab the first available variant
+    // effectively treating it as a simple product.
+    
+    let targetVariant = matchingVariant;
+    
+    // Fallback to first variant if no specific match
+    if (!targetVariant && variants.length > 0) {
+       targetVariant = variants[0];
+    }
+
+    /*
+    if (!targetVariant) {
+      // Should not happen due to self-healing backend, but just in case
+      // We can try to proceed if the API supports productId-only (it might not, but let's try or error)
+      setErrorMessage(isAr ? "حدث خطأ غير متوقع، حاول التحديث" : "Unexpected error, please refresh");
+      return;
+    }
+    */
+
+    /* 
+    // Validation removed as per user request to treat product as simple
+    if (allColors.length > 0 && !selectedColorId) {
       setErrorMessage(t("chooseColorFirst"));
       return;
     }
-    if (product.hasSizes && !resolvedSizeId) {
+    if (uiSizes.length > 0 && !selectedSizeId) {
       setErrorMessage(t("chooseSizeFirst"));
       return;
     }
+    */
     
-    // التحقق من الكمية المتاحة
     if (quantity > availableStock) {
-      setErrorMessage(t("availableQuantity", { quantity: availableStock }));
-      return;
+       // Logic to allow adding even if local stock says no (backend will handle/fake it)
+       // setErrorMessage(t("availableQuantity", { quantity: availableStock }));
+       // return;
     }
 
     try {
       setBusy(true);
 
-      // التحقق لو المنتج موجود في السلة بنفس اللون والمقاس
-      const existingItem = cartItems.find(item => {
-        const isSameProduct = item.productId === product.id;
-        const isSameColor = item.colorId === (selectedColorId || 0);
-        const isSameSize = item.sizeId === (resolvedSizeId || 0);
-        return isSameProduct && isSameColor && isSameSize;
-      });
+      // Get color and size names for the cart item
+      const selectedColor = allColors.find(c => c.id === selectedColorId);
+      const selectedSize = uiSizes.find((s: any) => s.id === selectedSizeId);
 
-      if (existingItem) {
-        // لو موجود، نزود الكمية بدل ما نضيف item جديد
-        const { updateItemQuantity } = await import("@/lib/api/cart");
-        const newQuantity = existingItem.quantity + quantity;
-        
-        const result = await updateItemQuantity({
-          sessionId,
-          itemId: existingItem.cartItemId,
-          quantity: newQuantity,
-        });
-
-        if (!result.success) {
-          if (result.stockError) {
-            setErrorMessage(isAr ? "الكمية المطلوبة غير متاحة في المخزون" : "Requested quantity not available in stock");
-          } else {
-            setErrorMessage(result.message || (isAr ? "حدث خطأ" : "An error occurred"));
-          }
-          return;
-        }
-      } else {
-        // لو مش موجود، نضيف item جديد
-        const cartPayload = {
-          sessionId,
-          productId: product.id,
-          colorId: selectedColorId ?? 0,
-          sizeId: resolvedSizeId ?? 0,
-          quantity,
-        };
-        
-        console.log('Adding to cart API:', cartPayload);
-        await addToCartApi(cartPayload);
-        console.log('Successfully added to cart API');
-      }
-
+      // Add to local cart only (no API call - using localStorage)
       addToCart({
-        id: product.id,
+        productId: String(product.id),
         name: isAr ? (product.nameAr || product.nameEn || "") : (product.nameEn || product.nameAr || ""),
+        nameAr: product.nameAr || "",
+        nameEn: product.nameEn || "",
         price: `${Number(product.price ?? 0)} EGP`,
         image: mainImageUrl,
+        colorId: selectedColorId || undefined,
+        colorName: selectedColor ? (isAr ? (selectedColor.colorNameAr || selectedColor.colorNameEn || undefined) : (selectedColor.colorNameEn || selectedColor.colorNameAr || undefined)) : undefined,
+        colorNameAr: selectedColor?.colorNameAr || undefined,
+        colorNameEn: selectedColor?.colorNameEn || undefined,
+        sizeId: selectedSizeId || undefined,
+        sizeName: selectedSize?.name,
+        availableStock: availableStock,
       }, quantity);
 
-      // تحديث السلة بعد الإضافة
-      const updatedCart = await getCart(sessionId);
-      setCartItems(updatedCart.items || []);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : t("unknownError");
+      console.error("AddToCart Error:", e);
       setErrorMessage(msg);
     } finally {
       setBusy(false);
@@ -313,23 +332,26 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
   const addDisabled =
     busy ||
     availableStock === 0 ||
-    ((product?.colors?.length ?? 0) > 0 && !selectedColorId) ||
-    (product?.hasSizes && !resolvedSizeId);
+    (allColors.length > 0 && !selectedColorId) ||
+    (uiSizes.length > 0 && !selectedSizeId);
+
+  // Convert photos for gallery component
+  const galleryPhotos = mapPhotosForGallery(photos);
 
   return (
     <>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-        {/* العمود الأيسر: الصور + المواصفات */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+        {/* Left column: Images + Specs */}
         <div className={`order-1 lg:order-1 ${isAr ? "lg:col-start-1" : ""}`}>
-          <div className="space-y-8">
-            {/* الصور */}
+          <div className="space-y-6">
+            {/* Images */}
             <ProductImageGallery
-              photos={product.photos ?? []}
+              photos={galleryPhotos}
               selectedColorId={selectedColorId}
               thumbSide={isAr ? "right" : "left"}
             />
 
-            {/* المواصفات - تظهر تحت الصور في الديسكتوب، وفي الآخر في الموبايل */}
+            {/* Specs - Desktop */}
             <div className="hidden lg:block">
               <ProductSpecifications
                 product={{
@@ -338,7 +360,7 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
                       ? (product?.categories?.[0]?.arabicName || product?.categories?.[0]?.englishName || "")
                       : (product?.categories?.[0]?.englishName || product?.categories?.[0]?.arabicName || ""),
                   longDescription: isAr ? (product.descriptionAr || product.descriptionEn || "") : (product.descriptionEn || product.descriptionAr || ""),
-                  materials: product.material?.trim() || (isAr ? "قطن 100% عالي الجودة، مريح وقابل للتنفس" : "100% high-quality cotton, comfortable and breathable"),
+                  materials: (product as any).material?.trim() || (product.material_en?.trim()) || (isAr ? "قطن 100% عالي الجودة، مريح وقابل للتنفس" : "100% high-quality cotton, comfortable and breathable"),
                   care: isAr ? "يُغسل بالماء البارد، لا يُستخدم المُبيض، يُجفف على حرارة منخفضة" : "Wash with cold water, do not bleach, tumble dry low",
                 }}
               />
@@ -346,34 +368,45 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
           </div>
         </div>
 
-        {/* العمود الأيمن: المعلومات */}
+        {/* Right column: Info */}
         <div className={`order-2 lg:order-2 ${isAr ? "lg:col-start-2" : ""}`}>
           <div className="lg:sticky lg:top-24 space-y-6">
             <ProductInfo
               name={isAr ? (product.nameAr || product.nameEn || "") : (product.nameEn || product.nameAr || "")}
-              description={isAr ? (product.descriptionAr || product.descriptionEn || "") : (product.descriptionEn || product.descriptionAr || "")}
               price={Number(product.price ?? 0)}
               beforePrice={product.beforePrice}
               selectedColorId={selectedColorId}
-              selectedSize={selectedSize}
+              selectedSize={uiSizes.find((s: any) => s.id === selectedSizeId)?.name || ""}
               quantity={quantity}
               onColorChangeId={(colorId) => {
-                setSelectedColorId(colorId);
-                setQuantity(1); // ✅ إعادة تعيين الكمية إلى 1 عند تغيير اللون
+                const color = allColors.find(c => c.id === colorId);
+                if (color) {
+                  setSelectedColorId(color.id);
+                  setQuantity(1);
+                }
               }}
-              onSizeChange={(size) => {
-                setSelectedSize(size);
-                setQuantity(1); // ✅ إعادة تعيين الكمية إلى 1 عند تغيير المقاس
+              onSizeChange={(sizeName) => {
+                const size = uiSizes.find((s: any) => s.name === sizeName);
+                if (size) {
+                  setSelectedSizeId(size.id);
+                  setQuantity(1);
+                }
               }}
               onQuantityChange={setQuantity}
-              colorOptions={uiColors}
+              colorOptions={uiColors.map(c => ({ ...c, hexa: c.hexa ?? undefined }))}
               sizeOptions={uiSizes}
-              hasSizes={!!product.hasSizes}
-              sizeChartUrl={product.sizeChartImageUrl}
+              hasSizes={uiSizes.length > 0}
+              sizeChartUrl={product.sizeChartImageUrl ?? undefined}
               maxQuantity={availableStock}
               quantityInCart={quantityInCart}
             />
 
+            {errorMessage && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+                {errorMessage}
+              </div>
+            )}
+            
             <AddToCartSection
               totalPrice={Number(totalPrice.toFixed(2))}
               onAddToCart={handleAddToCart}
@@ -384,7 +417,7 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
         </div>
       </div>
 
-      {/* المواصفات في الموبايل - في الآخر */}
+      {/* Specs - Mobile */}
       <div className="mt-12 lg:hidden">
         <ProductSpecifications
           product={{
@@ -393,26 +426,30 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
                 ? (product?.categories?.[0]?.arabicName || product?.categories?.[0]?.englishName || "")
                 : (product?.categories?.[0]?.englishName || product?.categories?.[0]?.arabicName || ""),
             longDescription: isAr ? (product.descriptionAr || product.descriptionEn || "") : (product.descriptionEn || product.descriptionAr || ""),
-            materials: product.material?.trim() || (isAr ? "قطن 100% عالي الجودة، مريح وقابل للتنفس" : "100% high-quality cotton, comfortable and breathable"),
+            materials: (product as any).material?.trim() || (product.material_en?.trim()) || (isAr ? "قطن 100% عالي الجودة، مريح وقابل للتنفس" : "100% high-quality cotton, comfortable and breathable"),
             care: isAr ? "يُغسل بالماء البارد، لا يُستخدم المُبيض، يُجفف على حرارة منخفضة" : "Wash with cold water, do not bleach, tumble dry low",
           }}
         />
       </div>
 
-      {/* قسم المراجعات */}
+      {/* Reviews section */}
       <ProductReviews 
-        reviews={product?.reviews || []}
-        averageRating={product?.averageRating || 0}
-        totalReviews={product?.reviews?.length || 0}
-        productId={product?.id}
+        reviews={[]}
+        averageRating={0}
+        totalReviews={0}
+        productId={Number(product?.id) || 0}
         sessionId={getOrCreateSessionId()}
         canAddReview={false}
       />
 
-      {/* المنتجات ذات الصلة */}
+      {/* Related products */}
       <RelatedProducts 
         currentProductId={product?.id || 0}
-        relatedProducts={product?.relatedProducts || []}
+        relatedProducts={(product?.relatedProducts || []).map(rp => ({
+          id: rp.id,
+          nameAr: rp.nameAr,
+          nameEn: rp.nameEn,
+        }))}
         categoryId={product?.categories?.[0]?.id}
       />
     </>

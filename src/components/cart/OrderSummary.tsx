@@ -1,9 +1,7 @@
 "use client";
 import { memo, useMemo } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import OrderSummaryDetails from "./OrderSummaryDetails";
 import OrderSummaryActions from "./OrderSummaryActions";
-import { ShoppingBag } from "lucide-react";
 
 type OrderSummaryProps = {
   totalItemsFallback: number;
@@ -15,6 +13,7 @@ type OrderSummaryProps = {
     percentage: number;
     code: string;
   } | null;
+  onCheckoutClick?: () => void;
 };
 
 const OrderSummary = memo(
@@ -24,6 +23,7 @@ const OrderSummary = memo(
     shippingPrice = 0,
     currency = "EGP",
     discount,
+    onCheckoutClick,
   }: OrderSummaryProps) => {
     const t = useTranslations("OrderSummary");
     const locale = useLocale();
@@ -35,32 +35,19 @@ const OrderSummary = memo(
     );
 
     return (
-      <div className="sticky top-[100px]" dir={dir}>
-        {/* كارد ملخص الطلب */}
-        <div className="bg-white dark:bg-card rounded-2xl border border-border/50 shadow-lg overflow-hidden">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 px-6 py-4 border-b border-border/50">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-full">
-                <ShoppingBag className="w-5 h-5 text-primary" />
-              </div>
-              <h2 className="text-lg font-semibold">{t("title")}</h2>
-            </div>
-          </div>
-
-          {/* Content */}
-          <div className="p-6 space-y-6">
-            <OrderSummaryDetails
-              items={totalItemsFallback}
-              subtotal={totalPriceFallback}
-              total={total}
-              currency={currency}
-              discount={discount}
-            />
-
-            <OrderSummaryActions />
-          </div>
+      <div dir={dir} className="space-y-6">
+        {/* Total Only */}
+        <div className="flex justify-between items-center py-4 border-t border-gray-200 dark:border-gray-800">
+          <span className="text-lg font-bold text-foreground">
+            {t("total")}
+          </span>
+          <span className="text-2xl font-bold text-foreground">
+            {total.toLocaleString()} <span className="text-base">{currency}</span>
+          </span>
         </div>
+
+        {/* Actions */}
+        <OrderSummaryActions onCheckoutClick={onCheckoutClick} />
       </div>
     );
   }

@@ -1,11 +1,22 @@
 import { Suspense } from "react";
 import Image from "next/image";
 import ProductGrid from "@/components/ProductGrid";
+import Hero from "@/components/Hero";
+import NewArrivals from "@/components/NewArrivals";
+import { ClothingShowcase } from "@/components/CategoryBanners";
+import { ReelsShowcase } from "@/components/ReelsShowcase";
+import DiscoverSection from "@/components/DiscoverSection";
+import MaisonClutchSection from "@/components/MaisonClutchSection";
+import HandbagsSection from "@/components/HandbagsSection";
+import ReviewsGallery from "@/components/ReviewsGallery";
+import BestSellers from "@/components/BestSellers";
+import FeaturesSection from "@/components/FeaturesSection";
+import MovingTicker from "@/components/MovingTicker";
 
 // Loading skeleton component
 const ProductGridSkeleton = () => (
   <div className="container mx-auto px-4 py-12">
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-10">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-10 items-stretch">
       {Array.from({ length: 8 }).map((_, i) => (
         <div key={i} className="space-y-2 animate-pulse">
           <div className="aspect-[3/4] w-full rounded-lg bg-muted" />
@@ -37,23 +48,35 @@ const Index = () => {
         </nav>
       </div>
       
-      {/* Logo Background Section - Using Next Image for LCP optimization */}
-      <section 
-        className="w-full h-32 md:h-48 flex items-center justify-center relative bg-[#042d87]"
-        aria-label="House Scrub Brand"
-      >
-        <Image
-          src="/yhouse-logo.png"
-          alt="House Scrub Logo"
-          width={200}
-          height={100}
-          priority
-          className="object-contain h-24 md:h-36 w-auto"
-        />
-      </section>
+      {/* Hero Section */}
+      <Hero />
+      
+      {/* New Arrivals */}
+      <NewArrivals />
+
+      {/* Category Banners */}
+      <ClothingShowcase />
+
+      {/* Reels Showcase */}
+      <ReelsShowcase />
+      
       <Suspense fallback={<ProductGridSkeleton />}>
         <ProductGrid />
       </Suspense>
+
+      <DiscoverSection />
+      
+      <MovingTicker />
+      
+      <MaisonClutchSection />
+      
+      <HandbagsSection />
+      
+      <ReviewsGallery />
+      
+      <BestSellers />
+      
+      <FeaturesSection />
     </div>
   );
 };

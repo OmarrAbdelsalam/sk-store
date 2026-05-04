@@ -6,6 +6,7 @@ import { Star, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ReviewDialog } from "./ReviewDialog";
 import { getOrCreateSessionId } from "@/lib/session";
+import { API_ROUTES } from "@/lib/api-routes";
 
 
 type OrderItemReviewProps = {
@@ -41,7 +42,7 @@ export function OrderItemReview({
     const checkExistingReview = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch(`https://scrubstore.runasp.net/api/Product/${productId}`);
+        const response = await fetch(API_ROUTES.products.byId(productId));
         
         if (response.ok) {
           const result = await response.json();
@@ -77,7 +78,7 @@ export function OrderItemReview({
     // Refresh the review data
     const checkExistingReview = async () => {
       try {
-        const response = await fetch(`https://scrubstore.runasp.net/api/Product/${productId}`);
+        const response = await fetch(API_ROUTES.products.byId(productId));
         
         if (response.ok) {
           const result = await response.json();

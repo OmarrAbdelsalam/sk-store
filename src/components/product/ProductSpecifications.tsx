@@ -23,11 +23,26 @@ export default function ProductSpecifications({ product }: ProductSpecifications
   const t = useTranslations("ProductSpecifications");
   const locale = useLocale();
   const dir = locale === "ar" ? "rtl" : "ltr";
+  const isAr = locale === "ar";
 
   return (
-    <div className="mt-12" dir={dir}>
-      <Accordion type="single" collapsible className="w-full" defaultValue="materials-care">
-        {/* Materials & Care - مفتوح افتراضياً */}
+    <div className="mt-4" dir={dir}>
+      <Accordion type="single" collapsible defaultValue="description" className="w-full">
+        {/* Description - Default Open */}
+        {product.longDescription && (
+          <AccordionItem value="description">
+            <AccordionTrigger className="text-lg font-semibold">
+              {isAr ? "الوصف" : "Description"}
+            </AccordionTrigger>
+            <AccordionContent>
+              <p className="text-muted-foreground leading-relaxed">
+                {product.longDescription}
+              </p>
+            </AccordionContent>
+          </AccordionItem>
+        )}
+
+        {/* Materials & Care */}
         <AccordionItem value="materials-care">
           <AccordionTrigger className="text-lg font-semibold">
             {t("materialsCareTitle")}

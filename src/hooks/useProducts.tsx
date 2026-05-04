@@ -3,28 +3,61 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useLocale } from "next-intl";
 import {
-  getProductsPage,
-  mapApiProductToUI,
+  fetchProducts,
+  fetchProductById,
+  searchProducts,
+  filterProducts,
   type ProductApi,
-} from "@/lib/api/products";
+} from "@/api/products";
 
 export interface Product {
-  id: number;
+  id: string;
   name: string;
-  nameAr?: string;        // للبحث ثنائي اللغة
-  nameEn?: string;        // للبحث ثنائي اللغة
-  category: string;       // اسم عرض
-  price: string;          // "1000 جنيه" أو "1000 EGP"
-  priceNum: number;       // 1000
+  nameAr?: string;
+  nameEn?: string;
+  category: string;
+  price: string;
+  priceNum: number;
   image: string;
   description: string;
-  gender: string;         // "unisex" | "men" | "women"
+  gender: string;
   availableColors: Array<{ name: string; hex: string }>;
-
-  // إضافيات:
   categoryIds?: string[];
   raw?: ProductApi;
+  beforePrice?: number;
 }
+
+// Map ProductApi to UI Product format
+export const mapApiProductToUI = (apiProduct: ProductApi, locale: 'ar' | 'en'): Product => {
+  const name = locale === 'ar' ? apiProduct.nameAr : apiProduct.nameEn;
+  const description = locale === 'ar' 
+    ? (apiProduct.descriptionAr || apiProduct.descriptionEn || '')
+    : (apiProduct.descriptionEn || apiProduct.descriptionAr || '');
+  
+  const mainImage = apiProduct.photos?.find(p => p.isMain)?.imageUrl || 
+                   apiProduct.photos?.[0]?.imageUrl || 
+                   '/placeholder-product.jpg';
+
+  return {
+    id: apiProduct.id,
+    name,
+    nameAr: apiProduct.nameAr,
+    nameEn: apiProduct.nameEn,
+    category: apiProduct.categories?.[0]?.arabicName || 'عام',
+    price: `${apiProduct.price} ${locale === 'ar' ? 'جنيه' : 'EGP'}`,
+    priceNum: apiProduct.price,
+    image: mainImage,
+    description,
+    gender: "unisex",
+    availableColors: apiProduct.colors?.map(c => ({
+      name: locale === 'ar' ? (c.colorNameAr || c.colorNameEn || '') : (c.colorNameEn || c.colorNameAr || ''),
+      hex: c.hexa || '#000000'
+    })) || [],
+    categoryIds: apiProduct.categories?.map(c => c.id) || [],
+    raw: apiProduct,
+    beforePrice: apiProduct.compareAtPrice ?? undefined,
+  };
+};
 
 // Cache for products - shared across all hook instances
 const productsCache: {
@@ -49,120 +82,112 @@ export const useProducts = () => {
     }
     return [];
   });
-  const [loading, setLoading] = useState(() => {
-    // Don't show loading if we have cached data
-    const cached = productsCache[locale];
-    return !(cached && Date.now() - cached.timestamp < CACHE_DURATION);
-  });
+  
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const fetchingRef = useRef(false);
-  const mountedRef = useRef(true);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Fetch function that can be called on demand
-  const fetchProducts = useCallback(async (forceRefresh = false) => {
-    // Check cache first (unless force refresh)
-    if (!forceRefresh) {
-      const cached = productsCache[locale];
-      if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-        setProducts(cached.products);
-        setLoading(false);
-        return;
-      }
-
-      // If we have raw data cached, just re-map it for the new locale
-      if (productsCache.rawData && productsCache.rawData.length > 0) {
-        const mapped = productsCache.rawData.map((p) => mapApiProductToUI(p, locale));
-        productsCache[locale] = { products: mapped, timestamp: Date.now() };
-        setProducts(mapped);
-        setLoading(false);
-        return;
-      }
+  const loadProducts = useCallback(async (forceRefresh = false) => {
+    // Check cache first
+    const cached = productsCache[locale];
+    if (!forceRefresh && cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+      setProducts(cached.products);
+      return;
     }
 
-    // Prevent duplicate fetches
-    if (fetchingRef.current) return;
-    fetchingRef.current = true;
+    // Cancel previous request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    abortControllerRef.current = new AbortController();
+    setIsLoading(true);
+    setError(null);
 
     try {
-      setLoading(true);
-      setError(null);
+      const result = await fetchProducts(1, 100); // Get more products for better UX
+      const mappedProducts = result.items.map(item => mapApiProductToUI(item, locale));
+      
+      // Update cache
+      productsCache[locale] = {
+        products: mappedProducts,
+        timestamp: Date.now(),
+      };
+      productsCache.rawData = result.items;
 
-      const page = await getProductsPage(1, 100);
-      
-      if (!mountedRef.current) return;
-      
-      // Cache raw data
-      productsCache.rawData = page.items ?? [];
-      
-      const mapped = (page.items ?? []).map((p) =>
-        mapApiProductToUI(p, locale)
-      );
-      
-      // Cache mapped products
-      productsCache[locale] = { products: mapped, timestamp: Date.now() };
-      
-      setProducts(mapped);
-    } catch (e: any) {
-      if (!mountedRef.current) return;
-      console.error(e);
-      setError(e?.message || "Failed to load products");
-      setProducts([]);
-    } finally {
-      if (mountedRef.current) {
-        setLoading(false);
-        fetchingRef.current = false;
+      setProducts(mappedProducts);
+    } catch (err: any) {
+      if (err.name !== 'AbortError') {
+        console.error('Error loading products:', err);
+        setError(err.message || 'Failed to load products');
       }
+    } finally {
+      setIsLoading(false);
     }
   }, [locale]);
 
-  // Initial fetch
+  // Load products on mount and locale change
   useEffect(() => {
-    mountedRef.current = true;
-    fetchProducts();
+    loadProducts();
     
     return () => {
-      mountedRef.current = false;
-    };
-  }, [fetchProducts]);
-
-  // Handle back/forward navigation (bfcache)
-  useEffect(() => {
-    const handlePageShow = (event: PageTransitionEvent) => {
-      // persisted = true means page was restored from bfcache
-      if (event.persisted) {
-        // Re-fetch from cache (will use cached data if still valid)
-        const cached = productsCache[locale];
-        if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-          setProducts(cached.products);
-          setLoading(false);
-        } else {
-          fetchProducts();
-        }
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
       }
     };
+  }, [loadProducts]);
 
-    // Handle popstate for client-side navigation
-    const handlePopState = () => {
-      // Small delay to let Next.js router settle
-      setTimeout(() => {
-        const cached = productsCache[locale];
-        if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-          setProducts(cached.products);
-          setLoading(false);
-        } else {
-          fetchProducts();
-        }
-      }, 50);
-    };
+  const refreshProducts = useCallback(() => {
+    return loadProducts(true);
+  }, [loadProducts]);
 
-    window.addEventListener('pageshow', handlePageShow);
-    window.addEventListener('popstate', handlePopState);
+  const getProductById = useCallback(async (id: string | number): Promise<Product | null> => {
+    try {
+      const apiProduct = await fetchProductById(String(id));
+      if (!apiProduct) return null;
+      
+      return mapApiProductToUI(apiProduct, locale);
+    } catch (error) {
+      console.error('Error fetching product by ID:', error);
+      return null;
+    }
+  }, [locale]);
 
-    return () => {
-      window.removeEventListener('pageshow', handlePageShow);
-      window.removeEventListener('popstate', handlePopState);
-    };
-  }, [locale, fetchProducts]);
+  const searchProductsLocal = useCallback(async (query: string): Promise<Product[]> => {
+    try {
+      const result = await searchProducts(query, 1, 50);
+      return result.items.map(item => mapApiProductToUI(item, locale));
+    } catch (error) {
+      console.error('Error searching products:', error);
+      return [];
+    }
+  }, [locale]);
 
-  return { products, loading, error };
+  const filterProductsLocal = useCallback(async (filters: {
+    minPrice?: number;
+    maxPrice?: number;
+    categoryId?: string;
+  }): Promise<Product[]> => {
+    try {
+      const result = await filterProducts({
+        ...filters,
+        page: 1,
+        pageSize: 50,
+      });
+      return result.items.map(item => mapApiProductToUI(item, locale));
+    } catch (error) {
+      console.error('Error filtering products:', error);
+      return [];
+    }
+  }, [locale]);
+
+  return {
+    products,
+    isLoading,
+    error,
+    refreshProducts,
+    getProductById,
+    searchProducts: searchProductsLocal,
+    filterProducts: filterProductsLocal,
+  };
 };

@@ -8,7 +8,7 @@ import PromoCodeInput from "./PromoCodeInput";
 import Image from "next/image";
 
 interface CartItem {
-  id: number;
+  id: string | number;
   name: string;
   nameAr?: string;
   nameEn?: string;
@@ -79,7 +79,7 @@ const CheckoutOrderSummary = memo(({
               <div key={item.id} className="flex gap-3 p-2 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors">
                 <div className="relative w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-luxury-cream to-luxury-platinum rounded-lg overflow-hidden flex-shrink-0">
                   <Image
-                    src={item.image}
+                    src={item.image || "/yhouse-logo.png"}
                     alt={item.name}
                     fill
                     sizes="64px"

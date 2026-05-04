@@ -4,22 +4,28 @@
 import useSWR, { preload, mutate } from "swr";
 import { getProductById, type ProductApi } from "@/lib/api/products";
 
-// Global cache for prefetched products
-const prefetchedProducts = new Map<number, ProductApi>();
+// Global cache for prefetched products - use string keys since IDs can be UUIDs
+const prefetchedProducts = new Map<string, ProductApi>();
 
-export function useProduct(id?: number) {
-  const shouldFetch = typeof id === "number" && id > 0;
+export function useProduct(id?: number | string) {
+  // Handle both number and string IDs
+  const stringId = id !== undefined && id !== null ? String(id) : undefined;
+  const shouldFetch = stringId !== undefined && stringId !== "" && stringId !== "0";
 
   const { data, error, isLoading, mutate: swrMutate } = useSWR<ProductApi>(
-    shouldFetch ? ["product", id] : null,
-    () => getProductById(id as number),
+    shouldFetch ? ["product", stringId] : null,
+    async () => {
+      const result = await getProductById(stringId as string);
+      if (!result) throw new Error('Product not found');
+      return result;
+    },
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
       dedupingInterval: 300000, // 5 minutes - increased for better caching
       revalidateIfStale: false,
       // Use prefetched data as fallback
-      fallbackData: id ? prefetchedProducts.get(id) : undefined,
+      fallbackData: stringId ? prefetchedProducts.get(stringId) : undefined,
     }
   );
 
@@ -27,17 +33,18 @@ export function useProduct(id?: number) {
 }
 
 // Prefetch function for ProductCard - loads data into cache
-export async function prefetchProduct(id: number) {
+export async function prefetchProduct(id: number | string) {
+  const stringId = String(id);
   // Skip if already prefetched
-  if (prefetchedProducts.has(id)) return;
+  if (prefetchedProducts.has(stringId)) return;
   
   try {
     // Preload into SWR cache
-    const data = await preload(["product", id], () => getProductById(id));
+    const data = await preload(["product", stringId], () => getProductById(stringId));
     if (data) {
-      prefetchedProducts.set(id, data);
+      prefetchedProducts.set(stringId, data);
       // Also update SWR cache directly
-      mutate(["product", id], data, false);
+      mutate(["product", stringId], data, false);
     }
   } catch (error) {
     console.error(`Failed to prefetch product ${id}:`, error);
@@ -45,6 +52,6 @@ export async function prefetchProduct(id: number) {
 }
 
 // Prefetch multiple products at once
-export function prefetchProducts(ids: number[]) {
+export function prefetchProducts(ids: (number | string)[]) {
   ids.forEach(id => prefetchProduct(id));
 }

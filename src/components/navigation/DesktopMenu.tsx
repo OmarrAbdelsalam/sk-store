@@ -24,8 +24,11 @@ export const DesktopMenu = () => {
     if (categories.length > 0) {
       categories.forEach((category) => {
         const categoryName = locale === 'ar' ? category.arabicName : category.englishName;
-        const slug = categoryName.toLowerCase().replace(/\s+/g, '-');
-        router.prefetch(`/${locale}?category=${encodeURIComponent(slug)}`);
+        // Add null check before calling toLowerCase
+        if (categoryName) {
+          const slug = categoryName.toLowerCase().replace(/\s+/g, '-');
+          router.prefetch(`/${locale}?category=${encodeURIComponent(slug)}`);
+        }
       });
       router.prefetch(`/${locale}`);
       
@@ -56,44 +59,42 @@ export const DesktopMenu = () => {
     }
     setActiveCategoryId(null);
     startTransition(() => {
-      router.push(`/${locale}`, { scroll: false });
+      router.push(`/${locale}/products`, { scroll: true });
     });
   };
   
   const goToCategory = (id: string, name: string) => {
+    // Add null check before calling toLowerCase
+    if (!name) return;
+    
     const slug = name.toLowerCase().replace(/\s+/g, '-');
     if (typeof window !== 'undefined') {
       sessionStorage.setItem(`category_${slug}`, id);
     }
     startTransition(() => {
-      router.push(`/${locale}?category=${encodeURIComponent(slug)}`, { scroll: false });
+      router.push(`/${locale}/products?category=${encodeURIComponent(slug)}`, { scroll: true });
     });
   };
 
-  // Check if we're on the home page
-  const isHomePage = pathname === '/' || pathname === `/${locale}` || pathname === `/${locale}/`;
+  // Check if we're on the products page
+  const isProductsPage = pathname.includes('/products');
 
   const isActive = (categoryId: string | null) => {
-    // Only show active state if we're on the home page
-    if (!isHomePage) return false;
+    // Only show active state if we're on the products page
+    if (!isProductsPage) return false;
     if (!activeCategoryId && !categoryId) return true; // All products is active
     return activeCategoryId === categoryId;
   };
 
   return (
     <nav className="flex items-center gap-1">
-      <div className="relative">
-        <Button 
-          variant="ghost" 
-          onClick={goToAllProducts}
-          className="font-medium"
-        >
-          {t("Nav.allProducts")}
-        </Button>
-        {isActive(null) && (
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3/4 h-0.5 bg-blue-600"></div>
-        )}
-      </div>
+      <Button 
+        variant="ghost" 
+        onClick={goToAllProducts}
+        className={`font-medium ${isActive(null) ? 'bg-gray-100 rounded-lg' : ''}`}
+      >
+        {t("Nav.allProducts")}
+      </Button>
 
       {loading && <span className="text-sm text-muted-foreground">…</span>}
 
@@ -102,20 +103,19 @@ export const DesktopMenu = () => {
           const isActiveCategory = isActive(category.key);
           const categoryName = locale === 'ar' ? category.arabicName : category.englishName;
           
+          // Skip if categoryName is undefined or null
+          if (!categoryName) return null;
+          
           return (
-            <div key={category.key} className="relative">
-              <Button
-                variant="ghost"
-                onClick={() => goToCategory(category.key, categoryName)}
-                className="font-medium"
-                disabled={isPending}
-              >
-                {categoryName}
-              </Button>
-              {isActiveCategory && (
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3/4 h-0.5 bg-blue-600"></div>
-              )}
-            </div>
+            <Button
+              key={category.key}
+              variant="ghost"
+              onClick={() => goToCategory(category.key, categoryName)}
+              className={`font-medium ${isActiveCategory ? 'bg-gray-100 rounded-lg' : ''}`}
+              disabled={isPending}
+            >
+              {categoryName}
+            </Button>
           );
         })}
     </nav>

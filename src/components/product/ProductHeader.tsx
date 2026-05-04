@@ -1,35 +1,30 @@
 "use client";
 
-import { ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useLocale, useTranslations } from "next-intl";
-import clsx from "clsx";
+import { useLocale } from "next-intl";
+import { Link } from "@/i18n/navigation";
 
 interface ProductHeaderProps {
   onBack: () => void;
+  productName?: string;
 }
 
-const ProductHeader = ({ onBack }: ProductHeaderProps) => {
+const ProductHeader = ({ productName }: ProductHeaderProps) => {
   const locale = useLocale();
-  const t = useTranslations("ProductHeader");
   const dir = locale === "ar" ? "rtl" : "ltr";
 
   return (
-    <div dir={dir}>
-      <Button
-        variant="ghost"
-        onClick={onBack}
-        className={clsx("mb-0 md:mb-8", dir === "rtl" ? "ml-0" : "mr-0")}
-        aria-label={t("back")}
-      >
-        <ArrowLeft
-          className={clsx(
-            "h-4 w-4",
-            dir === "rtl" ? "ml-2 rotate-180" : "mr-2"
-          )}
-        />
-        <span>{t("back")}</span>
-      </Button>
+    <div dir={dir} className="flex items-center gap-2 text-sm mb-6 text-gray-500 font-medium">
+      <Link href="/" className="hover:text-black transition-colors">
+        {locale === 'ar' ? 'الرئيسية' : 'Home'}
+      </Link>
+      <span>/</span>
+      <Link href="/products" className="hover:text-black transition-colors">
+        {locale === 'ar' ? 'المنتجات' : 'Products'}
+      </Link>
+      <span>/</span>
+      <span className="text-black truncate max-w-[200px] md:max-w-none">
+        {productName || (locale === 'ar' ? 'جاري التحميل...' : 'Loading...')}
+      </span>
     </div>
   );
 };

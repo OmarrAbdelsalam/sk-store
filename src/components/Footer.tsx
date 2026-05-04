@@ -24,8 +24,8 @@ const Footer = () => {
       <div className="container mx-auto px-4">
         {/* Newsletter Section */}
         <div className="text-center mb-16">
-          <h3 className="font-luxury text-3xl font-medium mb-4">
-            {t('Footer.brand')}
+          <h3 className="font-luxury text-3xl font-bold tracking-widest text-white">
+            SK Bags
           </h3>
         </div>
         {/* Footer Links */}
@@ -34,8 +34,16 @@ const Footer = () => {
           <div className="space-y-6">
             {/* Brand */}
             <div>
-              <h4 className="font-luxury text-xl font-medium mb-4">{t('Footer.brand')}</h4>
-              <p className="text-primary-foreground/80 text-sm leading-relaxed">
+              <div className="mb-4">
+                <Image 
+                  src="/SK_Logo.svg" 
+                  alt="SK Bags Logo" 
+                  width={120} 
+                  height={40} 
+                  className="h-10 w-auto"
+                />
+              </div>
+              <p className="text-primary-foreground text-sm leading-relaxed">
                 {t('Footer.brandDesc')}
               </p>
             </div>
@@ -47,7 +55,7 @@ const Footer = () => {
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="text-primary-foreground/80 hover:text-white justify-start w-full p-0 h-auto"
+                  className="text-primary-foreground hover:text-white justify-start w-full p-0 h-auto"
                   onClick={() => router.push(`/${locale}/my-orders`)}
                 >
                   <span className="text-sm">{t('Footer.myOrders')}</span>
@@ -66,7 +74,7 @@ const Footer = () => {
                   <li key={category.key}>
                     <button
                       onClick={() => goToCategory(category.key, categoryName)}
-                      className={`text-primary-foreground/80 hover:text-white transition-colors w-full ${locale === 'ar' ? 'text-right' : 'text-left'}`}
+                      className={`text-primary-foreground hover:text-white transition-colors w-full ${locale === 'ar' ? 'text-right' : 'text-left'}`}
                     >
                       {categoryName}
                     </button>
@@ -83,7 +91,7 @@ const Footer = () => {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="text-primary-foreground/80 hover:text-white justify-start w-full p-0 h-auto"
+                className="text-primary-foreground hover:text-white justify-start w-full p-0 h-auto"
                 onClick={() => window.open("https://wa.me/+201501881005", "_blank")}
               >
                 <span className="text-sm">{t('Footer.whatsapp')}</span>
@@ -91,7 +99,7 @@ const Footer = () => {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="text-primary-foreground/80 hover:text-white justify-start w-full p-0 h-auto"
+                className="text-primary-foreground hover:text-white justify-start w-full p-0 h-auto"
                 onClick={() => window.open("https://www.facebook.com/housescrub/", "_blank")}
               >
                 <span className="text-sm">{t('Footer.facebook')}</span>
@@ -99,7 +107,7 @@ const Footer = () => {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="text-primary-foreground/80 hover:text-white justify-start w-full p-0 h-auto"
+                className="text-primary-foreground hover:text-white justify-start w-full p-0 h-auto"
                 onClick={() => window.open("https://www.instagram.com/housescrub/", "_blank")}
               >
                 <span className="text-sm">{t('Footer.instagram')}</span>
@@ -108,14 +116,13 @@ const Footer = () => {
           </div>
 
           {/* Footer Image */}
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center md:justify-end">
             <Image 
               src="/footer.webp" 
               alt="Footer decoration" 
               width={300}
               height={450}
               className={`w-full h-auto object-contain ${locale === 'ar' ? 'scale-x-[-1]' : ''}`}
-              style={{ mixBlendMode: 'screen' }}
               sizes="(max-width: 768px) 100vw, 25vw"
               loading="lazy"
             />
@@ -123,15 +130,27 @@ const Footer = () => {
         </div>
         {/* Bottom Section */}
         <div className="border-t border-white/10 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-primary-foreground/60 text-sm mb-4 md:mb-0">
-              © {new Date().getFullYear()} House Scrub. {locale === 'ar' ? 'جميع الحقوق محفوظة.' : 'All rights reserved.'}
-            </p>
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="text-center md:text-left">
+              <p className="text-primary-foreground text-sm">
+                © {new Date().getFullYear()} SK Bags. {locale === 'ar' ? 'جميع الحقوق محفوظة.' : 'All rights reserved.'}
+              </p>
+              <p className="text-primary-foreground/50 text-xs mt-1 font-light tracking-wider">
+                Developed by <a 
+                  href="https://wa.me/201010314809" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="font-medium text-primary-foreground/80 hover:underline transition-all cursor-pointer"
+                >
+                  madX
+                </a>
+              </p>
+            </div>
             <div className="flex items-center space-x-6">
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="text-primary-foreground/60 hover:text-white"
+                className="text-primary-foreground hover:text-white"
                 onClick={() => window.open("https://www.instagram.com/housescrub/", "_blank")}
                 aria-label="Instagram"
               >
@@ -140,7 +159,7 @@ const Footer = () => {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="text-primary-foreground/60 hover:text-white"
+                className="text-primary-foreground hover:text-white"
                 onClick={() => window.open("https://www.facebook.com/housescrub/", "_blank")}
                 aria-label="Facebook"
               >

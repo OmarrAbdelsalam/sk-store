@@ -9,8 +9,8 @@ import ReviewDisplay from './ReviewDisplay';
 import type { Review } from '@/types/review';
 
 interface ReviewSectionProps {
-  productId: number;
-  orderId?: number;
+  productId: number | string;
+  orderId?: number | string;
   sessionId: string;
   className?: string;
 }

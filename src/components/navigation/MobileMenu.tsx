@@ -40,16 +40,19 @@ export const MobileMenu = () => {
 
   const goToAllProducts = () => {
     setOpen(false);
-    router.push(`/${locale}`);
+    router.push(`/${locale}/products`);
   };
   
   const goToCategory = (id: string, name: string) => {
+    // Add null check before calling toLowerCase
+    if (!name) return;
+    
     const slug = name.toLowerCase().replace(/\s+/g, '-');
     if (typeof window !== 'undefined') {
       sessionStorage.setItem(`category_${slug}`, id);
     }
     setOpen(false);
-    router.push(`/${locale}?category=${encodeURIComponent(slug)}`);
+    router.push(`/${locale}/products?category=${encodeURIComponent(slug)}`);
   };
 
   // Don't render Sheet until mounted to avoid hydration mismatch
@@ -114,6 +117,10 @@ export const MobileMenu = () => {
             {!loading && categories.length > 0 &&
               categories.map((category) => {
                 const categoryName = locale === 'ar' ? category.arabicName : category.englishName;
+                
+                // Skip if categoryName is undefined or null
+                if (!categoryName) return null;
+                
                 return (
                   <Button
                     key={category.key}
@@ -169,10 +176,10 @@ export const MobileMenu = () => {
             </Link>
           </div>
 
-          {/* مبدّل اللغة */}
-          <div className="pt-6">
+          {/* Language switcher hidden for now */}
+          {/* <div className="pt-6">
             <LanguageSwitcher />
-          </div>
+          </div> */}
         </div>
       </SheetContent>
     </Sheet>

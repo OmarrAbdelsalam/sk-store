@@ -9,8 +9,8 @@ import { Star } from 'lucide-react';
 import type { Review, ReviewFormData } from '@/types/review';
 
 interface ReviewFormProps {
-  productId: number;
-  orderId?: number;
+  productId: number | string;
+  orderId?: number | string;
   sessionId: string;
   existingReview?: Review | null;
   onReviewSubmitted: (review: Review) => void;

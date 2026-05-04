@@ -1,65 +1,33 @@
-// api/categories.ts
-const API_BASE = "https://scrubstore.runasp.net";
-
-type CategoryItem = {
-  id: string;
-  arabicName: string;
-  englishName: string;
-};
-
-type Paged<T> = {
-  pageIndex: number;
-  totalPages: number;
-  pageSize: number;
-  totalCount: number;
-  hasPreviousPage: boolean;
-  hasNextPage: boolean;
-  items: T[];
-};
-
-type ApiResponse<T> = {
-  succeeded: boolean;
-  message: string | null;
-  data: T;
-};
+// Navigation categories helper - uses Supabase via categoryService
+import { getCategories } from "@/api/categories";
 
 export type CategoryOption = {
-  key: string;        // سنستخدم الـ id كـ key
-  label: string;      // الاسم العربي للعرض
+  key: string;
+  label: string;
   arabicName: string;
   englishName: string;
 };
 
-/** جلب الأقسام من الـ API مع دعم الـ pagination (افتراضي 1/50) */
 export async function fetchCategories(
   pageNumber = 1,
   pageSize = 50
 ): Promise<CategoryOption[]> {
-  const url = `${API_BASE}/api/Category?pageNumber=${pageNumber}&pageSize=${pageSize}`;
-  const res = await fetch(url, { headers: { accept: "*/*" }, cache: "no-store" });
-
-  if (!res.ok) {
-    throw new Error(`Failed to load categories: ${res.status}`);
+  try {
+    const categories = await getCategories();
+    return categories.map(c => ({
+      key: c.key,
+      label: c.label,
+      arabicName: c.arabicName,
+      englishName: c.englishName,
+    }));
+  } catch (error) {
+    console.error('Failed to load categories:', error);
+    return [];
   }
-
-  const json: ApiResponse<Paged<CategoryItem>> = await res.json();
-
-  if (!json?.succeeded || !json?.data?.items) {
-    throw new Error("Invalid categories response");
-  }
-
-  // تحويل البيانات لشكل موحّد للاستخدام في الواجهة
-  return json.data.items.map((c) => ({
-    key: c.id,
-    label: c.arabicName || c.englishName || "بدون اسم",
-    arabicName: c.arabicName,
-    englishName: c.englishName,
-  }));
 }
 
-/** اختيارياً: كاش بسيط في الذاكرة لتقليل الاستدعاءات */
 let _categoriesCache: CategoryOption[] | null = null;
-export async function getCategories(): Promise<CategoryOption[]> {
+export async function getCategoriesNav(): Promise<CategoryOption[]> {
   if (_categoriesCache) return _categoriesCache;
   _categoriesCache = await fetchCategories();
   return _categoriesCache;

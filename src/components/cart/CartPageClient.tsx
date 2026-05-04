@@ -131,12 +131,12 @@ export default function CartPageClient() {
             }>
               {items.map((item, index) => (
                 <div 
-                  key={item.itemId}
+                  key={item.id}
                   className="animate-fade-in"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                   <CartItem
-                    item={item}
+                    item={{ ...item, itemId: item.id }}
                     onUpdateQuantity={updateQuantity}
                     onRemove={removeFromCart}
                     maxQuantity={item.availableStock}

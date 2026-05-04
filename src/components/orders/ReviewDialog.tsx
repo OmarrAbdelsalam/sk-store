@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { getOrCreateSessionId } from "@/lib/session";
+import { API_ROUTES } from "@/lib/api-routes";
 
 type ReviewDialogProps = {
   orderItemId: number;
@@ -61,7 +62,7 @@ export function ReviewDialog({
       
       if (isEditing && existingReview) {
         // Update existing review using PUT
-        const response = await fetch("https://scrubstore.runasp.net/api/Reviews", {
+        const response = await fetch(API_ROUTES.reviews.update(existingReview.id), {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -79,7 +80,7 @@ export function ReviewDialog({
         }
       } else {
         // Create new review using POST
-        const response = await fetch("https://scrubstore.runasp.net/api/Reviews", {
+        const response = await fetch(API_ROUTES.reviews.create(), {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

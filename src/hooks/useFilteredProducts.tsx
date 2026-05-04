@@ -16,8 +16,8 @@ export type Filters = {
 };
 
 const fetcher = (key: string) => {
-  const { priceFrom, priceTo, colorName, sizeName, pageNumber, pageSize } = JSON.parse(key);
-  return filterProducts({ priceFrom, priceTo, colorName, sizeName, pageNumber, pageSize });
+  const { priceFrom, priceTo, pageNumber, pageSize } = JSON.parse(key);
+  return filterProducts({ minPrice: priceFrom, maxPrice: priceTo, page: pageNumber, pageSize });
 };
 
 // بسيط: لو عايز تعمل debounce في الأب، ابعته جاهز هنا

@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import Image from "next/image";
 
-type ColorOption = { id: number; label: string; hexa?: string; disabled?: boolean };
+type ColorOption = { id: number | string; label: string; hexa?: string; disabled?: boolean };
 type SizeOption  = { name: string; disabled?: boolean };
 
 interface ProductInfoProps {
@@ -28,12 +28,12 @@ interface ProductInfoProps {
   hasSizes?: boolean;
 
   // ✅ الاختيارات بالـ IDs
-  selectedColorId: number;
+  selectedColorId: number | string;
   selectedSize: string;
   quantity: number;
 
   onSizeChange: (size: string) => void;
-  onColorChangeId: (id: number) => void;
+  onColorChangeId: (id: number | string) => void;
   onQuantityChange: (quantity: number) => void;
   
   sizeChartUrl?: string;
@@ -85,66 +85,26 @@ const ProductInfo = React.memo(function ProductInfo({
       : String(price);
 
   return (
-    <div className="space-y-4 md:space-y-8">
-      {/* الاسم + الوصف + السعر */}
-      <div>
-        <h1 className="font-luxury text-3xl md:text-4xl font-medium mb-2" aria-label={t("a11y.productName")}>
+    <div className="space-y-4 md:space-y-6">
+      {/* الاسم + السعر */}
+      <div className="space-y-3">
+        <h1 className="text-2xl md:text-3xl font-medium text-gray-900" aria-label={t("a11y.productName")}>
           {name}
         </h1>
-        {description && (
-          <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-            {description}
-          </p>
-        )}
         <div className="flex items-center gap-3" aria-label={t("a11y.price")}>
           {beforePrice && (
-            <p className="text-lg text-red-700 line-through font-medium">
+            <p className="text-base text-gray-500 line-through">
               {beforePrice} {locale === 'ar' ? 'جنيه' : 'EGP'}
             </p>
           )}
-          <p className="text-2xl font-semibold text-foreground/90">
+          <p className="text-xl font-semibold text-gray-900">
             {priceText}
           </p>
         </div>
       </div>
 
       {/* اختيار اللون (ID) */}
-      {colorOptions.length > 0 && (
-        <div>
-          <Label className="block text-sm font-medium mb-3">
-            {t("color")}
-          </Label>
-          <div className="flex flex-wrap gap-3">
-            {colorOptions.map((c) => {
-              const active = c.id === selectedColorId;
-              const disabled = !!c.disabled;
-              return (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() => !disabled && onColorChangeId(c.id)}
-                  disabled={disabled}
-                  className={[
-                    "relative w-9 h-9 rounded-full border transition-all duration-200",
-                    active ? "border-primary scale-110 shadow-lg" : "border-gray-300 hover:border-gray-400",
-                    disabled ? "opacity-40 cursor-not-allowed hover:border-gray-300" : "cursor-pointer",
-                  ].join(" ")}
-                  title={c.label}
-                  aria-label={t("a11y.selectColor", { color: c.label })}
-                >
-                  <span
-                    className="absolute inset-0 rounded-full border"
-                    style={{
-                      backgroundColor: c.hexa ?? "#000000",
-                      borderColor: "#e5e7eb",
-                    }}
-                  />
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
+
 
       {/* اختيار المقاس */}
       {hasSizes && (

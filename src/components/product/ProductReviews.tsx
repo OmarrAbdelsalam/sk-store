@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { ReviewSection } from "@/components/reviews";
 
 type Review = {
-  id: number;
+  id: number | string;
   name: string;
   rating: number;
   comment: string;
@@ -24,8 +24,8 @@ interface ProductReviewsProps {
   reviews: Review[];
   averageRating?: number;
   totalReviews?: number;
-  productId?: number;
-  orderId?: number;
+  productId?: number | string;
+  orderId?: number | string;
   sessionId?: string;
   canAddReview?: boolean;
 }
@@ -102,39 +102,7 @@ export default function ProductReviews({
   };
 
   if (reviews.length === 0) {
-    return (
-      <div className="mt-16">
-        <h2 className="text-2xl font-semibold mb-6">
-          {t("title")}
-        </h2>
-        <Card>
-          <CardContent className="py-12 text-center">
-            <div className="flex flex-col items-center gap-4">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
-                <Star className="w-8 h-8 text-gray-400" />
-              </div>
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  {t("noReviews")}
-                </h3>
-                <p className="text-gray-600">
-                  {t("beFirst")}
-                </p>
-              </div>
-              {canAddReview && productId && sessionId && (
-                <div className="mt-6 w-full max-w-2xl">
-                  <ReviewSection
-                    productId={productId}
-                    orderId={orderId}
-                    sessionId={sessionId}
-                  />
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return null;
   }
 
   return (

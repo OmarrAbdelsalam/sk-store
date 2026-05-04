@@ -15,8 +15,9 @@ export default function EmptyCartButton() {
       size="lg" 
       onClick={() => router.push(`/${locale}`)} 
       aria-label={t("cta")}
-      className="h-12 px-8 text-base font-semibold rounded-xl shadow-md 
-        hover:shadow-lg transition-all duration-300 group"
+      className="h-12 px-8 text-sm font-bold tracking-wider uppercase rounded-lg
+        bg-black text-white hover:bg-gray-800 
+        transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-0.5 group"
     >
       {t("cta")}
       {isAr ? (
