@@ -94,8 +94,8 @@ const TopBannerPage = () => {
     } catch (error) {
       console.error("Error loading banner:", error);
       toast({
-        title: "خطأ",
-        description: "فشل في تحميل إعدادات البانر",
+        title: "Error",
+        description: "Failed to load banner settings",
         variant: "destructive",
       });
     } finally {
@@ -146,14 +146,14 @@ const TopBannerPage = () => {
 
       setHasChanges(false);
       toast({
-        title: "تم الحفظ",
-        description: "تم حفظ إعدادات البانر بنجاح",
+        title: "Saved",
+        description: "Banner settings saved successfully",
       });
     } catch (error) {
       console.error("Error saving banner:", error);
       toast({
-        title: "خطأ",
-        description: "فشل في حفظ إعدادات البانر",
+        title: "Error",
+        description: "Failed to save banner settings",
         variant: "destructive",
       });
     } finally {
@@ -180,14 +180,14 @@ const TopBannerPage = () => {
         await bannerService.toggleActive(banner.id, newActive);
         setBanner({ ...banner, is_active: newActive });
         toast({
-          title: newActive ? "تم التفعيل" : "تم الإيقاف",
-          description: newActive ? "البانر مفعل الآن" : "البانر متوقف الآن",
+          title: newActive ? "Activated" : "Deactivated",
+          description: newActive ? "البانر Enabled الآن" : "البانر Disabled الآن",
         });
       } catch (error) {
         setIsActive(!newActive);
         toast({
-          title: "خطأ",
-          description: "فشل في تغيير حالة البانر",
+          title: "Error",
+          description: "Failed to change banner state",
           variant: "destructive",
         });
       }
@@ -203,14 +203,14 @@ const TopBannerPage = () => {
       setMarqueeItems([...marqueeItems, newItem]);
       setNewItemText("");
       toast({
-        title: "تمت الإضافة",
-        description: "تمت إضافة العنصر بنجاح",
+        title: "Added",
+        description: "Item added successfully",
       });
     } catch (error) {
       console.error("Error adding marquee item:", error);
       toast({
-        title: "خطأ",
-        description: "فشل في إضافة العنصر",
+        title: "Error",
+        description: "Failed to add item",
         variant: "destructive",
       });
     }
@@ -221,14 +221,14 @@ const TopBannerPage = () => {
       await marqueeService.deleteItem(id);
       setMarqueeItems(marqueeItems.filter(item => item.id !== id));
       toast({
-        title: "تم الحذف",
-        description: "تم حذف العنصر بنجاح",
+        title: "Deleted",
+        description: "Item deleted successfully",
       });
     } catch (error) {
       console.error("Error deleting marquee item:", error);
       toast({
-        title: "خطأ",
-        description: "فشل في حذف العنصر",
+        title: "Error",
+        description: "Failed to delete item",
         variant: "destructive",
       });
     }
@@ -248,14 +248,14 @@ const TopBannerPage = () => {
       });
       setMarqueeHasChanges(false);
       toast({
-        title: "تم الحفظ",
-        description: "تم حفظ إعدادات الشريط المتحرك",
+        title: "Saved",
+        description: "Marquee settings saved successfully",
       });
     } catch (error) {
       console.error("Error saving marquee settings:", error);
       toast({
-        title: "خطأ",
-        description: "فشل في حفظ الإعدادات",
+        title: "Error",
+        description: "Failed to save settings",
         variant: "destructive",
       });
     } finally {
@@ -268,8 +268,8 @@ const TopBannerPage = () => {
       <div className="space-y-6">
         <PageHeader
           icon={Megaphone}
-          title="البانر العلوي"
-          subtitle="إدارة نص البانر العلوي في المتجر"
+          title="Top Banner"
+          subtitle="Manage Top Banner text in the store"
         />
         <div className="flex items-center justify-center h-64">
           <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
@@ -282,8 +282,8 @@ const TopBannerPage = () => {
     <div className="space-y-8">
       <PageHeader
         icon={Megaphone}
-        title="البانر العلوي"
-        subtitle="إدارة البانر والشريط المتحرك في المتجر"
+        title="Top Banner"
+        subtitle="Manage Banner and Marquee in the store"
         actions={
           <div className="flex items-center gap-3">
             {hasChanges && (
@@ -294,7 +294,7 @@ const TopBannerPage = () => {
                 className="flex items-center gap-2"
               >
                 <RotateCcw className="w-4 h-4" />
-                إلغاء
+                Cancel
               </Button>
             )}
             <Button
@@ -308,7 +308,7 @@ const TopBannerPage = () => {
               ) : (
                 <Save className="w-4 h-4" />
               )}
-              حفظ البانر
+              Save Banner
             </Button>
           </div>
         }
@@ -321,8 +321,8 @@ const TopBannerPage = () => {
             <Megaphone className="w-5 h-5 text-blue-600" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-gray-900">البانر الرئيسي</h2>
-            <p className="text-sm text-gray-500">النص الثابت في أعلى الصفحة</p>
+            <h2 className="text-lg font-bold text-gray-900">Main Banner</h2>
+            <p className="text-sm text-gray-500">Static text at the top of the page</p>
           </div>
         </div>
 
@@ -338,7 +338,7 @@ const TopBannerPage = () => {
                 <div className="p-4 border-b border-gray-100 bg-gray-50/50">
                   <h3 className="font-semibold text-gray-900 flex items-center gap-2 text-sm">
                     <Eye className="w-4 h-4 text-gray-500" />
-                    معاينة
+                    Preview
                   </h3>
                 </div>
                 <div className="p-4">
@@ -372,10 +372,10 @@ const TopBannerPage = () => {
                   </div>
                   <div>
                     <h4 className="font-medium text-gray-900 text-sm">
-                      {isActive ? "مفعل" : "متوقف"}
+                      {isActive ? "Enabled" : "Disabled"}
                     </h4>
                     <p className="text-xs text-gray-500">
-                      {isActive ? "يظهر للزوار" : "مخفي"}
+                      {isActive ? "Visible to visitors" : "Hidden"}
                     </p>
                   </div>
                 </div>
@@ -399,7 +399,7 @@ const TopBannerPage = () => {
           {/* Right Column: Settings */}
           <Card className="h-fit">
             <div className="p-4 border-b border-gray-100 bg-gray-50/50">
-              <h3 className="font-semibold text-gray-900 text-sm">الإعدادات</h3>
+              <h3 className="font-semibold text-gray-900 text-sm">Settings</h3>
             </div>
             
             <div className="p-4 space-y-4">
@@ -407,7 +407,7 @@ const TopBannerPage = () => {
               <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
                   <Type className="w-4 h-4" />
-                  نص البانر
+                  Banner Text
                 </label>
                 <Input
                   value={textEn}
@@ -421,7 +421,7 @@ const TopBannerPage = () => {
               {/* Colors Section */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-medium text-gray-700 mb-2 block">لون الخلفية</label>
+                  <label className="text-xs font-medium text-gray-700 mb-2 block">Background Color</label>
                   <div className="flex gap-2 items-center">
                     <input
                       type="color"
@@ -438,7 +438,7 @@ const TopBannerPage = () => {
                 </div>
 
                 <div>
-                  <label className="text-xs font-medium text-gray-700 mb-2 block">لون النص</label>
+                  <label className="text-xs font-medium text-gray-700 mb-2 block">Text Color</label>
                   <div className="flex gap-2 items-center">
                     <input
                       type="color"
@@ -467,8 +467,8 @@ const TopBannerPage = () => {
               <Sparkles className="w-5 h-5 text-purple-600" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-gray-900">الشريط المتحرك</h2>
-              <p className="text-sm text-gray-500">الجمل المتحركة أسفل البانر الرئيسي</p>
+              <h2 className="text-lg font-bold text-gray-900">Marquee</h2>
+              <p className="text-sm text-gray-500">الجمل المتحركة أسفل Main Banner</p>
             </div>
           </div>
           {marqueeHasChanges && (
@@ -483,7 +483,7 @@ const TopBannerPage = () => {
               ) : (
                 <Save className="w-4 h-4" />
               )}
-              حفظ الألوان
+              Save Colors
             </Button>
           )}
         </div>
@@ -500,7 +500,7 @@ const TopBannerPage = () => {
                 <div className="p-4 border-b border-gray-100 bg-gray-50/50">
                   <h3 className="font-semibold text-gray-900 flex items-center gap-2 text-sm">
                     <Eye className="w-4 h-4 text-gray-500" />
-                    معاينة الشريط
+                    Preview Marquee
                   </h3>
                 </div>
                 <div className="p-4">
@@ -535,11 +535,11 @@ const TopBannerPage = () => {
               <Card className="p-4">
                 <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
                   <Palette className="w-4 h-4" />
-                  ألوان الشريط
+                  Marquee Colors
                 </h4>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs text-gray-500 mb-1 block">الخلفية</label>
+                    <label className="text-xs text-gray-500 mb-1 block">Background</label>
                     <div className="flex gap-2 items-center">
                       <input
                         type="color"
@@ -555,7 +555,7 @@ const TopBannerPage = () => {
                     </div>
                   </div>
                   <div>
-                    <label className="text-xs text-gray-500 mb-1 block">النص</label>
+                    <label className="text-xs text-gray-500 mb-1 block">Text</label>
                     <div className="flex gap-2 items-center">
                       <input
                         type="color"
@@ -577,7 +577,7 @@ const TopBannerPage = () => {
             {/* Right: Items Management */}
             <Card>
               <div className="p-4 border-b border-gray-100 bg-gray-50/50">
-                <h3 className="font-semibold text-gray-900 text-sm">العناصر ({marqueeItems.length})</h3>
+                <h3 className="font-semibold text-gray-900 text-sm">Items ({marqueeItems.length})</h3>
               </div>
               
               <div className="p-4 space-y-3">
@@ -629,8 +629,8 @@ const TopBannerPage = () => {
                   {marqueeItems.length === 0 && (
                     <div className="text-center py-8 text-gray-400">
                       <Sparkles className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">لا توجد عناصر</p>
-                      <p className="text-xs">أضف عناصر جديدة لتظهر في الشريط</p>
+                      <p className="text-sm">No items</p>
+                      <p className="text-xs">أضف عناصر New لتظهر في الشريط</p>
                     </div>
                   )}
                 </div>

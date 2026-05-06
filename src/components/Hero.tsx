@@ -1,30 +1,24 @@
-"use client";
-
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
-import { useEffect, useState } from "react";
 import { heroService, HeroSettings, DEFAULT_HERO } from "@/services/hero";
 import { mobileHeroService, MobileHero, DEFAULT_MOBILE_HERO } from "@/services/mobileHero";
 
-const Hero = () => {
-  const [hero, setHero] = useState<HeroSettings>({ id: "default", ...DEFAULT_HERO });
-  const [mobileHero, setMobileHero] = useState<MobileHero>({ id: "default", ...DEFAULT_MOBILE_HERO });
-  const [mounted, setMounted] = useState(false);
+export default async function Hero() {
+  let hero: HeroSettings = { id: "default", ...DEFAULT_HERO };
+  let mobileHero: MobileHero = { id: "default", ...DEFAULT_MOBILE_HERO };
 
-  useEffect(() => {
-    setMounted(true);
-    Promise.all([
+  try {
+    const [heroData, mobileData] = await Promise.all([
       heroService.getActive(),
       mobileHeroService.getActive(),
-    ]).then(([heroData, mobileData]) => {
-      setHero(heroData);
-      setMobileHero(mobileData);
-    }).catch(() => {
-      // keep defaults on error
-    });
-  }, []);
+    ]);
+    if (heroData) hero = heroData;
+    if (mobileData) mobileHero = mobileData;
+  } catch (error) {
+    // keep defaults on error
+  }
 
-  // SSR: render with defaults to avoid layout shift
+  // SSR: render with actual data immediately
   const desktopImage = hero.image_url || DEFAULT_HERO.image_url;
   const mobileMedia = mobileHero.media_url || DEFAULT_MOBILE_HERO.media_url;
   const mobileIsVideo = mobileHero.media_type === "video";
@@ -118,4 +112,4 @@ const Hero = () => {
   );
 };
 
-export default Hero;
+

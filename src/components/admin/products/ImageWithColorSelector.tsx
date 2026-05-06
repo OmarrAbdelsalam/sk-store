@@ -50,12 +50,12 @@ export const ImageWithColorSelector = ({
         <div className="absolute top-2 left-2 flex flex-col gap-1">
           {isMain && (
             <span className="bg-[#ff6b4a] text-white text-xs px-2 py-1 rounded-md shadow-sm">
-              رئيسية
+              Main
             </span>
           )}
           {isNew && (
             <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-md shadow-sm">
-              جديدة
+              New
             </span>
           )}
         </div>
@@ -88,7 +88,7 @@ export const ImageWithColorSelector = ({
       <div className="mt-3">
         <Select value={colorId || ''} onValueChange={onColorChange}>
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="اختر اللون">
+            <SelectValue placeholder="Select Color">
               {selectedColor && (
                 <div className="flex items-center gap-2">
                   <div

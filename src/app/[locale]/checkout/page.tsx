@@ -21,11 +21,13 @@ export default function Checkout() {
   const dir = locale === "ar" ? "rtl" : "ltr";
   const isAr = locale === "ar";
 
-  const { items, getTotalPrice, clearCart } = useCart();
+  const { items, getTotalPrice, clearCart, bogoDiscount, freeShippingApplied, appliedPromotions, discountCode, discountAmount } = useCart();
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderCompleted, setOrderCompleted] = useState(false);
+  const [orderError, setOrderError] = useState<string | null>(null);
   const [shippingPrice, setShippingPrice] = useState(0);
   const [selectedGovernorate, setSelectedGovernorate] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [mounted, setMounted] = useState(false);
   const [discount, setDiscount] = useState<{ 
     amount: number; 
@@ -47,7 +49,7 @@ export default function Checkout() {
           const data = JSON.parse(saved);
           if (data.governorate) {
             setSelectedGovernorate(data.governorate);
-            const price = getShippingPrice(data.governorate, data.city || "");
+            const price = freeShippingApplied ? 0 : getShippingPrice(data.governorate, data.city || "");
             setShippingPrice(price);
           }
         }
@@ -60,13 +62,13 @@ export default function Checkout() {
   // Update shipping price when governorate changes
   useEffect(() => {
     if (selectedGovernorate) {
-      const price = getShippingPrice(selectedGovernorate, "");
-      console.log('Governorate selected:', selectedGovernorate, 'Price:', price);
+      const price = freeShippingApplied ? 0 : getShippingPrice(selectedGovernorate, "");
+      console.log('Governorate selected:', selectedGovernorate, 'Price:', price, 'Free shipping:', freeShippingApplied);
       setShippingPrice(price);
     } else {
       setShippingPrice(0);
     }
-  }, [selectedGovernorate]);
+  }, [selectedGovernorate, freeShippingApplied]);
 
   // Prefetch order-success page
   useEffect(() => {
@@ -80,7 +82,7 @@ export default function Checkout() {
 
   const handleSubmit = async (formData: CheckoutFormData & { paymentMethod: string }) => {
     setIsProcessing(true);
-    const shipping = getShippingPrice(formData.governorate, formData.city);
+    const shipping = freeShippingApplied ? 0 : getShippingPrice(formData.governorate, formData.city);
     setShippingPrice(shipping);
 
     try {
@@ -124,10 +126,38 @@ export default function Checkout() {
         shippingCost: shipping,
         discountAmount: discountAmt,
         discountCode: discount?.code,
+        bogoDiscount: bogoDiscount || 0,
+        appliedPromotions: appliedPromotions || [],
         total,
       };
 
       console.log('Sending order payload:', payload);
+
+      // Save order summary to localStorage BEFORE API call so it's available on success page
+      try {
+        localStorage.setItem('last_order_data', JSON.stringify({
+          orderNumber: null, // will be updated after API response
+          sessionId,
+          customerName: formData.name,
+          government: formData.governorate,
+          city: formData.city,
+          subtotal,
+          shippingCost: shipping,
+          discountAmount: discountAmt,
+          total,
+          items: items.map(item => ({
+            productName: item.nameEn || item.name,
+            productNameAr: item.nameAr || item.name,
+            colorNameEn: item.colorName,
+            colorNameAr: item.colorName,
+            sizeName: item.sizeName,
+            quantity: item.quantity,
+            unitPrice: parseFloat(String(item.price).replace(/[^0-9.]/g, '')) || 0,
+            subtotal: (parseFloat(String(item.price).replace(/[^0-9.]/g, '')) || 0) * item.quantity,
+            image: item.image,
+          })),
+        }));
+      } catch {}
 
       const idempotencyKey = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
         var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
@@ -152,17 +182,28 @@ export default function Checkout() {
         throw new Error(errorMsg);
       }
 
-      try { localStorage.setItem('last_order_data', JSON.stringify(response.data)); } catch {}
+      try { 
+        // Update order number after successful API response
+        const saved = localStorage.getItem('last_order_data');
+        if (saved) {
+          const data = JSON.parse(saved);
+          data.orderNumber = response.data?.orderNumber || response.data?.order_number || null;
+          localStorage.setItem('last_order_data', JSON.stringify(data));
+        }
+      } catch {}
       
       // Mark order as completed before clearing cart to prevent EmptyCart flash
       setOrderCompleted(true);
+      setOrderError(null);
       
       // Server automatically clears cart after order, just clear local state
-      clearCart(); // Clear from local state
-      router.push(`/${locale}/order-success`);
+      clearCart();
+      const orderNum = response.data?.orderNumber || response.data?.order_number;
+      router.push(`/${locale}/order-success${orderNum ? `?order=${orderNum}` : ''}`);
     } catch (error) {
       const message = error instanceof Error ? error.message : typeof error === "string" ? error : t("genericErrorDesc");
       console.error('Order error:', message);
+      setOrderError(message);
     } finally {
       setIsProcessing(false);
     }
@@ -172,10 +213,11 @@ export default function Checkout() {
   if (!mounted) {
     return (
       <div className="min-h-screen" dir={dir}>
-        <div className="container mx-auto px-4 py-8">
-          <div className="animate-pulse space-y-4">
-            <div className="h-10 w-32 bg-muted rounded" />
-            <div className="h-8 w-48 bg-muted rounded" />
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="animate-pulse space-y-6">
+            <div className="h-px w-full bg-border" />
+            <div className="h-8 w-48 bg-muted" />
+            <div className="h-px w-full bg-border" />
           </div>
         </div>
       </div>
@@ -186,9 +228,9 @@ export default function Checkout() {
   if (orderCompleted || isProcessing) {
     return (
       <div className="min-h-screen flex items-center justify-center" dir={dir}>
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto" />
-          <p className="text-muted-foreground">
+        <div className="text-center space-y-6">
+          <div className="animate-spin h-10 w-10 border-2 border-foreground border-t-transparent mx-auto" />
+          <p className="text-sm tracking-widest uppercase text-muted-foreground">
             {orderCompleted ? t("redirecting") : t("processingOrder")}
           </p>
         </div>
@@ -199,42 +241,30 @@ export default function Checkout() {
   if (items.length === 0) return <EmptyCart dir={dir} />;
 
   return (
-    <div className="min-h-screen" dir={dir}>
-      <div className="container mx-auto px-4 py-2 sm:py-8">
-        {/* زر الرجوع */}
-        <Button 
-          variant="ghost" 
+    <div className="min-h-screen bg-background" dir={dir}>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
+        {/* Back Button */}
+        <button 
           onClick={() => router.push("/cart")} 
-          className="mb-2 sm:mb-6 hover:bg-secondary/50 rounded-xl group" 
+          className="hidden sm:inline-flex items-center gap-2 text-sm tracking-wider uppercase text-muted-foreground hover:text-foreground transition-colors mb-8 sm:mb-12"
           aria-label={t("backToCart")}
         >
           {isAr ? (
-            <ArrowRight className="h-4 w-4 me-2 group-hover:translate-x-1 transition-transform" />
+            <ArrowRight className="h-4 w-4" />
           ) : (
-            <ArrowLeft className="h-4 w-4 me-2 group-hover:-translate-x-1 transition-transform" />
+            <ArrowLeft className="h-4 w-4" />
           )}
           {t("backToCart")}
-        </Button>
+        </button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
-          <div className="space-y-3 sm:space-y-6">
-            {/* العنوان */}
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="p-1.5 sm:p-2 bg-primary/10 rounded-full">
-                <CreditCard className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-              </div>
-              <h1 className="text-lg sm:text-2xl md:text-3xl font-bold">{t("checkoutTitle")}</h1>
-            </div>
-            
-            <CheckoutForm
-              onSubmit={handleSubmit}
-              isProcessing={isProcessing}
-              totalAmount={nf.format(getTotalPrice() + shippingPrice - (discount?.amount || 0))}
-              onGovernorateChange={setSelectedGovernorate}
-            />
-          </div>
+        {/* Page Title */}
+        <div className="mb-8 sm:mb-12">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-light tracking-wider uppercase">{t("checkoutTitle")}</h1>
+          <div className="h-px w-16 bg-foreground mt-4" />
+        </div>
 
-          <div className="lg:sticky lg:top-8 lg:h-fit">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12">
+          <div className="order-first lg:order-last lg:col-span-5 lg:sticky lg:top-8 lg:h-fit">
             <CheckoutOrderSummary 
               items={items} 
               totalPrice={getTotalPrice()} 
@@ -242,6 +272,23 @@ export default function Checkout() {
               discount={discount}
               onDiscountChange={setDiscount}
               disabled={isProcessing}
+              phoneNumber={phoneNumber}
+              freeShippingApplied={freeShippingApplied}
+            />
+          </div>
+
+          <div className="lg:col-span-7 space-y-6 sm:space-y-8">
+            {orderError && (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                {orderError}
+              </div>
+            )}
+            <CheckoutForm
+              onSubmit={handleSubmit}
+              isProcessing={isProcessing}
+              totalAmount={nf.format(getTotalPrice() + shippingPrice - (discount?.amount || 0))}
+              onGovernorateChange={setSelectedGovernorate}
+              onPhoneChange={setPhoneNumber}
             />
           </div>
         </div>

@@ -735,6 +735,15 @@ CREATE POLICY "Public can read active promo codes"
   USING (is_active = 1 AND deleted_at IS NULL);
 
 -- ================================================
+-- RLS for quick_promotions (run in Supabase SQL Editor)
+-- ================================================
+ALTER TABLE quick_promotions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Public can read active quick promotions"
+  ON quick_promotions FOR SELECT
+  USING (is_active = 1);
+
+-- ================================================
 -- Functions
 -- ================================================
 

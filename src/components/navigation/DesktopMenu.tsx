@@ -14,6 +14,11 @@ export const DesktopMenu = () => {
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
 
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const { categories, isLoading: loading } = useCategories();
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
 
@@ -96,9 +101,9 @@ export const DesktopMenu = () => {
         {t("Nav.allProducts")}
       </Button>
 
-      {loading && <span className="text-sm text-muted-foreground">…</span>}
+      {(!mounted || loading) && <span className="text-sm text-muted-foreground">…</span>}
 
-      {!loading && categories.length > 0 &&
+      {mounted && !loading && categories.length > 0 &&
         categories.map((category) => {
           const isActiveCategory = isActive(category.key);
           const categoryName = locale === 'ar' ? category.arabicName : category.englishName;

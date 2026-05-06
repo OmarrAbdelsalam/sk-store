@@ -4,55 +4,39 @@ import { lazy, Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, ShoppingCart } from "lucide-react";
+import { useActivePromotions } from "@/hooks/usePromotions";
 
 const CartItem = lazy(() => import("@/components/cart/CartItem"));
 const EmptyCart = lazy(() => import("@/components/cart/EmptyCart"));
 const OrderSummary = lazy(() => import("@/components/cart/OrderSummary"));
+const CartUpsell = lazy(() => import("@/components/cart/CartUpsell"));
 
 // Skeleton للكارت وقت التحميل
 function CartSkeleton() {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
       <div className="lg:col-span-2 space-y-4">
-        <Skeleton className="h-10 w-48 mb-6" />
-        <div className="space-y-4">
-          {[...Array(2)].map((_, i) => (
-            <div key={i} className="bg-white dark:bg-card rounded-2xl border border-border/50 p-6">
-              <div className="flex gap-4 sm:gap-6">
-                <Skeleton className="w-24 h-24 sm:w-32 sm:h-32 rounded-xl" />
-                <div className="flex-1 space-y-3">
-                  <Skeleton className="h-5 w-3/4" />
-                  <Skeleton className="h-4 w-1/2" />
-                  <div className="flex gap-2">
-                    <Skeleton className="h-6 w-16 rounded-full" />
-                    <Skeleton className="h-6 w-16 rounded-full" />
-                  </div>
-                  <div className="flex items-center justify-between pt-2">
-                    <Skeleton className="h-9 w-28 rounded-full" />
-                    <Skeleton className="h-6 w-24" />
-                  </div>
-                </div>
+        <div className="h-px w-full bg-border" />
+        {[...Array(2)].map((_, i) => (
+          <div key={i} className="border border-border p-5">
+            <div className="flex gap-4">
+              <Skeleton className="w-24 h-28 sm:w-28 sm:h-32" />
+              <div className="flex-1 space-y-3">
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-1/3" />
+                <Skeleton className="h-8 w-28" />
               </div>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
       <div className="lg:col-span-1">
-        <div className="bg-white dark:bg-card rounded-2xl border border-border/50 overflow-hidden">
-          <Skeleton className="h-16 w-full" />
-          <div className="p-6 space-y-4">
-            <div className="space-y-3">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="flex justify-between">
-                  <Skeleton className="h-4 w-24" />
-                  <Skeleton className="h-4 w-20" />
-                </div>
-              ))}
-            </div>
-            <Skeleton className="h-12 w-full rounded-xl" />
-            <Skeleton className="h-11 w-full rounded-xl" />
+        <div className="border border-border">
+          <Skeleton className="h-12 w-full" />
+          <div className="p-5 space-y-4">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-2/3" />
+            <Skeleton className="h-12 w-full" />
           </div>
         </div>
       </div>
@@ -61,7 +45,10 @@ function CartSkeleton() {
 }
 
 export default function CartPageClient() {
-  const { items, isLoading, removeFromCart, updateQuantity, getTotalPrice, getTotalItems } = useCart();
+  const { items, isLoading, removeFromCart, updateQuantity, getTotalPrice, getTotalItems, getSubtotal, bogoDiscount, freeShippingApplied } = useCart();
+  const { data: activePromotions = [] } = useActivePromotions();
+  const freeShippingPromo = activePromotions.find(p => p.promo_type === 'free_shipping_min_amount');
+  const freeShippingThreshold = freeShippingPromo?.min_amount ?? undefined;
   const t = useTranslations("Cart");
   const tOrderSummary = useTranslations("OrderSummary");
   const locale = useLocale();
@@ -73,7 +60,6 @@ export default function CartPageClient() {
   if (isLoading) {
     return (
       <div dir={dir}>
-        <Skeleton className="h-10 w-40 mb-8" />
         <CartSkeleton />
       </div>
     );
@@ -89,43 +75,20 @@ export default function CartPageClient() {
 
   return (
     <div dir={dir} className="animate-fade-in">
-      {/* زر الرجوع */}
-      <Button 
-        variant="ghost" 
-        onClick={() => router.push(`/${locale}`)} 
-        className="mb-2 sm:mb-6 hover:bg-secondary/50 rounded-xl group" 
-        aria-label={tOrderSummary("continueShopping")}
-      >
-        {isAr ? (
-          <ArrowRight className="h-4 w-4 me-2 group-hover:translate-x-1 transition-transform" />
-        ) : (
-          <ArrowLeft className="h-4 w-4 me-2 group-hover:-translate-x-1 transition-transform" />
-        )}
-        {tOrderSummary("continueShopping")}
-      </Button>
+      {/* Page Title */}
+      <div className="mb-6 sm:mb-10">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-light tracking-wider uppercase">{t("title")}</h1>
+        <div className="h-px w-12 bg-foreground mt-3" />
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-8">
-        {/* قائمة المنتجات */}
-        <div className="lg:col-span-2">
-          {/* العنوان مع عدد المنتجات */}
-          <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-6">
-            <div className="p-1.5 sm:p-2 bg-primary/10 rounded-full">
-              <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-lg sm:text-2xl md:text-3xl font-bold">{t("title")}</h1>
-              <p className="text-xs sm:text-sm text-muted-foreground">
-                {getTotalItems()} {isAr ? "منتج" : "items"}
-              </p>
-            </div>
-          </div>
-
-          {/* المنتجات */}
-          <div className="space-y-2 sm:space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-12">
+        {/* Products List */}
+        <div className="lg:col-span-7">
+          <div className="space-y-0">
             <Suspense fallback={
-              <div className="space-y-2 sm:space-y-4">
+              <div className="space-y-4">
                 {[...Array(3)].map((_, i) => (
-                  <Skeleton key={i} className="h-36 sm:h-40 w-full rounded-2xl" />
+                  <Skeleton key={i} className="h-32 w-full" />
                 ))}
               </div>
             }>
@@ -145,14 +108,23 @@ export default function CartPageClient() {
               ))}
             </Suspense>
           </div>
+
+          {/* Upsell Section */}
+          <Suspense fallback={null}>
+            <CartUpsell />
+          </Suspense>
         </div>
 
-        {/* ملخص الطلب */}
-        <div className="lg:col-span-1">
-          <Suspense fallback={<Skeleton className="h-96 w-full rounded-2xl" />}>
+        {/* Order Summary */}
+        <div className="lg:col-span-5">
+          <Suspense fallback={<Skeleton className="h-72 w-full" />}>
             <OrderSummary
               totalItemsFallback={getTotalItems()}
               totalPriceFallback={getTotalPrice()}
+              bogoDiscount={bogoDiscount}
+              freeShippingApplied={freeShippingApplied}
+              freeShippingThreshold={freeShippingThreshold}
+              subtotal={getSubtotal()}
             />
           </Suspense>
         </div>

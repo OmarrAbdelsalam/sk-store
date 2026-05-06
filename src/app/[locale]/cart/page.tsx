@@ -11,18 +11,21 @@ export const metadata = generatePageMetadata({
 
 export default function CartPage() {
   return (
-    <div className="min-h-screen">
-      <div className="container mx-auto px-4 py-2 sm:py-8">
+    <div className="min-h-screen bg-background">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
         <Suspense fallback={
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-8">
-            <div className="lg:col-span-2 space-y-2 sm:space-y-4">
-              <Skeleton className="h-7 sm:h-10 w-36 sm:w-48 mb-3 sm:mb-6" />
-              {[...Array(3)].map((_, i) => (
-                <Skeleton key={i} className="h-24 sm:h-32 w-full" />
-              ))}
-            </div>
-            <div className="lg:col-span-1">
-              <Skeleton className="h-72 sm:h-96 w-full" />
+          <div className="space-y-6">
+            <div className="h-8 w-48 bg-muted" />
+            <div className="h-px w-full bg-border" />
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+              <div className="lg:col-span-7 space-y-4">
+                {[...Array(3)].map((_, i) => (
+                  <Skeleton key={i} className="h-28 w-full" />
+                ))}
+              </div>
+              <div className="lg:col-span-5">
+                <Skeleton className="h-48 w-full" />
+              </div>
             </div>
           </div>
         }>

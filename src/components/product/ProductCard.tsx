@@ -26,6 +26,7 @@ interface ProductCardProps {
   index?: number;
   hideViewDetails?: boolean;
   showNewBadge?: boolean;
+  hideStockBadge?: boolean;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({
@@ -33,13 +34,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
   index = 0,
   hideViewDetails = false,
   showNewBadge = false,
+  hideStockBadge = false,
 }) => {
   const locale = useLocale();
   const router = useRouter();
   const t = useTranslations("ProductCard");
 
   const [isHovered, setIsHovered] = React.useState(false);
-  const [showStockBadge, setShowStockBadge] = React.useState(true);
   const [selectedColorId, setSelectedColorId] = React.useState<number | string | null>(null);
 
   const photos = product.raw?.photos || [];
@@ -111,15 +112,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
     setIsHovered(false);
   }, []);
 
-  // Toggle stock badge - only for low stock items
-  React.useEffect(() => {
-    if (totalStock > 0 && totalStock <= 10) {
-      const interval = setInterval(() => {
-        setShowStockBadge(prev => !prev);
-      }, 3000);
-      return () => clearInterval(interval);
-    }
-  }, [totalStock]);
+  // Stock badge is always visible (no toggle) when stock is low
+  const showStock = !hideStockBadge && totalStock > 0 && totalStock <= 10;
 
   // Reset hover state when component unmounts or when touch events occur
   React.useEffect(() => {
@@ -177,12 +171,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
 
 
-        {/* Low Stock Badge inside image if needed, or remove to be clean. Keeping it minimal as requested */}
-        {totalStock > 0 && totalStock <= 10 && showStockBadge && (
-           <div className="absolute bottom-4 left-4 bg-red-600 text-white text-xs font-bold px-2 py-1 uppercase tracking-wider z-10">
-             {locale === 'ar' ? 'كمية محدودة' : 'Low Stock'}
-           </div>
-        )}
+
       </div>
 
       {/* Product Details */}

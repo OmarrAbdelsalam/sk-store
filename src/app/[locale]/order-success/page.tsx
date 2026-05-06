@@ -1,217 +1,323 @@
 "use client";
 
-import { useMemo, useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
-import { CheckCircle, Package, ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getOrCreateSessionId } from "@/lib/session";
-import { useCart } from "@/hooks/useCart";
-import Image from "next/image";
+import { Check, Package, ArrowRight, Loader2 } from "lucide-react";
+import { orderService } from "@/services/orders";
 
 type OrderItem = {
-  productId: number;
   productName: string;
-  colorId: number;
-  colorNameAr: string;
-  colorNameEn: string;
-  sizeId: number;
-  sizeName: string;
+  productNameAr?: string;
+  colorNameAr?: string;
+  colorNameEn?: string;
+  sizeName?: string;
   quantity: number;
   unitPrice: number;
   subtotal: number;
+  image?: string;
 };
 
 type OrderData = {
-  orderId: number;
-  sessionId: string;
-  subTotal: number;
-  totalAmount: number;
+  orderNumber: string | null;
+  customerName?: string;
+  government?: string;
+  city?: string;
+  subtotal: number;
+  shippingCost: number;
+  discountAmount: number;
+  total: number;
   items: OrderItem[];
 };
 
-export default function OrderSuccessPage() {
+function OrderSuccessContent() {
   const router = useRouter();
-  const search = useSearchParams();
+  const searchParams = useSearchParams();
   const t = useTranslations("OrderSuccess");
   const locale = useLocale();
-  const dir = locale === "ar" ? "rtl" : "ltr";
   const isAr = locale === "ar";
+  const dir = isAr ? "rtl" : "ltr";
 
   const [orderData, setOrderData] = useState<OrderData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
+
+  const orderNumber = searchParams.get("order");
 
   useEffect(() => {
     setMounted(true);
-    
-    // Get order data from localStorage
-    try {
-      const saved = localStorage.getItem('last_order_data');
-      if (saved) {
-        setOrderData(JSON.parse(saved));
-        localStorage.removeItem('last_order_data'); // Clean up
+
+    const loadOrder = async () => {
+      setIsLoading(true);
+      try {
+        // 1. Try to load from URL param → fetch from DB
+        if (orderNumber) {
+          const order = await orderService.getByOrderNumber(orderNumber);
+          if (order) {
+            setOrderData({
+              orderNumber: order.order_number,
+              customerName: order.customer_name,
+              government: order.government,
+              city: order.city,
+              subtotal: Number(order.subtotal),
+              shippingCost: Number(order.shipping_cost),
+              discountAmount: Number(order.discount_amount),
+              total: Number(order.total),
+              items: (order.items || []).map((item: any) => ({
+                productName: item.product_name,
+                productNameAr: item.product_name_ar,
+                colorNameEn: item.color_name,
+                colorNameAr: item.color_name,
+                sizeName: item.size_name,
+                quantity: item.quantity,
+                unitPrice: Number(item.unit_price),
+                subtotal: Number(item.total_price),
+                image: item.product_image,
+              })),
+            });
+            return;
+          }
+        }
+
+        // 2. Fallback: localStorage
+        const saved = localStorage.getItem("last_order_data");
+        if (saved) {
+          setOrderData(JSON.parse(saved));
+          localStorage.removeItem("last_order_data");
+        }
+      } catch (err) {
+        console.error("Error loading order:", err);
+        // fallback to localStorage
+        try {
+          const saved = localStorage.getItem("last_order_data");
+          if (saved) {
+            setOrderData(JSON.parse(saved));
+            localStorage.removeItem("last_order_data");
+          }
+        } catch {}
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error('Error loading order data:', error);
-    }
-  }, []);
+    };
 
-  const orderNumber = useMemo(() => {
-    if (!mounted) return '';
-    return orderData?.sessionId || getOrCreateSessionId();
-  }, [orderData, mounted]);
+    loadOrder();
+  }, [orderNumber]);
 
-  const orderDate = useMemo(() => {
-    if (!mounted) return '';
-    try {
-      return new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date());
-    } catch {
-      return new Date().toLocaleDateString();
-    }
-  }, [locale, mounted]);
+  const orderDate = mounted
+    ? (() => {
+        try {
+          return new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date());
+        } catch {
+          return new Date().toLocaleDateString();
+        }
+      })()
+    : "";
 
-  if (!mounted) {
+  if (!mounted || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse">Loading...</div>
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen" dir={dir}>
-      <div className="container mx-auto px-4 py-16">
-        <div className="max-w-2xl mx-auto text-center space-y-8">
+    <div className="min-h-screen bg-background" dir={dir}>
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
+        <div className="text-center space-y-6 sm:space-y-8">
+
           {/* Success Icon */}
           <div className="flex justify-center">
-            <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center">
-              <CheckCircle className="h-12 w-12 text-green-600" aria-hidden="true" />
+            <div className="w-16 h-16 border-2 border-green-600 flex items-center justify-center">
+              <Check className="h-8 w-8 text-green-600" strokeWidth={2} />
             </div>
           </div>
 
           {/* Success Message */}
-          <div className="space-y-4">
-            <h1 className="text-4xl font-bold text-green-600">{t("title")}</h1>
-            <p className="text-xl text-muted-foreground">{t("subtitle")}</p>
+          <div className="space-y-3">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-light tracking-wider uppercase">
+              {t("title")}
+            </h1>
+            <div className="h-px w-12 bg-foreground mx-auto" />
+            <p className="text-sm text-muted-foreground tracking-wider">
+              {t("subtitle")}
+            </p>
           </div>
 
-          {/* Order Details Card */}
-          <Card className="text-start">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Package className="h-5 w-5" aria-hidden="true" />
+          {/* Order Details */}
+          <div className="border border-border text-start">
+            <div className="px-5 sm:px-6 py-4 border-b border-border">
+              <h3 className="text-xs sm:text-sm font-medium tracking-widest uppercase">
                 {t("orderDetails")}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              </h3>
+            </div>
+            <div className="p-5 sm:p-6 space-y-5">
+              <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <p className="text-sm text-muted-foreground">{t("orderNumber")}</p>
-                  <p className="font-semibold text-lg">#{orderNumber}</p>
+                  <p className="text-xs tracking-wider uppercase text-muted-foreground mb-1.5">
+                    {t("orderNumber")}
+                  </p>
+                  <p className="text-sm font-medium">
+                    {orderData?.orderNumber ? `#${orderData.orderNumber}` : orderNumber ? `#${orderNumber}` : "—"}
+                  </p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">{t("orderDate")}</p>
-                  <p className="font-semibold text-lg">{orderDate}</p>
+                  <p className="text-xs tracking-wider uppercase text-muted-foreground mb-1.5">
+                    {t("orderDate")}
+                  </p>
+                  <p className="text-sm font-medium">{orderDate}</p>
                 </div>
               </div>
 
-              <div className="border-t pt-4">
-                <div className="flex items-start gap-3">
-                  <Package className="h-5 w-5 text-muted-foreground mt-1" aria-hidden="true" />
-                  <div>
-                    <p className="font-medium">{t("shippingInfoTitle")}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {t("shippingInfoBody")}
+              {orderData?.customerName && (
+                <div className="border-t border-border pt-5">
+                  <p className="text-xs tracking-wider uppercase text-muted-foreground mb-1.5">
+                    {isAr ? "اسم العميل" : "Customer"}
+                  </p>
+                  <p className="text-sm font-medium">{orderData.customerName}</p>
+                  {(orderData.government || orderData.city) && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {[orderData.city, orderData.government].filter(Boolean).join(", ")}
                     </p>
-                  </div>
+                  )}
                 </div>
+              )}
+
+              <div className="border-t border-border pt-5">
+                <p className="text-xs tracking-wider uppercase text-muted-foreground mb-1.5">
+                  {t("shippingInfoTitle")}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {t("shippingInfoBody")}
+                </p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Ordered Items */}
           {orderData && orderData.items && orderData.items.length > 0 && (
-            <Card className="text-start">
-              <CardHeader>
-                <CardTitle>{t("orderedItems")}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
+            <div className="border border-border text-start">
+              <div className="px-5 sm:px-6 py-4 border-b border-border">
+                <h3 className="text-xs sm:text-sm font-medium tracking-widest uppercase">
+                  {t("orderedItems")}
+                </h3>
+              </div>
+              <div className="p-5 sm:p-6">
+                <div className="space-y-0">
                   {orderData.items.map((item, index) => {
                     const colorName = isAr ? item.colorNameAr : item.colorNameEn;
+                    const productName = isAr ? (item.productNameAr || item.productName) : item.productName;
                     return (
-                      <div key={index} className="flex gap-4 items-center border-b pb-4 last:border-0">
-                        <div className="relative w-20 h-20 bg-luxury-cream rounded-lg overflow-hidden flex-shrink-0">
-                          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                            <Package className="h-8 w-8" />
-                          </div>
+                      <div key={index} className="flex gap-4 items-center py-4 border-b border-border/50 last:border-0 last:pb-0 first:pt-0">
+                        <div className="relative w-16 h-20 bg-[#f5f5f5] overflow-hidden flex-shrink-0">
+                          {item.image ? (
+                            <img src={item.image} alt={productName} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Package className="h-6 w-6 text-muted-foreground/40" />
+                            </div>
+                          )}
                         </div>
-                        <div className="flex-1">
-                          <h4 className="font-medium">{item.productName}</h4>
-                          <p className="text-sm text-muted-foreground">
-                            {colorName && `${colorName} • `}
-                            {item.sizeName && `${item.sizeName} • `}
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-sm font-medium line-clamp-1">{productName}</h4>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {colorName && `${colorName}`}
+                            {colorName && item.sizeName && " · "}
+                            {item.sizeName}
+                            {(colorName || item.sizeName) && " · "}
                             {t("quantity")}: {item.quantity}
                           </p>
                         </div>
-                        <div className="text-right">
-                          <p className="font-semibold">{item.unitPrice} {isAr ? "جنيه" : "EGP"}</p>
+                        <div className="text-end flex-shrink-0">
+                          <p className="text-sm font-medium">
+                            {item.unitPrice.toLocaleString()} {isAr ? "جنيه" : "EGP"}
+                          </p>
                           {item.quantity > 1 && (
-                            <p className="text-sm text-muted-foreground">
-                              {t("subtotal")}: {item.subtotal} {isAr ? "جنيه" : "EGP"}
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {t("subtotal")}: {item.subtotal.toLocaleString()} {isAr ? "جنيه" : "EGP"}
                             </p>
                           )}
                         </div>
                       </div>
                     );
                   })}
-                  
-                  {/* Total */}
-                  <div className="flex justify-between items-center pt-4 border-t font-bold text-lg">
-                    <span>{t("total")}</span>
-                    <span>{orderData.totalAmount} {isAr ? "جنيه" : "EGP"}</span>
+                </div>
+
+                {/* Totals */}
+                <div className="mt-4 pt-4 border-t border-border space-y-2">
+                  {orderData.shippingCost > 0 && (
+                    <div className="flex justify-between text-sm text-muted-foreground">
+                      <span className="tracking-wider uppercase text-xs">{isAr ? "الشحن" : "Shipping"}</span>
+                      <span>{orderData.shippingCost.toLocaleString()} {isAr ? "جنيه" : "EGP"}</span>
+                    </div>
+                  )}
+                  {orderData.discountAmount > 0 && (
+                    <div className="flex justify-between text-sm text-green-600">
+                      <span className="tracking-wider uppercase text-xs">{isAr ? "الخصم" : "Discount"}</span>
+                      <span>- {orderData.discountAmount.toLocaleString()} {isAr ? "جنيه" : "EGP"}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center pt-2 border-t border-foreground">
+                    <span className="text-sm font-medium tracking-wider uppercase">{t("total")}</span>
+                    <span className="text-xl font-light tracking-wider">
+                      {orderData.total.toLocaleString()} <span className="text-xs tracking-wider uppercase">{isAr ? "جنيه" : "EGP"}</span>
+                    </span>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           )}
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Button 
-              size="lg" 
-              variant="outline"
-              onClick={() => router.push("/my-orders")} 
-              className="flex items-center gap-2"
+          <div className="flex flex-col sm:flex-row justify-center gap-3 pt-2">
+            <button
+              onClick={() => router.push("/my-orders")}
+              className="h-12 px-8 border border-foreground text-foreground text-xs font-medium tracking-widest uppercase
+                transition-all duration-200 hover:bg-foreground hover:text-background"
             >
-              <Package className="h-4 w-4" />
               {t("trackOrders")}
-            </Button>
-            <Button 
-              size="lg" 
-              onClick={() => router.push("/")} 
-              className="flex items-center gap-2"
+            </button>
+            <button
+              onClick={() => router.push("/")}
+              className="h-12 px-8 bg-foreground text-background text-xs font-medium tracking-widest uppercase
+                transition-all duration-200 hover:bg-foreground/90 inline-flex items-center justify-center gap-2"
             >
               {t("continueShopping")}
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </Button>
+              <ArrowRight className="h-4 w-4" />
+            </button>
           </div>
 
           {/* Customer Support */}
-          <div className="bg-muted rounded-lg p-6 text-center">
-            <h3 className="font-semibold mb-2">{t("needHelp")}</h3>
-            <p className="text-muted-foreground text-sm mb-4">{t("needHelpBody")}</p>
-            <Button 
+          <div className="border border-border p-6 sm:p-8 text-center">
+            <h3 className="text-xs sm:text-sm font-medium tracking-widest uppercase mb-2">
+              {t("needHelp")}
+            </h3>
+            <p className="text-xs text-muted-foreground mb-5 tracking-wider">
+              {t("needHelpBody")}
+            </p>
+            <button
               onClick={() => window.open("https://wa.me/+201501881005", "_blank")}
-              className="gap-2 bg-green-600 hover:bg-green-700 text-white"
+              className="h-11 px-6 bg-green-600 text-white text-xs font-medium tracking-widest uppercase
+                transition-all duration-200 hover:bg-green-700"
             >
               {t("contactWhatsApp")}
-            </Button>
+            </button>
           </div>
+
         </div>
       </div>
-
     </div>
+  );
+}
+
+export default function OrderSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    }>
+      <OrderSuccessContent />
+    </Suspense>
   );
 }

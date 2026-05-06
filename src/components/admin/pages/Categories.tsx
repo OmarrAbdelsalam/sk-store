@@ -38,9 +38,19 @@ import { uploadFile } from "@/api/admin/upload";
 // StrictMode Droppable Fix for Next.js 13+ / React 18
 
 
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+
 const CategoriesPage = () => {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
+
+  const { data: categories = [], isLoading } = useQuery({
+    queryKey: ['categories-data'],
+    queryFn: async () => {
+      return await categoryService.getAll();
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
@@ -61,23 +71,6 @@ const CategoriesPage = () => {
       setEnabled(false);
     };
   }, []);
-
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  const fetchCategories = async () => {
-    try {
-      setIsLoading(true);
-      const data = await categoryService.getAll();
-      setCategories(data);
-    } catch (error) {
-      console.error(error);
-      toast.error("فشل في تحميل الفئات");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleOpenModal = (category?: Category) => {
     if (category) {
@@ -109,7 +102,7 @@ const CategoriesPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!nameEn) {
-      toast.error("يرجى إدخال اسم الفئة");
+      toast.error("Please enter category name");
       return;
     }
 
@@ -137,17 +130,17 @@ const CategoriesPage = () => {
 
       if (editingCategory) {
         await categoryService.update(editingCategory.id, inputData);
-        toast.success("تم تحديث الفئة بنجاح");
+        toast.success("Category updated successfully");
       } else {
         await categoryService.create(inputData as any);
-        toast.success("تم إنشاء الفئة بنجاح");
+        toast.success("Category created successfully");
       }
 
       handleCloseModal();
-      fetchCategories();
+      queryClient.invalidateQueries({ queryKey: ['categories-data'] });
     } catch (error: any) {
       console.error(error);
-      toast.error(error.message || "حدث خطأ أثناء الحفظ");
+      toast.error(error.message || "An error occurred while saving");
     } finally {
       setIsSubmitting(false);
     }
@@ -161,10 +154,10 @@ const CategoriesPage = () => {
     if (!deleteId) return;
     try {
       await categoryService.delete(deleteId);
-      toast.success("تم حذف الفئة");
-      setCategories(prev => prev.filter(c => c.id !== deleteId));
+      toast.success("Category deleted");
+      queryClient.setQueryData(['categories-data'], (old: Category[] | undefined) => old?.filter(c => c.id !== deleteId) || []);
     } catch (error) {
-      toast.error("فشل في الحذف");
+      toast.error("Failed to delete");
     } finally {
       setDeleteId(null);
     }
@@ -183,7 +176,7 @@ const CategoriesPage = () => {
     newCategories.splice(destinationIndex, 0, reorderedItem);
 
     // Optimistic UI update
-    setCategories(newCategories);
+    queryClient.setQueryData(['categories-data'], newCategories);
 
     // Prepare updates
     const updates = newCategories.map((cat, index) => ({
@@ -195,112 +188,141 @@ const CategoriesPage = () => {
       await categoryService.reorder(updates);
     } catch (error) {
       console.error(error);
-      toast.error("فشل في حفظ الترتيب");
-      fetchCategories(); // Revert on error
+      toast.error("Failed to save order");
+      queryClient.invalidateQueries({ queryKey: ['categories-data'] });
     }
   };
 
   if (isLoading) {
-    return <div className="flex justify-center items-center h-64"><Loader2 className="animate-spin text-gray-400" size={32} /></div>;
+    return (
+      <div className="space-y-6" dir="ltr">
+        {/* Header Skeleton */}
+        <div className="flex justify-between items-start mb-8">
+          <div className="flex gap-4">
+            <div className="w-12 h-12 bg-gray-200 rounded-xl animate-pulse"></div>
+            <div>
+              <div className="h-8 w-64 bg-gray-200 rounded-lg animate-pulse mb-2"></div>
+              <div className="h-4 w-48 bg-gray-200 rounded-lg animate-pulse"></div>
+            </div>
+          </div>
+          <div className="h-11 w-36 bg-gray-200 rounded-xl animate-pulse"></div>
+        </div>
+
+        {/* Categories List Skeleton */}
+        <div className="content-card p-6">
+          <div className="space-y-3">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="bg-white rounded-xl p-3 pl-4 flex items-center gap-4 border border-gray-100 shadow-sm animate-pulse">
+                <div className="w-8 h-8 rounded-xl bg-gray-200"></div>
+                <div className="w-16 h-16 rounded-xl bg-gray-200 flex-shrink-0"></div>
+                <div className="flex-1">
+                  <div className="h-5 w-48 bg-gray-200 rounded mb-2"></div>
+                </div>
+                <div className="flex gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-gray-200"></div>
+                  <div className="w-8 h-8 rounded-xl bg-gray-200"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
       <PageHeader
         icon={GripVertical}
-        title="إدارة الفئات"
-        subtitle="إضافة وتعديل وترتيب تصنيفات المنتجات"
+        title="Manage Categories"
+        subtitle="Add, edit and order product categories"
         actions={
-            <Button onClick={() => handleOpenModal()} className="bg-[hsl(var(--luxury-charcoal))] text-white hover:bg-[hsl(var(--luxury-charcoal))]/90 gap-2 rounded-xl shadow-lg shadow-[hsl(var(--luxury-charcoal))]/20 transition-all hover:scale-[1.02]">
-            <Plus size={18} />
-            فئة جديدة
+            <Button onClick={() => handleOpenModal()} className="rounded-xl shadow-md bg-primary hover:bg-primary/90 text-white px-5">
+            <Plus size={18} className="mr-2" />
+            New Category
           </Button>
         }
       />
 
-      <div className="space-y-4">
+      <div>
         {categories.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-[32px] border border-dashed border-gray-200">
-            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="text-center py-20 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
               <ImageIcon className="text-gray-300" size={32} />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-1">لا توجد فئات حالياً</h3>
-            <p className="text-gray-500 text-sm">قم بإضافة فئات جديدة لتظهر في المتجر</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-1">No categories available</h3>
+            <p className="text-gray-500 text-sm">Add new categories to appear in the store</p>
           </div>
         ) : (
           enabled && (
             <DragDropContext onDragEnd={onDragEnd}>
               <Droppable droppableId="categories">
                 {(provided: DroppableProvided) => (
-                  <ul 
+                  <div 
                     {...provided.droppableProps} 
                     ref={provided.innerRef}
-                    className="space-y-3"
+                    className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4"
                   >
                     {categories.map((category, index) => (
                       <Draggable key={category.id} draggableId={category.id} index={index}>
                         {(provided: DraggableProvided, snapshot: DraggableStateSnapshot) => (
-                          <li
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            className={`
-                              bg-white rounded-2xl p-3 pl-4 flex items-center gap-4 transition-all duration-300 group
-                              ${snapshot.isDragging 
-                                ? 'shadow-2xl shadow-[hsl(var(--luxury-charcoal))]/20 ring-2 ring-[hsl(var(--luxury-charcoal))] scale-[1.02] z-50 rotate-1' 
-                                : 'shadow-sm border border-transparent hover:border-[hsl(var(--luxury-cream))] hover:shadow-md'
-                              }
-                            `}
-                          >
-                            <div 
-                              {...provided.dragHandleProps} 
-                              className={`p-2 rounded-xl transition-colors cursor-grab active:cursor-grabbing
-                                ${snapshot.isDragging ? 'text-[hsl(var(--luxury-charcoal))] bg-[hsl(var(--luxury-cream))]' : 'text-gray-300 group-hover:text-gray-500 group-hover:bg-gray-50'}
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              className={`
+                                relative rounded-2xl overflow-hidden group cursor-pointer
+                                transition-all duration-300
+                                ${snapshot.isDragging 
+                                  ? 'shadow-2xl ring-2 ring-primary scale-[1.05] z-50 rotate-1' 
+                                  : 'shadow-sm hover:shadow-lg border border-gray-100'
+                                }
                               `}
+                              onClick={() => handleOpenModal(category)}
+                              style={{
+                                ...provided.draggableProps.style,
+                              }}
                             >
-                              <GripVertical size={20} />
-                            </div>
+                              {/* Image */}
+                              <div className="aspect-square bg-gray-50 relative">
+                                {category.image_url ? (
+                                  <img 
+                                    src={category.image_url} 
+                                    alt={category.name_en} 
+                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50">
+                                    <ImageIcon size={36} className="text-indigo-200" />
+                                  </div>
+                                )}
 
-                            <div className="w-16 h-16 rounded-xl bg-[hsl(var(--luxury-cream))]/30 overflow-hidden flex-shrink-0 relative border border-gray-100">
-                              {category.image_url ? (
-                                <img src={category.image_url} alt={category.name_en} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-[hsl(var(--luxury-stone))]">
-                                  <ImageIcon size={24} />
+                                {/* Order Badge + Drag Handle */}
+                                <div className="absolute top-2 left-2 flex items-center gap-1.5">
+                                  <div 
+                                    {...provided.dragHandleProps}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="w-7 h-7 rounded-lg bg-white/90 backdrop-blur-sm flex items-center justify-center cursor-grab active:cursor-grabbing shadow-sm hover:bg-white transition-colors"
+                                  >
+                                    <GripVertical size={12} className="text-gray-500" />
+                                  </div>
+                                  <span className="h-7 px-2 rounded-lg bg-white/90 backdrop-blur-sm flex items-center justify-center text-[0.65rem] font-bold text-gray-500 shadow-sm">
+                                    #{index + 1}
+                                  </span>
                                 </div>
-                              )}
-                            </div>
+                              </div>
 
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-bold text-[hsl(var(--luxury-charcoal))] text-lg font-luxury tracking-wide truncate">
-                                {category.name_en}
-                              </h3>
-                              {/* Description removed as requested */}
+                              {/* Name bar */}
+                              <div className="bg-white px-3 py-2.5">
+                                <h3 className="font-semibold text-gray-900 text-xs md:text-sm leading-snug truncate">
+                                  {category.name_en}
+                                </h3>
+                              </div>
                             </div>
-
-                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                onClick={() => handleOpenModal(category)}
-                                className="w-9 h-9 rounded-xl text-gray-400 hover:text-[hsl(var(--luxury-charcoal))] hover:bg-[hsl(var(--luxury-cream))]"
-                              >
-                                <Pencil size={18} />
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                onClick={() => handleDelete(category.id)}
-                                className="w-9 h-9 rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50"
-                              >
-                                <Trash2 size={18} />
-                              </Button>
-                            </div>
-                          </li>
                         )}
                       </Draggable>
                     ))}
                     {provided.placeholder}
-                  </ul>
+                  </div>
                 )}
               </Droppable>
             </DragDropContext>
@@ -309,30 +331,30 @@ const CategoriesPage = () => {
       </div>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[480px] p-0 overflow-hidden bg-white border-none shadow-2xl rounded-[32px]" dir="rtl">
-          <div className="bg-[hsl(var(--luxury-cream))]/30 px-6 pt-5 pb-4 border-b border-gray-100">
-            <DialogTitle className="text-xl text-[hsl(var(--luxury-charcoal))] font-luxury font-bold">
-              {editingCategory ? "تعديل الفئة" : "إضافة فئة جديدة"}
+        <DialogContent className="sm:max-w-[480px] p-0 overflow-hidden bg-white border-none shadow-2xl rounded-[32px]" dir="ltr">
+          <div className="bg-gray-50 px-6 pt-5 pb-4 border-b border-gray-100">
+            <DialogTitle className="text-xl text-gray-900 font-bold">
+              {editingCategory ? "Edit Category" : "Add New Category"}
             </DialogTitle>
           </div>
 
           <form onSubmit={handleSubmit} className="px-6 pt-2 pb-6 space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-sm font-semibold text-[hsl(var(--luxury-charcoal))]">اسم الفئة (English)</Label>
+              <Label htmlFor="name" className="text-sm font-semibold text-gray-900">Category Name</Label>
               <div className="relative">
                 <Input 
                   id="name" 
                   value={nameEn} 
                   onChange={(e) => setNameEn(e.target.value)} 
                   placeholder="Ex: Travel Bags"
-                  className="text-left h-12 rounded-xl border-gray-200 bg-gray-50/50 focus:bg-white focus:border-[hsl(var(--luxury-charcoal))] transition-all pr-4 pl-4"
+                  className="text-left h-12 rounded-xl border-gray-200 bg-gray-50/50 focus:bg-white focus:border-primary transition-all pr-4 pl-4"
                   dir="ltr"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="image" className="text-sm font-semibold text-[hsl(var(--luxury-charcoal))]">صورة الفئة</Label>
+              <Label htmlFor="image" className="text-sm font-semibold text-gray-900">Category Image</Label>
               <div className="relative group cursor-pointer">
                 <Input 
                   id="image" 
@@ -344,7 +366,7 @@ const CategoriesPage = () => {
                 
                 <div 
                   onClick={() => document.getElementById('image')?.click()}
-                  className="w-full h-40 rounded-2xl border-2 border-dashed border-gray-200 hover:border-[hsl(var(--luxury-charcoal))] hover:bg-gray-50 transition-all flex flex-col items-center justify-center gap-2 overflow-hidden relative group"
+                  className="w-full h-40 rounded-2xl border-2 border-dashed border-gray-200 hover:border-primary hover:bg-gray-50 transition-all flex flex-col items-center justify-center gap-2 overflow-hidden relative group"
                 >
                   {imageFile ? (
                     <img src={URL.createObjectURL(imageFile)} className="w-full h-full object-cover" />
@@ -352,10 +374,10 @@ const CategoriesPage = () => {
                     <img src={currentImageUrl} className="w-full h-full object-cover" />
                   ) : (
                     <>
-                      <div className="w-12 h-12 rounded-full bg-[hsl(var(--luxury-cream))] flex items-center justify-center text-[hsl(var(--luxury-charcoal))] mb-1 group-hover:scale-110 transition-transform">
+                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-1 group-hover:scale-110 transition-transform">
                         <ImageIcon size={20} />
                       </div>
-                      <p className="text-sm font-medium text-gray-600">اضغط لرفع صورة</p>
+                      <p className="text-sm font-medium text-gray-600">Click to upload image</p>
                       <p className="text-xs text-gray-400">PNG, JPG up to 5MB</p>
                     </>
                   )}
@@ -363,7 +385,7 @@ const CategoriesPage = () => {
                   {(imageFile || currentImageUrl) && (
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                       <p className="text-white font-medium flex items-center gap-2">
-                        <Pencil size={16} /> تغيير الصورة
+                        <Pencil size={16} /> Change Image
                       </p>
                     </div>
                   )}
@@ -372,51 +394,56 @@ const CategoriesPage = () => {
             </div>
 
             <div className="flex gap-3 pt-2">
-               <Button 
-                type="button" 
-                variant="outline" 
-                onClick={handleCloseModal}
-                className="flex-1 h-12 rounded-xl border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-              >
-                إلغاء
-              </Button>
               <Button 
                 type="submit" 
                 disabled={isSubmitting} 
-                className="flex-1 h-12 rounded-xl bg-[hsl(var(--luxury-charcoal))] text-white hover:bg-[hsl(var(--luxury-charcoal))]/90 shadow-lg shadow-[hsl(var(--luxury-charcoal))]/20"
+                className="flex-1 h-12 rounded-xl shadow-lg"
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="ml-2 animate-spin" size={18} />
-                    جاري الحفظ...
+                    <Loader2 className="mr-2 animate-spin" size={18} />
+                    Saving...
                   </>
                 ) : (
                   <>
-                    <Save className="ml-2" size={18} />
-                     حفظ التغييرات
+                    <Save className="mr-2" size={18} />
+                    Save Changes
                   </>
                 )}
               </Button>
             </div>
+
+            {editingCategory && (
+              <div className="border-t border-gray-100 pt-4 mt-2">
+                <button
+                  type="button"
+                  onClick={() => { handleCloseModal(); handleDelete(editingCategory.id); }}
+                  className="w-full flex items-center justify-center gap-2 text-sm font-medium text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl py-3 transition-colors"
+                >
+                  <Trash2 size={16} />
+                  Delete this category
+                </button>
+              </div>
+            )}
           </form>
         </DialogContent>
       </Dialog>
 
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
-        <AlertDialogContent className="bg-white rounded-[32px] border-none shadow-2xl" dir="rtl">
+        <AlertDialogContent className="bg-white rounded-[32px] border-none shadow-2xl" dir="ltr">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl font-luxury font-bold text-[hsl(var(--luxury-charcoal))]">حذف الفئة</AlertDialogTitle>
+            <AlertDialogTitle className="text-xl font-bold text-gray-900">Delete Category</AlertDialogTitle>
             <AlertDialogDescription className="text-gray-500">
-              هل أنت متأكد من رغبتك في حذف هذه الفئة؟ لا يمكن التراجع عن هذا الإجراء، وقد يؤثر على المنتجات المرتبطة بها.
+              Are you sure you want to delete this category? This cannot be undone and may affect linked products.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2 sm:gap-0 mt-4">
-            <AlertDialogCancel className="rounded-xl border-gray-200 hover:bg-gray-50 text-gray-600 h-11">إلغاء</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-xl border-gray-200 hover:bg-gray-50 text-gray-600 h-11">Cancel</AlertDialogCancel>
             <AlertDialogAction 
               onClick={confirmDelete}
               className="bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 rounded-xl h-11 border border-red-100 shadow-none"
             >
-              حذف
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

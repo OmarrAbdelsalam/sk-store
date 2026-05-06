@@ -51,8 +51,34 @@ const HandbagsSection = () => {
   }, [emblaApi, onSelect]);
 
   // Don't render until mounted to avoid hydration mismatch
-  if (!mounted) return null;
-  if (loading) return null;
+  if (!mounted || (loading && products.length === 0)) {
+    return (
+      <section className="py-16 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-10">
+            <div className="h-8 w-48 bg-muted animate-pulse mx-auto mb-2 rounded" />
+            <div className="w-24 h-[1px] bg-muted mx-auto mt-3" />
+          </div>
+          <div className="overflow-hidden">
+            <div className="flex -ml-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="flex-[0_0_50%] md:flex-[0_0_33.33%] lg:flex-[0_0_25%] pl-4 min-w-0">
+                  <div className="space-y-4 animate-pulse">
+                    <div className="aspect-[3/4] w-full rounded-lg bg-muted" />
+                    <div className="space-y-2">
+                      <div className="h-4 bg-muted rounded w-3/4" />
+                      <div className="h-4 bg-muted rounded w-1/2" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+  
   if (!products || products.length === 0) return null;
 
   // Filter products by category "Handbag" or similar

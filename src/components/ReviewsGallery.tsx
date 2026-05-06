@@ -10,14 +10,53 @@ const ReviewsGallery = () => {
   const t = useTranslations("ReviewsGallery");
   const [mounted, setMounted] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const [items, setItems] = useState<CustomerLoveItem[]>([]);
+  const [items, setItems] = useState<CustomerLoveItem[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const local = localStorage.getItem('reviews_gallery_cache');
+        if (local) return JSON.parse(local);
+      } catch (e) {}
+    }
+    return [];
+  });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setMounted(true);
-    customerLoveService.getActiveItems().then(setItems).catch(() => setItems([]));
+    customerLoveService.getActiveItems()
+      .then(data => {
+        setItems(data);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('reviews_gallery_cache', JSON.stringify(data));
+        }
+      })
+      .catch(() => setItems([]))
+      .finally(() => setLoading(false));
   }, []);
 
-  if (!mounted || items.length === 0) return null;
+  if (!mounted || (loading && items.length === 0)) {
+    return (
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-10">
+            <div className="h-8 w-48 bg-muted animate-pulse mx-auto mb-2 rounded" />
+            <div className="h-4 w-64 bg-muted animate-pulse mx-auto mt-2 rounded" />
+            <div className="w-24 h-[1px] bg-muted mx-auto mt-4" />
+          </div>
+          <div className="reviews-grid grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+            {Array.from({ length: 8 }).map((_, index) => (
+              <div
+                key={index}
+                className={`relative aspect-square lg:aspect-[4/3] bg-muted animate-pulse rounded-xl ${index >= 6 ? 'hidden lg:block' : ''}`}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (items.length === 0) return null;
 
   return (
     <section className="py-16 bg-white">
@@ -35,11 +74,19 @@ const ReviewsGallery = () => {
 
         {/* Gallery Grid */}
         <div className="reviews-grid grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-          {items.slice(0, 8).map((item, index) => (
+          {items.slice(0, 8).map((item, index) => {
+            // Mobile (2 cols) reversed: positions 1,4,5 → indices 0,3,4
+            const mobileRev = [0, 3, 4].includes(index);
+            // Desktop (4 cols) reversed: positions 1,3,6,8 → indices 0,2,5,7
+            const desktopRev = [0, 2, 5, 7].includes(index);
+
+            return (
             <div
               key={item.id}
-              className="group relative aspect-square lg:aspect-[4/3] overflow-hidden bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer"
+              className={`group relative aspect-square lg:aspect-[4/3] overflow-hidden bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer ${index >= 6 ? 'hidden lg:block' : ''}`}
               onClick={() => setSelectedIndex(index)}
+              {...(mobileRev ? { 'data-mobile-rev': '' } : {})}
+              {...(desktopRev ? { 'data-desktop-rev': '' } : {})}
             >
               {/* Image */}
               <div className="relative w-full h-full">
@@ -69,7 +116,8 @@ const ReviewsGallery = () => {
                 )}
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* CTA */}

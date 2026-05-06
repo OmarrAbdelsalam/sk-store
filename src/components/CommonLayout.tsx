@@ -1,11 +1,10 @@
 "use client";
 
 import { usePathname } from 'next/navigation';
-import TopBanner from '@/components/TopBanner';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 
-export default function CommonLayout({ children }: { children: React.ReactNode }) {
+export default function CommonLayout({ children, topBanner }: { children: React.ReactNode, topBanner?: React.ReactNode }) {
   const pathname = usePathname();
   // Check if the path contains "/admin" (accounting for locale prefix like /en/admin or /ar/admin)
   const isAdmin = pathname?.includes('/admin');
@@ -16,7 +15,7 @@ export default function CommonLayout({ children }: { children: React.ReactNode }
 
   return (
     <>
-      <TopBanner />
+      {topBanner}
       <Navigation />
       <main id="main-content" className="pb-16 md:pb-24">
         {children}

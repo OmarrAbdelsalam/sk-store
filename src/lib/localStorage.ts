@@ -1,6 +1,14 @@
 // Local Storage Utilities for Frontend-Only Store
 // Replaces backend session and cart management
 
+export interface AppliedPromotion {
+  type: "promo_code" | "bogo" | "free_shipping" | "get_gift";
+  promotionId: string;
+  name: string;
+  amountSaved: number;
+  code?: string; // for promo_code type
+}
+
 export interface CartItem {
   id: string;
   productId: string;
@@ -27,6 +35,11 @@ export interface LocalCart {
   subtotal: number;
   discountAmount: number;
   discountCode?: string;
+  bogoDiscount: number;
+  bogoPromotionId?: string;
+  freeShippingApplied: boolean;
+  freeShippingPromotionId?: string;
+  appliedPromotions: AppliedPromotion[];
   total: number;
   updatedAt: string;
 }
@@ -74,6 +87,9 @@ export const getLocalCart = (): LocalCart => {
       items: [],
       subtotal: 0,
       discountAmount: 0,
+      bogoDiscount: 0,
+      freeShippingApplied: false,
+      appliedPromotions: [],
       total: 0,
       updatedAt: new Date().toISOString(),
     };
@@ -84,7 +100,14 @@ export const getLocalCart = (): LocalCart => {
   
   if (cartData) {
     try {
-      return JSON.parse(cartData);
+      const parsed = JSON.parse(cartData);
+      // Ensure new fields have defaults for existing carts
+      return {
+        bogoDiscount: 0,
+        freeShippingApplied: false,
+        appliedPromotions: [],
+        ...parsed,
+      } as LocalCart;
     } catch (error) {
       console.error('Error parsing cart data:', error);
     }
@@ -97,6 +120,9 @@ export const getLocalCart = (): LocalCart => {
     items: [],
     subtotal: 0,
     discountAmount: 0,
+    bogoDiscount: 0,
+    freeShippingApplied: false,
+    appliedPromotions: [],
     total: 0,
     updatedAt: new Date().toISOString(),
   };
@@ -141,7 +167,7 @@ export const addToLocalCart = (item: Omit<CartItem, 'id'>, quantity = 1): LocalC
     const price = parseFloat(String(priceStr).replace(/[^\d.]/g, '')) || 0;
     return sum + (price * item.quantity);
   }, 0);
-  cart.total = cart.subtotal - cart.discountAmount;
+  cart.total = Math.max(0, cart.subtotal - cart.discountAmount - (cart.bogoDiscount || 0));
 
   saveLocalCart(cart);
   return cart;
@@ -166,7 +192,7 @@ export const updateCartItemQuantity = (itemId: string, quantity: number): LocalC
       const price = parseFloat(String(priceStr).replace(/[^\d.]/g, '')) || 0;
       return sum + (price * item.quantity);
     }, 0);
-    cart.total = cart.subtotal - cart.discountAmount;
+    cart.total = Math.max(0, cart.subtotal - cart.discountAmount - (cart.bogoDiscount || 0));
 
     saveLocalCart(cart);
   }
@@ -184,6 +210,11 @@ export const clearLocalCart = (): LocalCart => {
   cart.subtotal = 0;
   cart.discountAmount = 0;
   cart.discountCode = undefined;
+  cart.bogoDiscount = 0;
+  cart.bogoPromotionId = undefined;
+  cart.freeShippingApplied = false;
+  cart.freeShippingPromotionId = undefined;
+  cart.appliedPromotions = [];
   cart.total = 0;
   
   saveLocalCart(cart);
@@ -194,7 +225,13 @@ export const applyDiscountToCart = (discountCode: string, discountAmount: number
   const cart = getLocalCart();
   cart.discountCode = discountCode;
   cart.discountAmount = discountAmount;
-  cart.total = Math.max(0, cart.subtotal - cart.discountAmount);
+  cart.total = Math.max(0, cart.subtotal - cart.discountAmount - cart.bogoDiscount);
+
+  // Upsert promo_code into appliedPromotions
+  cart.appliedPromotions = [
+    ...cart.appliedPromotions.filter(p => p.type !== 'promo_code'),
+    { type: 'promo_code', promotionId: '', name: discountCode, amountSaved: discountAmount, code: discountCode },
+  ];
   
   saveLocalCart(cart);
   return cart;
@@ -204,8 +241,73 @@ export const removeDiscountFromCart = (): LocalCart => {
   const cart = getLocalCart();
   cart.discountCode = undefined;
   cart.discountAmount = 0;
-  cart.total = cart.subtotal;
+  cart.total = Math.max(0, cart.subtotal - cart.bogoDiscount);
   
+  // Remove promo_code from appliedPromotions
+  cart.appliedPromotions = cart.appliedPromotions.filter(p => p.type !== 'promo_code');
+  
+  saveLocalCart(cart);
+  return cart;
+};
+
+// ── BOGO helpers ─────────────────────────────────────────────────────────────
+
+export const applyBogoToCart = (
+  promotionId: string,
+  bogoDiscount: number,
+  promotionName: string
+): LocalCart => {
+  const cart = getLocalCart();
+  cart.bogoDiscount = bogoDiscount;
+  cart.bogoPromotionId = promotionId;
+
+  // Upsert into appliedPromotions
+  cart.appliedPromotions = [
+    ...cart.appliedPromotions.filter(p => p.type !== 'bogo'),
+    { type: 'bogo', promotionId, name: promotionName, amountSaved: bogoDiscount },
+  ];
+
+  cart.total = Math.max(0, cart.subtotal - cart.discountAmount - cart.bogoDiscount);
+  saveLocalCart(cart);
+  return cart;
+};
+
+export const removeBogoFromCart = (): LocalCart => {
+  const cart = getLocalCart();
+  cart.bogoDiscount = 0;
+  cart.bogoPromotionId = undefined;
+  cart.appliedPromotions = cart.appliedPromotions.filter(p => p.type !== 'bogo');
+  cart.total = Math.max(0, cart.subtotal - cart.discountAmount);
+  saveLocalCart(cart);
+  return cart;
+};
+
+// ── Free Shipping helpers ─────────────────────────────────────────────────────
+
+export const applyFreeShippingToCart = (
+  promotionId: string,
+  promotionName: string,
+  shippingAmountSaved: number
+): LocalCart => {
+  const cart = getLocalCart();
+  cart.freeShippingApplied = true;
+  cart.freeShippingPromotionId = promotionId;
+
+  // Upsert into appliedPromotions
+  cart.appliedPromotions = [
+    ...cart.appliedPromotions.filter(p => p.type !== 'free_shipping'),
+    { type: 'free_shipping', promotionId, name: promotionName, amountSaved: shippingAmountSaved },
+  ];
+
+  saveLocalCart(cart);
+  return cart;
+};
+
+export const removeFreeShippingFromCart = (): LocalCart => {
+  const cart = getLocalCart();
+  cart.freeShippingApplied = false;
+  cart.freeShippingPromotionId = undefined;
+  cart.appliedPromotions = cart.appliedPromotions.filter(p => p.type !== 'free_shipping');
   saveLocalCart(cart);
   return cart;
 };

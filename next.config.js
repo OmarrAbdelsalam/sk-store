@@ -3,7 +3,7 @@ const createNextIntlPlugin = require('next-intl/plugin');
 
 const withNextIntl = createNextIntlPlugin({
   defaultLocale: 'en',
-  locales: ['en', 'ar'],
+  locales: ['en'],
 });
 
 const nextConfig = {

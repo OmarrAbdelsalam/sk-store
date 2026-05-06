@@ -1,4 +1,6 @@
 import { supabase } from "@/lib/supabaseClient";
+import type { AppliedPromotion } from "@/lib/localStorage";
+import { promotionService } from "@/services/promotions";
 
 export type Order = {
   id: string;
@@ -28,6 +30,7 @@ export type Order = {
   // Timestamps
   created_at?: string;
   updated_at?: string;
+  is_read?: boolean;
   
   // Relations
   items?: OrderItem[];
@@ -75,6 +78,8 @@ export type CreateOrderInput = {
   discountAmount?: number;
   discountCode?: string;
   total: number;
+  appliedPromotions?: AppliedPromotion[];
+  bogoDiscount?: number;
 };
 
 // Generate order number
@@ -107,6 +112,7 @@ export const orderService = {
         discount_amount: input.discountAmount || 0,
         discount_code: input.discountCode,
         total: input.total,
+        applied_promotions: input.appliedPromotions ? JSON.stringify(input.appliedPromotions) : null,
       })
       .select()
       .single();
@@ -117,14 +123,14 @@ export const orderService = {
     if (input.items.length > 0) {
       const orderItems = input.items.map(item => ({
         order_id: order.id,
-        product_id: item.productId,
-        product_name: item.productName,
-        product_name_ar: item.productNameAr,
-        product_image: item.productImage,
-        color_id: item.colorId,
-        color_name: item.colorName,
-        size_id: item.sizeId,
-        size_name: item.sizeName,
+        product_id: item.productId || null,
+        product_name: item.productName || '',
+        product_name_ar: item.productNameAr || null,
+        product_image: item.productImage || null,
+        color_id: item.colorId || null,
+        color_name: item.colorName || null,
+        size_id: item.sizeId || null,
+        size_name: item.sizeName || null,
         quantity: item.quantity,
         unit_price: item.unitPrice,
         total_price: item.unitPrice * item.quantity,
@@ -136,6 +142,15 @@ export const orderService = {
 
       if (itemsError) {
         console.error("Error creating order items:", itemsError);
+      }
+    }
+
+    // 3. Increment promo code usage (non-blocking)
+    if (input.appliedPromotions?.length) {
+      const promoCodeEntry = input.appliedPromotions.find(p => p.type === 'promo_code');
+      if (promoCodeEntry) {
+        promotionService.incrementUsage(promoCodeEntry.promotionId)
+          .catch(err => console.error('Failed to increment promo code usage:', err));
       }
     }
 
@@ -210,5 +225,21 @@ export const orderService = {
 
     if (error) throw error;
     return data as Order;
+  },
+
+  async markAsRead(id: string): Promise<void> {
+    const { error } = await supabase
+      .from("orders")
+      .update({ is_read: true })
+      .eq("id", id);
+    if (error) throw error;
+  },
+
+  async markAllRead(): Promise<void> {
+    const { error } = await supabase
+      .from("orders")
+      .update({ is_read: true })
+      .eq("is_read", false);
+    if (error) throw error;
   },
 };

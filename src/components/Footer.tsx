@@ -4,6 +4,7 @@ import { Instagram, Facebook } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslations, useLocale } from 'next-intl';
 import { useCategories } from "@/hooks/useCategories";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
@@ -12,6 +13,11 @@ const Footer = () => {
   const locale = useLocale();
   const router = useRouter();
   const { categories } = useCategories();
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const goToCategory = (id: string, name: string) => {
     const slug = name.toLowerCase().replace(/\s+/g, '-');
@@ -68,7 +74,7 @@ const Footer = () => {
           <div>
             <h5 className="font-semibold mb-4">{t('Footer.shop')}</h5>
             <ul className="space-y-2 text-sm">
-              {categories.map((category) => {
+              {mounted && categories.map((category) => {
                 const categoryName = locale === 'ar' ? category.arabicName : category.englishName;
                 return (
                   <li key={category.key}>
@@ -134,16 +140,6 @@ const Footer = () => {
             <div className="text-center md:text-left">
               <p className="text-primary-foreground text-sm">
                 © {new Date().getFullYear()} SK Bags. {locale === 'ar' ? 'جميع الحقوق محفوظة.' : 'All rights reserved.'}
-              </p>
-              <p className="text-primary-foreground/50 text-xs mt-1 font-light tracking-wider">
-                Developed by <a 
-                  href="https://wa.me/201010314809" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="font-medium text-primary-foreground/80 hover:underline transition-all cursor-pointer"
-                >
-                  madX
-                </a>
               </p>
             </div>
             <div className="flex items-center space-x-6">

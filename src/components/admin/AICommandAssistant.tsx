@@ -87,8 +87,8 @@ export const AICommandAssistant = ({ onExecuteCommand, context, existingItems = 
           if (file) {
             if (file.size > 5 * 1024 * 1024) {
               toast({ 
-                title: "خطأ", 
-                description: "حجم الصورة كبير جداً (الحد الأقصى 5MB)", 
+                title: "Error", 
+                description: "حجم Imagesة كبير جداً (الحد الأقصى 5MB)", 
                 variant: "destructive" 
               });
               return;
@@ -110,13 +110,13 @@ export const AICommandAssistant = ({ onExecuteCommand, context, existingItems = 
                 }]);
                 toast({ 
                   title: "تم", 
-                  description: `تم لصق الصورة واستخراج اللون: ${colorResult.name}` 
+                  description: `تم لصق Imagesة واستخراج اللون: ${colorResult.name}` 
                 });
               } catch (error) {
                 setUploadedImages(prev => [...prev, { file, preview }]);
                 toast({ 
                   title: "تم", 
-                  description: "تم لصق الصورة (تعذر استخراج اللون)" 
+                  description: "تم لصق Imagesة (تعذر استخراج اللون)" 
                 });
               }
             };
@@ -141,7 +141,7 @@ export const AICommandAssistant = ({ onExecuteCommand, context, existingItems = 
       const file = files[i];
       
       if (file.size > 5 * 1024 * 1024) {
-        toast({ title: "خطأ", description: `${file.name}: حجم الصورة كبير جداً (الحد الأقصى 5MB)`, variant: "destructive" });
+        toast({ title: "Error", description: `${file.name}: حجم Imagesة كبير جداً (الحد الأقصى 5MB)`, variant: "destructive" });
         continue;
       }
       
@@ -208,13 +208,13 @@ export const AICommandAssistant = ({ onExecuteCommand, context, existingItems = 
 الأسماء الموجودة حالياً: ${existingNamesStr}
 
 قم بتحليل الأمر أولاً:
-1. إذا كان الأمر إنشاء عنصر جديد، تحقق من التشابه مع الأسماء الموجودة
-2. إذا كان الاسم المطلوب موجود بالضبط، أرجع: {"duplicate": "exact", "existing": "الاسم الموجود"}
-3. إذا كان الاسم المطلوب مشابه لاسم موجود (نفس المعنى أو غلط إملائي بسيط)، أرجع: {"duplicate": "similar", "existing": ["الأسماء المشابهة"]}
-4. إذا كان الاسم مختلف تماماً (مثل "شنط" و "شنط كروشيه" مختلفين)، أرجع: {"duplicate": "none"}
-5. إذا كان الأمر ليس إنشاء (مثل حذف أو تعديل)، أرجع: {"duplicate": "none"}
+1. إذا كان الأمر Create عنصر جديد، تحقق from التشابه مع الأسماء الموجودة
+2. إذا كان Name المطلوب موجود بالضبط، أرجع: {"duplicate": "exact", "existing": "Name الموجود"}
+3. إذا كان Name المطلوب مشابه لاسم موجود (نفس المعنى أو غلط إملائي بسيط)، أرجع: {"duplicate": "similar", "existing": ["الأسماء المشابهة"]}
+4. إذا كان Name مختلف تماماً (مثل "شنط" و "شنط كروشيه" مختلفين)، أرجع: {"duplicate": "none"}
+5. إذا كان الأمر ليس Create (مثل Delete أو Edit)، أرجع: {"duplicate": "none"}
 
-أرجع JSON فقط بدون أي نص إضافي.`
+أرجع JSON only بدون أي نص إضافي.`
             }
           ],
           temperature: 0.3
@@ -253,21 +253,21 @@ export const AICommandAssistant = ({ onExecuteCommand, context, existingItems = 
             role: "user",
             content: `أنا في صفحة ${context}. المستخدم كتب الأمر التالي: "${userInput}"
 
-قم بتحليل الأمر وإرجاع JSON فقط بهذا الشكل:
+قم بتحليل الأمر وإرجاع JSON only بهذا الشكل:
 
 ${context === "product-edit" ? `
-للتعديل (منتج):
+للEdit (fromتج):
 {
   "action": "update",
   "items": [
     {
-      "new_name_ar": "الاسم الجديد بالعربي (اختياري)",
+      "new_name_ar": "Name New بArabic (اختياري)",
       "new_name_en": "New English Name (optional)",
-      "new_description_ar": "الوصف الجديد بالعربي (اختياري)",
+      "new_description_ar": "الوصف New بArabic (اختياري)",
       "new_description_en": "New English Description (optional)",
-      "new_material_ar": "المادة الجديدة بالعربي (اختياري)",
+      "new_material_ar": "المادة الNew بArabic (اختياري)",
       "new_material_en": "New Material (optional)",
-      "new_category_name": "الفئة الجديدة (اختياري)",
+      "new_category_name": "Category الNew (اختياري)",
       "new_price": 150.00,
       "is_active": true
     }
@@ -275,109 +275,109 @@ ${context === "product-edit" ? `
 }
 
 أمثلة:
-- "عدل الاسم إلى سماعات بلوتوث" → new_name_ar + new_name_en
+- "عدل Name إلى سماعات بلوتوث" → new_name_ar + new_name_en
 - "عدل الوصف إلى سماعات عالية الجودة" → new_description_ar + new_description_en
 - "عدل المادة إلى قطن 100%" → new_material_ar + new_material_en
-- "غير الفئة إلى إلكترونيات" → new_category_name
-- "غير السعر إلى 299" → new_price
-- "خلي المنتج نشط" → is_active: true
-- "خلي المنتج غير نشط" → is_active: false
+- "غير Category إلى إلكترونيات" → new_category_name
+- "غير Price إلى 299" → new_price
+- "خلي Product Active" → is_active: true
+- "خلي Product غير Active" → is_active: false
 ` : context === "products" ? `
-للإنشاء (منتج):
+للCreate (fromتج):
 {
   "action": "create",
   "items": [
     {
-      "name_ar": "الاسم بالعربي",
+      "name_ar": "Name بArabic",
       "name_en": "English Name",
-      "category_name": "اسم الفئة (عربي أو إنجليزي)",
-      "description_ar": "الوصف بالعربي (اختياري)",
+      "category_name": "اسم Category (عربي أو إنجليزي)",
+      "description_ar": "الوصف بArabic (اختياري)",
       "description_en": "English Description (optional)",
       "price": 100.50
     }
   ]
 }
 
-للتعديل (منتج):
+للEdit (fromتج):
 {
   "action": "update",
   "items": [
     {
-      "old_name": "الاسم القديم (عربي أو إنجليزي)",
-      "new_name_ar": "الاسم الجديد بالعربي",
+      "old_name": "Name القديم (عربي أو إنجليزي)",
+      "new_name_ar": "Name New بArabic",
       "new_name_en": "New English Name",
-      "new_category_name": "الفئة الجديدة (اختياري)",
-      "new_description_ar": "الوصف الجديد (اختياري)",
+      "new_category_name": "Category الNew (اختياري)",
+      "new_description_ar": "الوصف New (اختياري)",
       "new_description_en": "New Description (optional)",
       "new_price": 150.00
     }
   ]
 }
 
-للحذف (منتج):
+للDelete (fromتج):
 {
   "action": "delete",
   "items": [
     {
-      "name_ar": "الاسم بالعربي",
+      "name_ar": "Name بArabic",
       "name_en": "English Name"
     }
   ]
 }
 ` : `
-للإنشاء (فئة):
+للCreate (فئة):
 {
   "action": "create",
   "items": [
     {
-      "name_ar": "الاسم بالعربي",
+      "name_ar": "Name بArabic",
       "name_en": "English Name"
     }
   ]
 }
 
-للتعديل (فئة):
+للEdit (فئة):
 {
   "action": "update",
   "items": [
     {
-      "old_name": "الاسم القديم (عربي أو إنجليزي)",
-      "new_name_ar": "الاسم الجديد بالعربي",
+      "old_name": "Name القديم (عربي أو إنجليزي)",
+      "new_name_ar": "Name New بArabic",
       "new_name_en": "New English Name"
     }
   ]
 }
 
-للحذف (فئة):
+للDelete (فئة):
 {
   "action": "delete",
   "items": [
     {
-      "name_ar": "الاسم بالعربي",
+      "name_ar": "Name بArabic",
       "name_en": "English Name"
     }
   ]
 }
 `}
 
-لحذف الكل:
+لDelete All:
 {
   "action": "delete_all",
   "items": []
 }
 
 ملاحظات:
-- إذا كان الأمر "أنشئ ${context === "products" ? "منتج" : "فئة"} ملابس وشنط" فأرجع عنصرين منفصلين
-- إذا كان "امسح ${context === "products" ? "منتج" : "فئة"} ملابس" فأرجع action: "delete"
-- إذا كان "امسح كل ${context === "products" ? "المنتجات" : "الفئات"}" فأرجع action: "delete_all"
-- إذا كان "عدل ${context === "products" ? "منتج" : "فئة"} ملابس إلى أزياء" فأرجع action: "update" مع old_name و new_name
-- إذا ذكر اسم عربي فقط، ترجمه للإنجليزي
-- إذا ذكر اسم إنجليزي فقط، ترجمه للعربي
-${context === "products" || context === "product-edit" ? `- إذا لم يذكر السعر، استخدم 0
-- إذا لم يذكر الفئة، استخدم أول فئة متاحة
-- IMPORTANT: للمنتجات، قم بتوليد وصف تسويقي احترافي بالعربي والإنجليزي (2-3 جمل) حتى لو لم يذكر المستخدم وصف
-- الوصف يجب أن يكون جذاب ويبرز مميزات المنتج` : ""}
-- أرجع JSON فقط بدون أي نص إضافي`
+- إذا كان الأمر "أنشئ ${context === "products" ? "fromتج" : "فئة"} ملابس وشنط" فأرجع عنصرين fromفصلين
+- إذا كان "امسح ${context === "products" ? "fromتج" : "فئة"} ملابس" فأرجع action: "delete"
+- إذا كان "امسح كل ${context === "products" ? "Productات" : "الفئات"}" فأرجع action: "delete_all"
+- إذا كان "عدل ${context === "products" ? "fromتج" : "فئة"} ملابس إلى أزياء" فأرجع action: "update" مع old_name و new_name
+- إذا ذكر اسم عربي only، ترجمه للإنجليزي
+- إذا ذكر اسم إنجليزي only، ترجمه للعربي
+${context === "products" || context === "product-edit" ? `- إذا لم يذكر Price، استخدم 0
+- إذا لم يذكر Category، استخدم أول فئة متاحة
+- IMPORTANT: للfromتجات، قم بتوليد وصف تسويقي احترافي بArabic والإنجليزي (2-3 جمل) Up to لو لم يذكر المستخدم وصف
+- الوصف يجب أن يكون جذاب ويبرز Featuredات Product` : ""}
+- أرجع JSON only بدون أي نص إضافي`
           }
         ],
         temperature: 0.3
@@ -403,8 +403,8 @@ ${context === "products" || context === "product-edit" ? `- إذا لم يذكر
           // Validate the parsed command
           if (!parsed.action) {
             toast({ 
-              title: "خطأ", 
-              description: "لم أتمكن من فهم الأمر. حاول مرة أخرى.", 
+              title: "Error", 
+              description: "لم أتمكن from فهم الأمر. حاول مرة أخرى.", 
               variant: "destructive" 
             });
             return;
@@ -431,22 +431,22 @@ ${context === "products" || context === "product-edit" ? `- إذا لم يذكر
             }
           } else {
             toast({ 
-              title: "خطأ", 
-              description: "لم أتمكن من فهم الأمر. حاول مرة أخرى.", 
+              title: "Error", 
+              description: "لم أتمكن from فهم الأمر. حاول مرة أخرى.", 
               variant: "destructive" 
             });
           }
         } catch (error) {
           console.error("Parse error:", error);
           toast({ 
-            title: "خطأ", 
+            title: "Error", 
             description: "فشل في تحليل الأمر. حاول صياغته بشكل أوضح.", 
             variant: "destructive" 
           });
         }
       }
     } catch (error) {
-      toast({ title: "خطأ", description: "حدث خطأ في الاتصال", variant: "destructive" });
+      toast({ title: "Error", description: "حدث Error في الاتصال", variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -467,10 +467,10 @@ ${context === "products" || context === "product-edit" ? `- إذا لم يذكر
       } else {
         setParsedCommand(null);
         setCurrentItemIndex(0);
-        toast({ title: "تم", description: "تم تنفيذ جميع الأوامر بنجاح" });
+        toast({ title: "تم", description: "Commands executed successfully" });
       }
     } catch (error) {
-      toast({ title: "خطأ", description: "فشل في تنفيذ الأمر", variant: "destructive" });
+      toast({ title: "Error", description: "Failed to execute command", variant: "destructive" });
     }
   };
 
@@ -508,7 +508,7 @@ ${context === "products" || context === "product-edit" ? `- إذا لم يذكر
       <div className="bg-gradient-to-r from-[#ff6b4a] to-[#ff8a6b] p-4 flex items-center justify-between">
         <div className="flex items-center gap-2 text-white">
           <Bot size={20} />
-          <span className="font-bold">مساعد AI</span>
+          <span className="font-bold">Assistant AI</span>
         </div>
         <button onClick={() => setIsOpen(false)} className="text-white hover:bg-white/20 rounded-lg p-1">
           <X size={20} />
@@ -523,21 +523,21 @@ ${context === "products" || context === "product-edit" ? `- إذا لم يذكر
               <p className={`text-sm ${duplicateWarning.type === 'exact' ? 'text-red-800' : 'text-yellow-800'} mb-2 flex items-center gap-2`}>
                 <AlertTriangle size={16} />
                 {duplicateWarning.type === 'exact' ? (
-                  <span className="font-bold">⚠️ هذا الاسم موجود بالفعل!</span>
+                  <span className="font-bold">⚠️ Name already exists!</span>
                 ) : (
-                  <span className="font-bold">⚠️ يوجد أسماء مشابهة</span>
+                  <span className="font-bold">⚠️ Similar names exist</span>
                 )}
               </p>
               
               <div className="bg-white rounded-lg p-3 space-y-2">
                 {duplicateWarning.type === 'exact' ? (
                   <p className="text-sm text-gray-700">
-                    الاسم <span className="font-bold">"{duplicateWarning.names[0]}"</span> موجود بالفعل. لا يمكن إنشاء عنصر بنفس الاسم.
+                    Name <span className="font-bold">"{duplicateWarning.names[0]}"</span> Already exists. لا يمكن Create عنصر بنفس Name.
                   </p>
                 ) : (
                   <>
                     <p className="text-sm text-gray-700 mb-2">
-                      الأسماء التالية مشابهة للاسم المطلوب:
+                      The following names are similar to the requested name:
                     </p>
                     <ul className="list-disc list-inside space-y-1">
                       {duplicateWarning.names.map((name, idx) => (
@@ -545,7 +545,7 @@ ${context === "products" || context === "product-edit" ? `- إذا لم يذكر
                       ))}
                     </ul>
                     <p className="text-sm text-gray-700 mt-3">
-                      هل تريد المتابعة رغم ذلك؟
+                      Do you want to المتابعة رغم ذلك؟
                     </p>
                   </>
                 )}
@@ -555,15 +555,15 @@ ${context === "products" || context === "product-edit" ? `- إذا لم يذكر
             <div className="flex gap-2">
               {duplicateWarning.type === 'exact' ? (
                 <Button onClick={handleCancel} className="flex-1 bg-gray-500 hover:bg-gray-600">
-                  حسناً
+                  OK
                 </Button>
               ) : (
                 <>
                   <Button onClick={handleConfirm} className="flex-1 bg-green-500 hover:bg-green-600">
-                    نعم، أنشئ
+                    Yes, create
                   </Button>
                   <Button onClick={handleCancel} variant="outline" className="flex-1">
-                    إلغاء
+                    Cancel
                   </Button>
                 </>
               )}
@@ -575,14 +575,14 @@ ${context === "products" || context === "product-edit" ? `- إذا لم يذكر
               <p className="text-sm text-blue-800 mb-2">
                 <Sparkles size={16} className="inline ml-1" />
                 {parsedCommand.action === "delete_all" ? (
-                  "⚠️ هل تريد حذف جميع العناصر؟"
+                  "⚠️ Do you want to Delete جميع Items؟"
                 ) : (
                   <>
-                    هل تريد {
-                      parsedCommand.action === "create" ? "إنشاء" : 
-                      parsedCommand.action === "update" ? "تعديل" : 
-                      "حذف"
-                    } هذا العنصر؟
+                    Do you want to {
+                      parsedCommand.action === "create" ? "Create" : 
+                      parsedCommand.action === "update" ? "Edit" : 
+                      "Delete"
+                    } this item?
                   </>
                 )}
               </p>
@@ -592,19 +592,19 @@ ${context === "products" || context === "product-edit" ? `- إذا لم يذكر
                   {parsedCommand.action === "update" ? (
                     <>
                       <p className="text-sm text-gray-500">
-                        <span className="font-bold">الاسم القديم:</span> {parsedCommand.items[currentItemIndex].old_name}
+                        <span className="font-bold">Name القديم:</span> {parsedCommand.items[currentItemIndex].old_name}
                       </p>
                       <p className="text-sm">
-                        <span className="font-bold">العربي الجديد:</span> {parsedCommand.items[currentItemIndex].new_name_ar}
+                        <span className="font-bold">Arabic New:</span> {parsedCommand.items[currentItemIndex].new_name_ar}
                       </p>
                       <p className="text-sm">
-                        <span className="font-bold">English الجديد:</span> {parsedCommand.items[currentItemIndex].new_name_en}
+                        <span className="font-bold">English New:</span> {parsedCommand.items[currentItemIndex].new_name_en}
                       </p>
                     </>
                   ) : (
                     <>
                       <p className="text-sm">
-                        <span className="font-bold">العربي:</span> {parsedCommand.items[currentItemIndex].name_ar}
+                        <span className="font-bold">Arabic:</span> {parsedCommand.items[currentItemIndex].name_ar}
                       </p>
                       <p className="text-sm">
                         <span className="font-bold">English:</span> {parsedCommand.items[currentItemIndex].name_en}
@@ -616,7 +616,7 @@ ${context === "products" || context === "product-edit" ? `- إذا لم يذكر
               
               {parsedCommand.action !== "delete_all" && (
                 <p className="text-xs text-gray-500 mt-2">
-                  ({currentItemIndex + 1} من {parsedCommand.items.length})
+                  ({currentItemIndex + 1} from {parsedCommand.items.length})
                 </p>
               )}
             </div>
@@ -632,12 +632,12 @@ ${context === "products" || context === "product-edit" ? `- إذا لم يذكر
                     : "bg-green-500 hover:bg-green-600"
                 }`}
               >
-                {parsedCommand.action === "delete_all" ? "حذف الكل" : "تنفيذ"}
+                {parsedCommand.action === "delete_all" ? "Delete All" : "Execute"}
               </Button>
               {parsedCommand.action !== "delete_all" && (
                 <>
                   <Button onClick={handleSkip} variant="outline" className="flex-1">
-                    تخطي
+                    Skip
                   </Button>
                   <Button onClick={handleCancel} variant="outline" className="px-3">
                     <X size={16} />
@@ -646,7 +646,7 @@ ${context === "products" || context === "product-edit" ? `- إذا لم يذكر
               )}
               {parsedCommand.action === "delete_all" && (
                 <Button onClick={handleCancel} variant="outline" className="flex-1">
-                  إلغاء
+                  Cancel
                 </Button>
               )}
             </div>
@@ -657,20 +657,20 @@ ${context === "products" || context === "product-edit" ? `- إذا لم يذكر
               <p className="font-bold text-gray-800">أمثلة:</p>
               {context === "product-edit" ? (
                 <>
-                  <p>• "عدل الاسم إلى سماعات بلوتوث"</p>
+                  <p>• "عدل Name إلى سماعات بلوتوث"</p>
                   <p>• "عدل الوصف إلى سماعات عالية الجودة مع صوت نقي"</p>
                   <p>• "عدل المادة إلى قطن 100%"</p>
-                  <p>• "غير الفئة إلى إلكترونيات"</p>
-                  <p>• "غير السعر إلى 299"</p>
-                  <p>• "خلي المنتج نشط"</p>
-                  <p>• "خلي المنتج غير نشط"</p>
+                  <p>• "غير Category إلى إلكترونيات"</p>
+                  <p>• "غير Price إلى 299"</p>
+                  <p>• "خلي Product Active"</p>
+                  <p>• "خلي Product غير Active"</p>
                 </>
               ) : context === "products" ? (
                 <>
-                  <p>• "أنشئ منتج سماعات لاسلكية بسعر 299 في فئة إلكترونيات"</p>
-                  <p>• "عدل منتج سماعات إلى سماعات بلوتوث"</p>
-                  <p>• "امسح منتج سماعات"</p>
-                  <p>• "امسح كل المنتجات"</p>
+                  <p>• "أنشئ fromتج سماعات لاسلكية بسعر 299 في فئة إلكترونيات"</p>
+                  <p>• "عدل fromتج سماعات إلى سماعات بلوتوث"</p>
+                  <p>• "امسح fromتج سماعات"</p>
+                  <p>• "امسح كل Productات"</p>
                 </>
               ) : (
                 <>
@@ -686,12 +686,12 @@ ${context === "products" || context === "product-edit" ? `- إذا لم يذكر
             {uploadedImages.length > 0 && (
               <div className="mb-3">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">الصور ({uploadedImages.length})</span>
+                  <span className="text-sm font-medium text-gray-700">Images ({uploadedImages.length})</span>
                   <button
                     onClick={clearAllImages}
                     className="text-xs text-red-500 hover:text-red-600"
                   >
-                    حذف الكل
+                    Delete All
                   </button>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
@@ -739,7 +739,7 @@ ${context === "products" || context === "product-edit" ? `- إذا لم يذكر
                     variant="outline"
                     className="rounded-xl"
                     disabled={loading}
-                    title="إضافة صور (يمكنك اختيار عدة صور)"
+                    title="Add Images (You can select multiple images)"
                   >
                     <ImageIcon size={18} />
                   </Button>
@@ -749,7 +749,7 @@ ${context === "products" || context === "product-edit" ? `- إذا لم يذكر
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={(e) => e.key === "Enter" && !loading && handleSend()}
-                placeholder="اكتب أمرك هنا..."
+                placeholder="Type your command here..."
                 className="rounded-xl flex-1"
                 disabled={loading}
               />

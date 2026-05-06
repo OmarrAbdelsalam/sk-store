@@ -1,32 +1,21 @@
 import { Suspense } from "react";
-import Image from "next/image";
-import ProductGrid from "@/components/ProductGrid";
+import dynamic from "next/dynamic";
 import Hero from "@/components/Hero";
-import NewArrivals from "@/components/NewArrivals";
-import { ClothingShowcase } from "@/components/CategoryBanners";
-import { ReelsShowcase } from "@/components/ReelsShowcase";
-import DiscoverSection from "@/components/DiscoverSection";
-import MaisonClutchSection from "@/components/MaisonClutchSection";
-import HandbagsSection from "@/components/HandbagsSection";
-import ReviewsGallery from "@/components/ReviewsGallery";
-import BestSellers from "@/components/BestSellers";
-import FeaturesSection from "@/components/FeaturesSection";
-import MovingTicker from "@/components/MovingTicker";
 
-// Loading skeleton component
-const ProductGridSkeleton = () => (
-  <div className="container mx-auto px-4 py-12">
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-10 items-stretch">
-      {Array.from({ length: 8 }).map((_, i) => (
-        <div key={i} className="space-y-2 animate-pulse">
-          <div className="aspect-[3/4] w-full rounded-lg bg-muted" />
-          <div className="h-4 w-3/4 rounded bg-muted" />
-          <div className="h-3 w-1/2 rounded bg-muted" />
-        </div>
-      ))}
-    </div>
-  </div>
-);
+// Lazy loaded components (Code Splitting)
+const NewArrivals = dynamic(() => import("@/components/NewArrivals"));
+const ClothingShowcase = dynamic(() => import("@/components/CategoryBanners").then(mod => mod.ClothingShowcase));
+const ReelsShowcase = dynamic(() => import("@/components/ReelsShowcase").then(mod => mod.ReelsShowcase));
+const ProductGrid = dynamic(() => import("@/components/ProductGrid"));
+const DiscoverSection = dynamic(() => import("@/components/DiscoverSection"));
+const MaisonClutchSection = dynamic(() => import("@/components/MaisonClutchSection"));
+const HandbagsSection = dynamic(() => import("@/components/HandbagsSection"));
+const ReviewsGallery = dynamic(() => import("@/components/ReviewsGallery"));
+const BestSellers = dynamic(() => import("@/components/BestSellers"));
+const FeaturesSection = dynamic(() => import("@/components/FeaturesSection"));
+const MovingTicker = dynamic(() => import("@/components/MovingTicker"));
+
+
 
 const Index = () => {
   return (
@@ -60,7 +49,27 @@ const Index = () => {
       {/* Reels Showcase */}
       <ReelsShowcase />
       
-      <Suspense fallback={<ProductGridSkeleton />}>
+      <Suspense fallback={
+        <section className="py-16 bg-background">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-10">
+              <div className="h-8 w-48 bg-muted animate-pulse mx-auto mb-2 rounded" />
+              <div className="w-24 h-[1px] bg-muted mx-auto mt-3" />
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-6 items-stretch">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="space-y-2 md:space-y-4 animate-pulse">
+                  <div className="aspect-[3/4] w-full rounded-lg bg-muted" />
+                  <div className="space-y-1.5 md:space-y-2">
+                    <div className="h-4 md:h-6 w-3/4 rounded bg-muted" />
+                    <div className="h-3 md:h-4 w-1/2 rounded bg-muted" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      }>
         <ProductGrid />
       </Suspense>
 

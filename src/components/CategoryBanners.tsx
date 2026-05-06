@@ -4,6 +4,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import Image from "next/image";
 import { useCategories } from "@/hooks/useCategories";
+import { useEffect, useState } from "react";
 
 const CategoryBanner = ({ 
   title, 
@@ -66,8 +67,38 @@ export const ClothingShowcase = () => {
   const { categories, isLoading } = useCategories();
   const locale = useLocale();
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-  if (isLoading || categories.length === 0) return null;
+  if (!mounted || (isLoading && categories.length === 0)) {
+    return (
+      <section className="py-16">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-10">
+            <div className="h-8 w-48 bg-muted animate-pulse mx-auto mb-2 rounded" />
+            <div className="w-24 h-[1px] bg-muted mx-auto mt-3" />
+          </div>
+          <div className="flex flex-row gap-3 h-[300px] md:h-[400px]">
+            <div className="w-1/2 h-full">
+              <div className="w-full h-full bg-muted animate-pulse rounded-xl" />
+            </div>
+            <div className="w-1/2 flex flex-col gap-3 h-full">
+              <div className="flex-1 overflow-hidden">
+                <div className="w-full h-full bg-muted animate-pulse rounded-xl" />
+              </div>
+              <div className="flex-1 overflow-hidden">
+                <div className="w-full h-full bg-muted animate-pulse rounded-xl" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+  
+  if (categories.length === 0) return null;
 
   // Filter out General/عام categories and take first 3
   const filteredCategories = categories.filter(cat => {

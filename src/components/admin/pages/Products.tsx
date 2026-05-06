@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2, Package, Loader2, Save, Image as ImageIcon, Search, X, Check } from "lucide-react";
+import { useEffect, useState, useMemo } from "react";
+import { Plus, Pencil, Trash2, Package, Loader2, Save, Image as ImageIcon, Search, X, Check, RefreshCw, FolderTree, Tag, DollarSign, PackageSearch, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 
 import { DropboxImg } from "@/components/DropboxImage";
-import { PageHeader } from "@/components/admin/common";
+import { PageHeader, Card } from "@/components/admin/common";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,12 +42,32 @@ import { categoryService, Category } from "@/services/categories";
 import { colorService, Color } from "@/services/colors";
 import { uploadFile } from "@/api/admin/upload";
 
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+
+
 const ProductsPage = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [colors, setColors] = useState<Color[]>([]);
+  const queryClient = useQueryClient();
   
-  const [isLoading, setIsLoading] = useState(true);
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ['products-data'],
+    queryFn: async () => {
+      const [productsData, categoriesData, colorsData] = await Promise.all([
+        productService.getAll(),
+        categoryService.getAll(),
+        colorService.getAll()
+      ]);
+      return { productsData, categoriesData, colorsData };
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const products = data?.productsData || [];
+  const categories = data?.categoriesData || [];
+  const colors = data?.colorsData || [];
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -67,29 +88,29 @@ const ProductsPage = () => {
 
   // Image Upload State
   const [isUploading, setIsUploading] = useState(false);
+  const [formStep, setFormStep] = useState(0);
+  const [colorSearch, setColorSearch] = useState('');
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const STEPS = [
+    { label: 'Info', key: 'info' },
+    { label: 'Colors', key: 'colors' },
+    { label: 'Images', key: 'images' },
+    { label: 'Related', key: 'related' },
+  ];
 
-  const fetchData = async () => {
-    try {
-      setIsLoading(true);
-      const [productsData, categoriesData, colorsData] = await Promise.all([
-        productService.getAll(),
-        categoryService.getAll(),
-        colorService.getAll()
-      ]);
-      setProducts(productsData);
-      setCategories(categoriesData);
-      setColors(colorsData);
-    } catch (error) {
-      console.error(error);
-      toast.error("فشل في تحميل البيانات");
-    } finally {
-      setIsLoading(false);
+  const filteredProducts = useMemo(() => {
+    let result = products;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(p => p.name_en.toLowerCase().includes(q) || (p.material_en && p.material_en.toLowerCase().includes(q)));
     }
-  };
+    if (categoryFilter !== "all") {
+      result = result.filter(p => p.category_id === categoryFilter);
+    }
+    return result;
+  }, [products, searchQuery, categoryFilter]);
+
+  const [isLoadingProduct, setIsLoadingProduct] = useState(false);
 
   const handleOpenModal = async (product?: Product) => {
     // Reset Form
@@ -103,24 +124,27 @@ const ProductsPage = () => {
     setProductImages([]);
     setSelectedRelated([]);
     setBadge("");
+    setFormStep(0);
+    setColorSearch('');
 
+    // Open modal immediately
     if (product) {
       setEditingProduct(product);
+      setIsModalOpen(true);
+      setIsLoadingProduct(true);
       try {
-        // Fetch full details (images, colors, related)
         const fullProduct = await productService.getById(product.id);
         
-        setName(fullProduct.name_en);
-        setCategoryId(fullProduct.category_id);
-        setMaterial(fullProduct.material_en);
-        setDescription(fullProduct.description_en);
-        setPrice(fullProduct.base_price.toString());
+        setName(fullProduct.name_en || "");
+        setCategoryId(fullProduct.category_id || "");
+        setMaterial(fullProduct.material_en || "");
+        setDescription(fullProduct.description_en || "");
+        setPrice(fullProduct.base_price ? fullProduct.base_price.toString() : "");
         setComparePrice(fullProduct.compare_at_price ? fullProduct.compare_at_price.toString() : "");
         setBadge(fullProduct.badge || "");
         
         setSelectedColors(fullProduct.color_ids || []);
         
-        // Map images to UI structure
         setProductImages(fullProduct.images?.map((img: any) => ({
           file_path: img.file_path,
           color_id: img.color_id,
@@ -128,20 +152,23 @@ const ProductsPage = () => {
         })) || []);
 
         setSelectedRelated(fullProduct.related_ids || []);
-
       } catch (error) {
-        toast.error("فشل في تحميل تفاصيل المنتج");
-        return;
+        toast.error("Failed to load product details");
+        setIsModalOpen(false);
+      } finally {
+        setIsLoadingProduct(false);
       }
     } else {
       setEditingProduct(null);
+      setIsModalOpen(true);
     }
-    setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingProduct(null);
+    setFormStep(0);
+    setColorSearch('');
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -177,7 +204,7 @@ const ProductsPage = () => {
       setProductImages(prev => [...prev, ...newImages]);
 
     } catch (error) {
-      toast.error("فشل في رفع الصور");
+      toast.error("Failed to upload images");
     } finally {
       setIsUploading(false);
     }
@@ -230,17 +257,17 @@ const ProductsPage = () => {
 
       if (editingProduct) {
         await productService.update(editingProduct.id, inputData);
-        toast.success("تم تحديث المنتج بنجاح");
+        toast.success("Product updated successfully");
       } else {
         await productService.create(inputData);
-        toast.success("تم إضافة المنتج بنجاح");
+        toast.success("Product added successfully");
       }
 
       handleCloseModal();
-      fetchData();
+      queryClient.invalidateQueries({ queryKey: ['products-data'] });
     } catch (error: any) {
       console.error(error);
-      toast.error(error.message || "حدث خطأ أثناء الحفظ");
+      toast.error(error.message || "An error occurred while saving");
     } finally {
       setIsSubmitting(false);
     }
@@ -250,58 +277,212 @@ const ProductsPage = () => {
     if (!deleteId) return;
     try {
       await productService.delete(deleteId);
-      toast.success("تم حذف المنتج");
-      setProducts(prev => prev.filter(p => p.id !== deleteId));
+      toast.success("Product deleted");
+      queryClient.setQueryData(['products-data'], (old: any) => old ? { ...old, productsData: old.productsData.filter((p: Product) => p.id !== deleteId) } : old);
     } catch (error) {
-      toast.error("فشل في الحذف");
+      toast.error("Failed to delete");
     } finally {
       setDeleteId(null);
     }
   };
 
+  const StatCard = ({
+    title,
+    value,
+    icon: Icon,
+    isHighlight,
+  }: {
+    title: string;
+    value: string | number;
+    icon: React.ElementType;
+    isHighlight?: boolean;
+  }) => (
+    <div
+      className={`stat-card ${isHighlight ? 'highlight' : ''}`}
+    >
+      <div className="stat-header">
+        <span className="stat-title">{title}</span>
+        <div className="stat-icon">
+          <Icon className="w-6 h-6" />
+        </div>
+      </div>
+      <div className="stat-value">{value}</div>
+    </div>
+  );
+
   if (isLoading) {
-    return <div className="flex justify-center items-center h-64"><Loader2 className="animate-spin text-gray-400" size={32} /></div>;
+    return (
+      <div className="space-y-6" dir="ltr">
+        {/* Header Skeleton */}
+        <div className="flex justify-between items-start mb-8">
+          <div className="flex gap-4">
+            <div className="w-12 h-12 bg-gray-200 rounded-xl animate-pulse"></div>
+            <div>
+              <div className="h-8 w-64 bg-gray-200 rounded-lg animate-pulse mb-2"></div>
+              <div className="h-4 w-48 bg-gray-200 rounded-lg animate-pulse"></div>
+            </div>
+          </div>
+          <div className="h-11 w-36 bg-gray-200 rounded-xl animate-pulse"></div>
+        </div>
+
+        {/* Stats Grid Skeleton */}
+        <div className="stats-grid">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="stat-card animate-pulse">
+               <div className="stat-header mb-4">
+                 <div className="h-4 w-24 bg-gray-200 rounded"></div>
+                 <div className="h-10 w-10 bg-gray-200 rounded-xl"></div>
+               </div>
+               <div className="h-10 w-32 bg-gray-200 rounded mb-1 mt-2"></div>
+            </div>
+          ))}
+        </div>
+
+        {/* Filters Skeleton */}
+        <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-4 animate-pulse">
+          <div className="flex-1 h-10 bg-gray-200 rounded-xl"></div>
+          <div className="w-full md:w-48 h-10 bg-gray-200 rounded-xl"></div>
+          <div className="w-full md:w-28 h-10 bg-gray-200 rounded-xl"></div>
+        </div>
+
+        {/* Table Skeleton */}
+        <div className="content-card">
+          <div className="table-wrapper">
+            <table className="data-table w-full">
+              <thead>
+                <tr>
+                  <th><div className="h-4 w-20 bg-gray-200 rounded animate-pulse"></div></th>
+                  <th><div className="h-4 w-20 bg-gray-200 rounded animate-pulse"></div></th>
+                  <th><div className="h-4 w-20 bg-gray-200 rounded animate-pulse"></div></th>
+                  <th><div className="h-4 w-20 bg-gray-200 rounded animate-pulse"></div></th>
+                  <th className="text-right"><div className="h-4 w-16 bg-gray-200 rounded animate-pulse ml-auto"></div></th>
+                </tr>
+              </thead>
+              <tbody>
+                {[1, 2, 3, 4, 5, 6].map(i => (
+                  <tr key={i}>
+                    <td>
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-gray-200 animate-pulse flex-shrink-0"></div>
+                        <div className="space-y-2">
+                          <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
+                          <div className="h-3 w-20 bg-gray-200 rounded animate-pulse"></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td><div className="h-6 w-24 bg-gray-200 rounded-full animate-pulse"></div></td>
+                    <td>
+                      <div className="space-y-2">
+                        <div className="h-4 w-20 bg-gray-200 rounded animate-pulse"></div>
+                        <div className="h-3 w-16 bg-gray-200 rounded animate-pulse"></div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="flex -space-x-2">
+                        {[1, 2, 3].map(j => (
+                          <div key={j} className="w-6 h-6 rounded-full border-2 border-white bg-gray-200 animate-pulse"></div>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <div className="w-8 h-8 rounded-xl bg-gray-200 animate-pulse"></div>
+                        <div className="w-8 h-8 rounded-xl bg-gray-200 animate-pulse"></div>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
   }
+
+  const totalProducts = products.length;
+  const categoriesCount = new Set(products.map(p => p.category_id)).size;
+  const badgesCount = products.filter(p => p.badge).length;
+  const avgPrice = totalProducts ? Math.round(products.reduce((acc, p) => acc + p.base_price, 0) / totalProducts) : 0;
 
   return (
     <div className="space-y-6">
       <PageHeader
         icon={Package}
-        title="إدارة المنتجات"
-        subtitle="جميع منتجات المتجر"
+        title="Manage Products"
+        subtitle="All store products"
         actions={
-          <Button onClick={() => handleOpenModal()} className="bg-[hsl(var(--luxury-charcoal))] text-white hover:bg-[hsl(var(--luxury-charcoal))]/90 gap-2 rounded-xl shadow-lg shadow-[hsl(var(--luxury-charcoal))]/20 transition-all hover:scale-[1.02]">
-            <Plus size={18} />
-            منتج جديد
+          <Button onClick={() => handleOpenModal()} className="rounded-xl shadow-md bg-primary hover:bg-primary/90 text-white px-5">
+            <Plus size={18} className="mr-2" />
+            New Product
           </Button>
         }
       />
 
-      <div className="bg-white rounded-[32px] shadow-sm border border-gray-100 overflow-hidden">
-        <div className="overflow-x-auto">
-            <table className="w-full">
+      {/* Stats Cards */}
+      <div className="stats-grid">
+        <StatCard title="Total Products" value={totalProducts} icon={PackageSearch} isHighlight={true} />
+        <StatCard title="Categories Used" value={categoriesCount} icon={FolderTree} />
+        <StatCard title="Active Badges" value={badgesCount} icon={Tag} />
+        <StatCard title="Avg Price" value={`${avgPrice} EGP`} icon={DollarSign} />
+      </div>
+
+      {/* Filters & Actions */}
+      <Card className="p-4">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Input
+              placeholder="Search products..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 rounded-xl"
+            />
+          </div>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="w-full md:w-48 rounded-xl">
+              <SelectValue placeholder="All Categories" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {categories.map(cat => (
+                <SelectItem key={cat.id} value={cat.id}>{cat.name_en}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button variant="outline" onClick={() => refetch()} className="rounded-xl">
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Refresh
+          </Button>
+        </div>
+      </Card>
+
+      {/* Products — Desktop Table */}
+      <div className="content-card hidden md:block">
+        <div className="table-wrapper">
+            <table className="data-table">
                 <thead>
-                    <tr className="bg-[hsl(var(--luxury-cream))]/30 border-b border-gray-100">
-                        <th className="px-6 py-4 text-right text-sm font-semibold text-[hsl(var(--luxury-charcoal))]">المنتج</th>
-                        <th className="px-6 py-4 text-right text-sm font-semibold text-[hsl(var(--luxury-charcoal))]">الفئة</th>
-                        <th className="px-6 py-4 text-right text-sm font-semibold text-[hsl(var(--luxury-charcoal))]">السعر</th>
-                        <th className="px-6 py-4 text-right text-sm font-semibold text-[hsl(var(--luxury-charcoal))]">الألوان</th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-[hsl(var(--luxury-charcoal))] rounded-tl-[32px]">إجراءات</th>
+                    <tr>
+                        <th>Product</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                        <th>Colors</th>
+                        <th className="text-center">Actions</th>
                     </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50">
-                    {products.length === 0 ? (
+                <tbody>
+                    {filteredProducts.length === 0 ? (
                         <tr>
-                            <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
-                                لا توجد منتجات حالياً
+                            <td colSpan={5} className="text-center text-gray-500 py-12">
+                                No products available
                             </td>
                         </tr>
                     ) : (
-                        products.map((product) => (
-                            <tr key={product.id} className="hover:bg-gray-50/50 transition-colors group">
-                                <td className="px-6 py-4">
+                        filteredProducts.map((product) => (
+                            <tr key={product.id}>
+                                <td>
                                     <div className="flex items-center gap-4">
-                                        <div className="w-16 h-16 rounded-xl bg-gray-100 border border-gray-100 overflow-hidden flex-shrink-0">
+                                        <div className="w-12 h-12 rounded-xl bg-gray-100 border border-gray-100 overflow-hidden flex-shrink-0">
                                             {product.main_image ? (
                                                 <DropboxImg src={product.main_image} alt={product.name_en} className="w-full h-full object-cover" />
                                             ) : (
@@ -311,26 +492,26 @@ const ProductsPage = () => {
                                             )}
                                         </div>
                                         <div>
-                                            <h3 className="font-bold text-[hsl(var(--luxury-charcoal))] font-luxury">{product.name_en}</h3>
+                                            <h3 className="font-bold text-gray-900">{product.name_en}</h3>
                                             <p className="text-xs text-gray-400 truncate max-w-[200px]">{product.material_en}</p>
                                         </div>
                                     </div>
                                 </td>
-                                <td className="px-6 py-4 text-sm text-gray-600">
+                                <td>
                                     <span className="bg-gray-100 px-3 py-1 rounded-full text-xs font-medium">
                                         {product.category?.name_en || "-"}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4">
+                                <td>
                                     <div className="flex flex-col">
-                                        <span className="font-bold text-[hsl(var(--luxury-charcoal))]">{product.base_price} EGP</span>
+                                        <span className="font-bold text-gray-900">{product.base_price} EGP</span>
                                         {product.compare_at_price && (
                                             <span className="text-xs text-gray-400 line-through">{product.compare_at_price} EGP</span>
                                         )}
                                     </div>
                                 </td>
-                                <td className="px-6 py-4">
-                                    <div className="flex -space-x-2 space-x-reverse">
+                                <td>
+                                    <div className="flex -space-x-2 ">
                                         {product.colors?.map((color, i) => (
                                             <div 
                                                 key={i} 
@@ -341,21 +522,21 @@ const ProductsPage = () => {
                                         ))}
                                     </div>
                                 </td>
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity justify-end">
+                                <td className="text-center">
+                                    <div className="flex items-center justify-center gap-2">
                                         <Button 
                                             variant="ghost" 
-                                            size="icon" 
+                                            size="sm" 
                                             onClick={() => handleOpenModal(product)}
-                                            className="w-9 h-9 rounded-xl text-gray-400 hover:text-[hsl(var(--luxury-charcoal))] hover:bg-[hsl(var(--luxury-cream))]"
+                                            className="rounded-xl text-gray-400 hover:text-primary"
                                         >
                                             <Pencil size={18} />
                                         </Button>
                                         <Button 
                                             variant="ghost" 
-                                            size="icon" 
+                                            size="sm" 
                                             onClick={() => setDeleteId(product.id)}
-                                            className="w-9 h-9 rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50"
+                                            className="rounded-xl text-gray-400 hover:text-red-500"
                                         >
                                             <Trash2 size={18} />
                                         </Button>
@@ -369,241 +550,425 @@ const ProductsPage = () => {
         </div>
       </div>
 
+      {/* Products — Mobile Cards */}
+      <div className="md:hidden grid grid-cols-2 gap-3">
+        {filteredProducts.length === 0 ? (
+          <div className="col-span-2 bg-white rounded-2xl border border-gray-100 p-8 text-center text-gray-500">
+            No products available
+          </div>
+        ) : (
+          filteredProducts.map((product) => (
+            <div
+              key={product.id}
+              onClick={() => handleOpenModal(product)}
+              className="bg-white rounded-2xl border border-gray-100 overflow-hidden cursor-pointer active:bg-gray-50 transition-colors group"
+              style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
+            >
+              {/* Product Image */}
+              <div className="aspect-square bg-gray-50 relative overflow-hidden">
+                {product.main_image ? (
+                  <DropboxImg src={product.main_image} alt={product.name_en} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-300">
+                    <ImageIcon size={32} />
+                  </div>
+                )}
+                {/* Badge */}
+                {product.badge && (
+                  <span className="absolute top-2 right-2 bg-indigo-600 text-white text-[0.6rem] font-bold px-2 py-0.5 rounded-md uppercase">
+                    {product.badge}
+                  </span>
+                )}
+              </div>
+
+              {/* Info */}
+              <div className="p-2.5">
+                <h3 className="font-semibold text-gray-900 text-xs leading-tight line-clamp-2 mb-1">
+                  {product.name_en}
+                </h3>
+                <span className="text-[0.6rem] text-gray-400 font-medium uppercase tracking-wider">
+                  {product.category?.name_en || ""}
+                </span>
+                <div className="flex items-center justify-between mt-1.5">
+                  <div className="flex items-baseline gap-1">
+                    <span className="font-bold text-gray-900 text-sm">{product.base_price}</span>
+                    <span className="text-[0.6rem] text-gray-500">EGP</span>
+                  </div>
+                  {product.colors && product.colors.length > 0 && (
+                    <div className="flex -space-x-1.5">
+                      {product.colors.slice(0, 3).map((color, i) => (
+                        <div 
+                          key={i}
+                          className="w-4 h-4 rounded-full border-2 border-white"
+                          style={{ backgroundColor: color.hex_code }}
+                        />
+                      ))}
+                      {product.colors.length > 3 && (
+                        <span className="text-[0.55rem] text-gray-400 ml-1">+{product.colors.length - 3}</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+                {product.compare_at_price && (
+                  <span className="text-[0.65rem] text-gray-400 line-through">{product.compare_at_price} EGP</span>
+                )}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-4xl p-0 overflow-hidden bg-white border-none shadow-2xl rounded-[32px] max-h-[90vh] flex flex-col" dir="rtl">
-          <div className="bg-[hsl(var(--luxury-cream))]/30 px-8 pt-6 pb-5 border-b border-gray-100 flex-shrink-0">
-            <DialogTitle className="text-2xl text-[hsl(var(--luxury-charcoal))] font-luxury font-bold">
-              {editingProduct ? "تعديل المنتج" : "إضافة منتج جديد"}
+        <DialogContent className="sm:max-w-2xl p-0 overflow-hidden bg-white shadow-2xl rounded-2xl max-h-[90vh] flex flex-col" dir="ltr">
+          {/* Header + Step Indicator */}
+          <div className="bg-gray-50 px-5 md:px-8 pt-5 pb-4 border-b border-gray-100 flex-shrink-0">
+            <DialogTitle className="text-lg md:text-2xl text-gray-900 font-bold mb-4">
+              {editingProduct ? "Edit Product" : "Add New Product"}
             </DialogTitle>
+
+            {/* Step Indicator */}
+            <div className="flex items-center gap-1">
+              {STEPS.map((step, i) => (
+                <div key={step.key} className="flex items-center flex-1">
+                  <button
+                    type="button"
+                    onClick={() => setFormStep(i)}
+                    className={`flex items-center gap-1.5 w-full px-2 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                      i === formStep
+                        ? 'bg-indigo-600 text-white shadow-sm'
+                        : i < formStep
+                          ? 'bg-indigo-100 text-indigo-600'
+                          : 'bg-gray-100 text-gray-400'
+                    }`}
+                  >
+                    <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[0.6rem] font-bold shrink-0 ${
+                      i === formStep ? 'bg-white/20 text-white' : i < formStep ? 'bg-indigo-200 text-indigo-700' : 'bg-gray-200 text-gray-400'
+                    }`}>
+                      {i < formStep ? <Check size={10} /> : i + 1}
+                    </span>
+                    <span className="hidden sm:inline truncate">{step.label}</span>
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-8 py-6 space-y-8">
-            {/* Section 1: Basic Info */}
-            <div className="space-y-4">
-                <h3 className="text-lg font-bold text-[hsl(var(--luxury-charcoal))] border-b border-gray-100 pb-2">Product Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                        <Label htmlFor="name">Product Name *</Label>
-                        <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Product name in English" className="rounded-xl" dir="ltr" />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="category">Category *</Label>
-                        <Select value={categoryId} onValueChange={setCategoryId}>
-                            <SelectTrigger className="rounded-xl">
-                                <SelectValue placeholder="Select category" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {categories.map(cat => (
-                                    <SelectItem key={cat.id} value={cat.id}>{cat.name_en}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="badge">Badge (Optional)</Label>
-                        <Select value={badge} onValueChange={setBadge}>
-                            <SelectTrigger className="rounded-xl">
-                                <SelectValue placeholder="No badge" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {BADGE_OPTIONS.map(option => (
-                                    <SelectItem key={option.value || 'none'} value={option.value || 'none'}>{option.label}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="price">Price *</Label>
-                        <Input id="price" type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0.00" className="rounded-xl" />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="comparePrice">Compare at Price (Optional)</Label>
-                        <Input id="comparePrice" type="number" value={comparePrice} onChange={(e) => setComparePrice(e.target.value)} placeholder="0.00" className="rounded-xl" />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="material">Material (Optional)</Label>
-                        <Input id="material" value={material} onChange={(e) => setMaterial(e.target.value)} placeholder="e.g. Leather, Canvas..." className="rounded-xl" dir="ltr" />
-                    </div>
-                    <div className="space-y-2 md:col-span-2">
-                        <Label htmlFor="description">Description *</Label>
-                        <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} rows={4} className="rounded-xl" placeholder="Detailed product description..." dir="ltr" />
-                    </div>
-                </div>
-            </div>
+          {/* Step Content */}
+          <div className="flex-1 overflow-y-auto px-5 md:px-8 py-5">
 
-            {/* Section 2: Colors */}
-            <div className="space-y-4">
-                <h3 className="text-lg font-bold text-[hsl(var(--luxury-charcoal))] border-b border-gray-100 pb-2">الألوان المتاحة</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    {colors.map(color => {
-                        const isSelected = selectedColors.includes(color.id);
-                        return (
-                            <div 
-                                key={color.id}
-                                onClick={() => {
-                                    if (isSelected) setSelectedColors(prev => prev.filter(c => c !== color.id));
-                                    else setSelectedColors(prev => [...prev, color.id]);
-                                }}
-                                className={`
-                                    cursor-pointer rounded-xl p-3 border transition-all flex items-center gap-3
-                                    ${isSelected ? 'border-[hsl(var(--luxury-charcoal))] bg-[hsl(var(--luxury-cream))]/20 ring-1 ring-[hsl(var(--luxury-charcoal))]' : 'border-gray-200 hover:border-gray-300'}
-                                `}
-                            >
-                                <div className="w-8 h-8 rounded-full border border-gray-100 shadow-sm flex items-center justify-center" style={{ backgroundColor: color.hex_code }}>
-                                    {isSelected && <Check size={14} className={color.hex_code.toLowerCase() === '#ffffff' ? 'text-black' : 'text-white'} />}
-                                </div>
-                                <span className="text-sm font-medium">{color.name_en}</span>
-                            </div>
-                        );
+            {/* Loading state while fetching product */}
+            {isLoadingProduct ? (
+              <div className="flex flex-col items-center justify-center py-16 gap-3">
+                <Loader2 className="animate-spin text-indigo-500" size={32} />
+                <p className="text-sm text-gray-400 font-medium">Loading product...</p>
+              </div>
+            ) : (
+            <>
+            {/* Step 1: Basic Info */}
+            {formStep === 0 && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Product Name *</Label>
+                  <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Product name" className="rounded-xl h-11" dir="ltr" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="category">Category *</Label>
+                    <Select value={categoryId} onValueChange={setCategoryId}>
+                      <SelectTrigger className="rounded-xl h-11"><SelectValue placeholder="Select" /></SelectTrigger>
+                      <SelectContent>
+                        {categories.map(cat => (
+                          <SelectItem key={cat.id} value={cat.id}>{cat.name_en}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="badge">Badge</Label>
+                    <Select value={badge || "none"} onValueChange={setBadge}>
+                      <SelectTrigger className="rounded-xl h-11"><SelectValue placeholder="None" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        {BADGE_OPTIONS.map(option => (
+                          <SelectItem key={option.value || 'none'} value={option.value || 'none'}>{option.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="price">Price *</Label>
+                    <Input id="price" type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0" className="rounded-xl h-11" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="comparePrice">Compare Price</Label>
+                    <Input id="comparePrice" type="number" value={comparePrice} onChange={(e) => setComparePrice(e.target.value)} placeholder="0" className="rounded-xl h-11" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="material">Material</Label>
+                  <Input id="material" value={material} onChange={(e) => setMaterial(e.target.value)} placeholder="e.g. Leather, Canvas..." className="rounded-xl h-11" dir="ltr" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description *</Label>
+                  <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="rounded-xl" placeholder="Product description..." dir="ltr" />
+                </div>
+              </div>
+            )}
+
+            {/* Step 2: Colors */}
+            {formStep === 1 && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search colors..."
+                      value={colorSearch}
+                      onChange={(e) => setColorSearch(e.target.value)}
+                      className="w-full pl-9 pr-3 h-10 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:border-indigo-300 focus:bg-white transition-colors"
+                    />
+                  </div>
+                  {selectedColors.length > 0 && (
+                    <span className="h-10 px-3 rounded-xl bg-indigo-50 text-indigo-600 text-xs font-bold flex items-center gap-1.5 shrink-0">
+                      <Check size={12} />
+                      {selectedColors.length}
+                    </span>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-2.5 max-h-[50vh] overflow-y-auto">
+                  {colors
+                    .filter(c => c.name_en.toLowerCase().includes(colorSearch.toLowerCase()))
+                    .map(color => {
+                      const isSelected = selectedColors.includes(color.id);
+                      return (
+                        <div 
+                          key={color.id}
+                          onClick={() => {
+                            if (isSelected) setSelectedColors(prev => prev.filter(c => c !== color.id));
+                            else setSelectedColors(prev => [...prev, color.id]);
+                          }}
+                          className={`
+                            cursor-pointer rounded-xl p-3 border-2 transition-all flex items-center gap-3
+                            ${isSelected 
+                              ? 'border-indigo-400 bg-indigo-50 ring-2 ring-indigo-100' 
+                              : 'border-gray-100 bg-white hover:border-gray-200'
+                            }
+                          `}
+                        >
+                          <div 
+                            className={`w-7 h-7 rounded-full shadow-sm flex items-center justify-center shrink-0 ${isSelected ? 'ring-2 ring-indigo-300' : 'border border-gray-200'}`}
+                            style={{ backgroundColor: color.hex_code }}
+                          >
+                            {isSelected && <Check size={12} className={color.hex_code.toLowerCase() === '#ffffff' ? 'text-black' : 'text-white'} strokeWidth={3} />}
+                          </div>
+                          <span className={`text-sm font-medium truncate ${isSelected ? 'text-indigo-900' : 'text-gray-700'}`}>{color.name_en}</span>
+                        </div>
+                      );
                     })}
                 </div>
-            </div>
+                {colors.filter(c => c.name_en.toLowerCase().includes(colorSearch.toLowerCase())).length === 0 && colors.length > 0 && (
+                  <p className="text-sm text-gray-400 text-center py-6">No colors match &quot;{colorSearch}&quot;</p>
+                )}
+                {colors.length === 0 && <p className="text-sm text-gray-400 text-center py-8">No colors configured yet</p>}
+              </div>
+            )}
 
-            {/* Section 3: Images */}
-            <div className="space-y-4">
-                <h3 className="text-lg font-bold text-[hsl(var(--luxury-charcoal))] border-b border-gray-100 pb-2">صور المنتج</h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* Upload Box */}
-                    <div className="md:col-span-1">
-                        <div className="relative group cursor-pointer w-full h-40 rounded-2xl border-2 border-dashed border-gray-300 hover:border-[hsl(var(--luxury-charcoal))] hover:bg-gray-50 transition-all flex flex-col items-center justify-center gap-2 overflow-hidden">
-                            <input 
-                                type="file" 
-                                multiple
-                                accept="image/*"
-                                onChange={handleImageUpload}
-                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50"
-                                disabled={isUploading}
-                            />
-                            {isUploading ? (
-                                <Loader2 className="animate-spin text-[hsl(var(--luxury-charcoal))]" size={32} />
-                            ) : (
-                                <>
-                                    <div className="w-10 h-10 rounded-full bg-[hsl(var(--luxury-cream))] flex items-center justify-center text-[hsl(var(--luxury-charcoal))]">
-                                        <ImageIcon size={20} />
-                                    </div>
-                                    <p className="text-sm font-medium text-gray-600">اضغط لرفع الصور</p>
-                                </>
-                            )}
+            {/* Step 3: Images */}
+            {formStep === 2 && (
+              <div className="space-y-4">
+                <p className="text-sm text-gray-500">Upload product photos and assign colors</p>
+
+                {/* Upload Box */}
+                <div className="relative group cursor-pointer w-full h-32 rounded-2xl border-2 border-dashed border-gray-300 hover:border-primary hover:bg-gray-50 transition-all flex flex-col items-center justify-center gap-2 overflow-hidden">
+                  <input 
+                    type="file" multiple accept="image/*"
+                    onChange={handleImageUpload}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50"
+                    disabled={isUploading}
+                  />
+                  {isUploading ? (
+                    <Loader2 className="animate-spin text-primary" size={28} />
+                  ) : (
+                    <>
+                      <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                        <ImageIcon size={18} />
+                      </div>
+                      <p className="text-xs font-medium text-gray-500">Tap to upload images</p>
+                    </>
+                  )}
+                </div>
+
+                {/* Image List */}
+                <div className="space-y-2.5 max-h-[40vh] overflow-y-auto">
+                  {productImages.map((img, idx) => (
+                    <div key={idx} className="flex gap-3 p-2.5 border border-gray-100 rounded-xl bg-gray-50 items-center">
+                      <div className="w-14 h-14 bg-white rounded-lg border border-gray-200 overflow-hidden shrink-0">
+                        <DropboxImg src={img.file_path} alt="Product image" className="w-full h-full object-cover" />
+                      </div>
+                      <div className="flex-1 min-w-0 space-y-1.5">
+                        <Select 
+                          value={img.color_id || "none"} 
+                          onValueChange={(val) => handleImageColorChange(idx, val)}
+                          dir="ltr"
+                        >
+                          <SelectTrigger className="h-8 text-xs rounded-lg">
+                            <SelectValue placeholder="Color" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">General</SelectItem>
+                            {colors.filter(c => selectedColors.includes(c.id)).map(c => (
+                              <SelectItem key={c.id} value={c.id}>{c.name_en}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <div className="flex items-center gap-3">
+                          <label className="flex items-center gap-1.5 text-xs cursor-pointer">
+                            <input type="radio" name="mainImage" checked={img.is_main === 1} onChange={() => handleSetMainImage(idx)} className="accent-primary" />
+                            Main
+                          </label>
+                          <button type="button" onClick={() => handleRemoveImage(idx)} className="text-xs text-red-500 hover:underline">Remove</button>
                         </div>
+                      </div>
                     </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
-                    {/* Image List */}
-                    <div className="md:col-span-2 space-y-3 max-h-80 overflow-y-auto pr-2">
-                        {productImages.map((img, idx) => (
-                            <div key={idx} className="flex gap-4 p-3 border border-gray-100 rounded-xl bg-gray-50 items-start">
-                                <div className="w-20 h-20 bg-white rounded-lg border border-gray-200 overflow-hidden flex-shrink-0">
-                                    <DropboxImg src={img.file_path} alt="Product image" className="w-full h-full object-cover" />
-                                </div>
-                                <div className="flex-1 space-y-3">
-                                    <div className="flex items-center gap-3">
-                                        <Label className="text-xs text-gray-500 whitespace-nowrap">لون الصورة:</Label>
-                                        <Select 
-                                            value={img.color_id || "none"} 
-                                            onValueChange={(val) => handleImageColorChange(idx, val)}
-                                            dir="rtl"
-                                        >
-                                            <SelectTrigger className="h-8 text-xs">
-                                                <SelectValue placeholder="اختر لون (اختياري)" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="none">-- عام / بدون لون --</SelectItem>
-                                                {colors.filter(c => selectedColors.includes(c.id)).map(c => (
-                                                    <SelectItem key={c.id} value={c.id}>{c.name_en}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div className="flex items-center gap-4">
-                                        <label className="flex items-center gap-2 text-xs cursor-pointer">
-                                            <input 
-                                                type="radio" 
-                                                name="mainImage" 
-                                                checked={img.is_main === 1} 
-                                                onChange={() => handleSetMainImage(idx)}
-                                                className="accent-[hsl(var(--luxury-charcoal))]"
-                                            />
-                                            صورة رئيسية
-                                        </label>
-                                        <button type="button" onClick={() => handleRemoveImage(idx)} className="text-xs text-red-500 hover:underline">حذف</button>
-                                    </div>
-                                </div>
+            {/* Step 4: Related Products */}
+            {formStep === 3 && (
+              <div className="space-y-4">
+                <p className="text-sm text-gray-500">Tap products to link them as recommendations</p>
+                {selectedRelated.length > 0 && (
+                  <div className="flex items-center gap-2 text-xs font-medium text-indigo-600 bg-indigo-50 px-3 py-2 rounded-lg">
+                    <Check size={14} />
+                    {selectedRelated.length} product{selectedRelated.length > 1 ? 's' : ''} selected
+                  </div>
+                )}
+                <div className="max-h-[50vh] overflow-y-auto space-y-2 pr-1">
+                  {products.filter(p => !editingProduct || p.id !== editingProduct.id).map(prod => {
+                    const isLinked = selectedRelated.includes(prod.id);
+                    return (
+                      <div 
+                        key={prod.id} 
+                        onClick={() => {
+                          if (isLinked) setSelectedRelated(prev => prev.filter(id => id !== prod.id));
+                          else setSelectedRelated(prev => [...prev, prod.id]);
+                        }}
+                        className={`
+                          flex items-center gap-3 p-2.5 rounded-xl cursor-pointer transition-all
+                          ${isLinked 
+                            ? 'bg-indigo-50 border-2 border-indigo-200 ring-1 ring-indigo-100' 
+                            : 'bg-white border border-gray-100 hover:border-gray-200 hover:bg-gray-50'
+                          }
+                        `}
+                      >
+                        {/* Product Thumbnail */}
+                        <div className={`w-12 h-12 rounded-lg overflow-hidden shrink-0 relative ${isLinked ? 'ring-2 ring-indigo-300' : 'border border-gray-100'}`}>
+                          {prod.main_image ? (
+                            <DropboxImg src={prod.main_image} alt={prod.name_en} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full bg-gray-50 flex items-center justify-center">
+                              <ImageIcon size={16} className="text-gray-300" />
                             </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-
-             {/* Section 4: Related Products */}
-            <div className="space-y-4">
-                <h3 className="text-lg font-bold text-[hsl(var(--luxury-charcoal))] border-b border-gray-100 pb-2">منتجات مرتبطة (اختياري)</h3>
-                <div className="border border-gray-200 rounded-xl max-h-48 overflow-y-auto p-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                     {products.filter(p => !editingProduct || p.id !== editingProduct.id).map(prod => (
-                        <div key={prod.id} className="flex items-center space-x-2 space-x-reverse min-w-0">
-                            <Checkbox 
-                                id={`rel-${prod.id}`}
-                                checked={selectedRelated.includes(prod.id)}
-                                onCheckedChange={(checked) => {
-                                    if (checked) setSelectedRelated(prev => [...prev, prod.id]);
-                                    else setSelectedRelated(prev => prev.filter(id => id !== prod.id));
-                                }}
-                            />
-                            <Label htmlFor={`rel-${prod.id}`} className="text-sm truncate cursor-pointer select-none">
-                                {prod.name_en} - {prod.base_price} EGP
-                            </Label>
+                          )}
+                          {isLinked && (
+                            <div className="absolute inset-0 bg-indigo-600/20 flex items-center justify-center">
+                              <Check size={16} className="text-white drop-shadow" />
+                            </div>
+                          )}
                         </div>
-                     ))}
-                     {products.length <= (editingProduct ? 1 : 0) && <p className="text-sm text-gray-400 p-2 text-center col-span-full">لا توجد منتجات أخرى لربطها</p>}
-                </div>
-            </div>
 
-          </form>
-          
-          <div className="bg-gray-50 px-8 py-5 border-t border-gray-100 flex gap-4 flex-shrink-0">
-             <Button 
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                          <h4 className={`text-sm font-semibold truncate ${isLinked ? 'text-indigo-900' : 'text-gray-900'}`}>
+                            {prod.name_en}
+                          </h4>
+                          <p className="text-[0.65rem] text-gray-400 uppercase tracking-wider">
+                            {prod.category?.name_en || ''}
+                          </p>
+                        </div>
+
+                        {/* Price */}
+                        <span className={`text-xs font-bold shrink-0 ${isLinked ? 'text-indigo-600' : 'text-gray-500'}`}>
+                          {prod.base_price} EGP
+                        </span>
+                      </div>
+                    );
+                  })}
+                  {products.length <= (editingProduct ? 1 : 0) && (
+                    <div className="text-center py-10">
+                      <Package size={32} className="text-gray-200 mx-auto mb-2" />
+                      <p className="text-sm text-gray-400">No other products to link</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            </>
+            )}
+
+          </div>
+
+          {/* Footer: Back / Next / Save */}
+          <div className="bg-gray-50 px-5 md:px-8 py-4 border-t border-gray-100 flex gap-3 flex-shrink-0">
+            {formStep > 0 && (
+              <Button 
                 type="button" 
                 variant="outline" 
-                onClick={handleCloseModal}
-                className="flex-1 h-12 rounded-xl border-gray-200 text-gray-600 hover:bg-white"
+                onClick={() => setFormStep(s => s - 1)}
+                className="h-11 rounded-xl border-gray-200 text-gray-600 px-4"
               >
-                إلغاء
+                <ChevronLeft size={16} className="mr-1" />
+                Back
               </Button>
+            )}
+            <div className="flex-1" />
+            {formStep < STEPS.length - 1 ? (
+              <Button 
+                type="button"
+                onClick={() => setFormStep(s => s + 1)}
+                className="h-11 rounded-xl px-6"
+              >
+                Next
+                <ChevronRight size={16} className="ml-1" />
+              </Button>
+            ) : (
               <Button 
                 onClick={handleSubmit}
                 disabled={isSubmitting} 
-                className="flex-1 h-12 rounded-xl bg-[hsl(var(--luxury-charcoal))] text-white hover:bg-[hsl(var(--luxury-charcoal))]/90 shadow-lg"
+                className="h-11 rounded-xl px-6 shadow-lg"
               >
                 {isSubmitting ? (
-                  <>
-                    <Loader2 className="ml-2 animate-spin" size={18} />
-                    جاري الحفظ...
-                  </>
+                  <><Loader2 className="mr-2 animate-spin" size={16} /> Saving...</>
                 ) : (
-                  <>
-                    <Save className="ml-2" size={18} />
-                     حفظ التغييرات
-                  </>
+                  <><Save className="mr-2" size={16} /> Save Product</>
                 )}
               </Button>
+            )}
           </div>
         </DialogContent>
       </Dialog>
       
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
-        <AlertDialogContent className="bg-white rounded-[32px] border-none shadow-2xl" dir="rtl">
+        <AlertDialogContent className="bg-white rounded-[32px] border-none shadow-2xl" dir="ltr">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl font-luxury font-bold text-[hsl(var(--luxury-charcoal))]">حذف المنتج</AlertDialogTitle>
+            <AlertDialogTitle className="text-xl font-bold text-gray-900">Delete Product</AlertDialogTitle>
             <AlertDialogDescription className="text-gray-500">
-              هل أنت متأكد من حذف هذا المنتج؟
+              Are you sure you want to delete this product?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2 sm:gap-0 mt-4">
-            <AlertDialogCancel className="rounded-xl border-gray-200 hover:bg-gray-50 text-gray-600 h-11">إلغاء</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-xl border-gray-200 hover:bg-gray-50 text-gray-600 h-11">Cancel</AlertDialogCancel>
             <AlertDialogAction 
               onClick={confirmDelete}
               className="bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 rounded-xl h-11 border border-red-100 shadow-none"
             >
-              حذف
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

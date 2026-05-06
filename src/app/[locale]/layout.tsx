@@ -8,11 +8,13 @@ import { NavigationLoadingProvider } from '@/contexts/NavigationLoadingContext';
 import NavigationLoadingOverlay from '@/components/ui/NavigationLoadingOverlay';
 import { Toaster } from '@/components/ui/toaster';
 import CommonLayout from '@/components/CommonLayout';
+import TopBanner from '@/components/TopBanner';
 import { Cairo, Inter, Playfair_Display } from 'next/font/google';
 import { defaultMetadata } from '@/lib/metadata';
 import SEOHead from '@/components/SEOHead';
 import { Analytics } from '@vercel/analytics/next';
 import type { Metadata } from 'next';
+import StorefrontProviders from '@/components/StorefrontProviders';
 
 const cairo = Cairo({
   subsets: ['arabic'],
@@ -52,7 +54,7 @@ export default async function LocaleLayout({
     notFound();
   }
 
-  const dir = locale === 'ar' ? 'rtl' : 'ltr';
+  const dir = (locale as string) === 'ar' ? 'rtl' : 'ltr';
 
   return (
     <html lang={locale} dir={dir} suppressHydrationWarning>
@@ -71,18 +73,18 @@ export default async function LocaleLayout({
         <meta name="twitter:image" content="https://scrubhousev1.vercel.app/yhouse-logo.png" />
         <meta name="twitter:card" content="summary_large_image" />
       </head>
-      <body className={`${cairo.variable} ${inter.variable} ${playfair.variable} ${locale === 'ar' ? 'font-cairo' : 'font-inter'}`}>    
+      <body className={`${cairo.variable} ${inter.variable} ${playfair.variable} ${(locale as string) === 'ar' ? 'font-cairo' : 'font-inter'}`}>
         <SEOHead locale={locale} />
         <ScrollToTop />
         <NextIntlClientProvider locale={locale}>
           <NavigationLoadingProvider>
-            <CartProvider>
-              <CommonLayout>
+            <StorefrontProviders>
+              <CommonLayout topBanner={<TopBanner />}>
                 {children}
               </CommonLayout>
               <NavigationLoadingOverlay />
               <Toaster />
-            </CartProvider>
+            </StorefrontProviders>
           </NavigationLoadingProvider>
         </NextIntlClientProvider>
         <Analytics />

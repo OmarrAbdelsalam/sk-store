@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { LucideIcon } from "lucide-react";
 
 interface StatCardProps {
@@ -16,28 +15,16 @@ const StatCard = ({
   icon: Icon,
   label,
   value,
-  delay = 0,
-  iconBgColor = "bg-[hsl(var(--luxury-cream))]",
-  iconColor = "text-[hsl(var(--luxury-charcoal))]",
-  valueColor = "text-[hsl(var(--luxury-charcoal))]",
-  hasBorder = true,
+  iconColor = "text-[var(--text-secondary)]",
 }: StatCardProps) => {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay }}
-      className={`bg-white rounded-[20px] lg:rounded-[24px] p-4 lg:p-5 shadow-sm hover:shadow-md transition-shadow duration-300 ${hasBorder ? "border border-[hsl(var(--luxury-cream))]" : ""}`}
-    >
-      <div className="flex items-center gap-2 lg:gap-3 mb-2 lg:mb-3">
-        <div className={`w-8 h-8 lg:w-10 lg:h-10 rounded-lg lg:rounded-xl ${iconBgColor} flex items-center justify-center`}>
-          <Icon size={16} className={`lg:hidden ${iconColor}`} />
-          <Icon size={20} className={`hidden lg:block ${iconColor}`} />
-        </div>
-        <span className="text-[hsl(var(--luxury-stone))] text-xs lg:text-sm font-medium tracking-wide">{label}</span>
+    <div className="border border-[var(--border-color)] bg-white p-5 transition-colors hover:border-[var(--border-hover)]">
+      <div className="flex items-center gap-2 mb-3">
+        <Icon size={16} className={iconColor} />
+        <span className="text-[10px] font-medium tracking-widest uppercase text-[var(--text-secondary)]">{label}</span>
       </div>
-      <p className={`text-xl sm:text-2xl lg:text-3xl font-bold font-luxury ${valueColor}`}>{value}</p>
-    </motion.div>
+      <p className="text-2xl font-light tracking-wider text-[var(--text-primary)]">{value}</p>
+    </div>
   );
 };
 

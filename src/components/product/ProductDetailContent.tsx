@@ -375,6 +375,7 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
               name={isAr ? (product.nameAr || product.nameEn || "") : (product.nameEn || product.nameAr || "")}
               price={Number(product.price ?? 0)}
               beforePrice={product.beforePrice}
+              productId={String(product.id)}
               selectedColorId={selectedColorId}
               selectedSize={uiSizes.find((s: any) => s.id === selectedSizeId)?.name || ""}
               quantity={quantity}

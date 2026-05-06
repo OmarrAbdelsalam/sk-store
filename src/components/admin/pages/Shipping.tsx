@@ -3,8 +3,8 @@ import ComingSoon from "./ComingSoon";
 const ShippingPage = () => {
   return (
     <ComingSoon 
-      title="إدارة الشحن"
-      description="إدارة الشحن غير متاحة في النسخة التجريبية."
+      title="Manage Shipping"
+      description="Manage Shipping not available in trial version."
     />
   );
 };

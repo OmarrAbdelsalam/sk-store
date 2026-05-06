@@ -34,6 +34,8 @@ export async function POST(request: NextRequest) {
     const discountAmount = body.discountAmount || 0;
     const discountCode = body.discountCode;
     const total = body.total || (subtotal + shippingCost - discountAmount);
+    const appliedPromotions = body.appliedPromotions || [];
+    const bogoDiscount = body.bogoDiscount || 0;
 
     // Create order input
     const orderInput: CreateOrderInput = {
@@ -46,22 +48,24 @@ export async function POST(request: NextRequest) {
       detailedAddress,
       notes,
       items: items.map((item: any) => ({
-        productId: item.productId,
-        productName: item.name || item.productName,
-        productNameAr: item.nameAr || item.productNameAr,
-        productImage: item.image || item.productImage,
-        colorId: item.colorId,
-        colorName: item.colorName,
-        sizeId: item.sizeId,
-        sizeName: item.sizeName,
+        productId: item.productId || undefined,
+        productName: item.name || item.productName || '',
+        productNameAr: item.nameAr || item.productNameAr || undefined,
+        productImage: item.image || item.productImage || undefined,
+        colorId: item.colorId || undefined,
+        colorName: item.colorName || undefined,
+        sizeId: item.sizeId || undefined,
+        sizeName: item.sizeName || undefined,
         quantity: item.quantity || 1,
-        unitPrice: parseFloat(String(item.price).replace(/[^0-9.]/g, '')) || 0,
+        unitPrice: parseFloat(String(item.price || '0').replace(/[^0-9.]/g, '')) || 0,
       })),
       subtotal,
       shippingCost,
       discountAmount,
       discountCode,
       total,
+      appliedPromotions,
+      bogoDiscount,
     };
 
     // Create order in database

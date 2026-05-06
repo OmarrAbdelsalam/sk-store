@@ -1,5 +1,4 @@
 import { useTranslations } from "next-intl";
-import { Ruler, Palette, Sparkles } from "lucide-react";
 
 interface CartItemDetailsProps {
   name: string;
@@ -13,45 +12,43 @@ export default function CartItemDetails({ name, price, size, color, addOns }: Ca
   const t = useTranslations("CartItem");
 
   return (
-    <div className="flex-1 min-w-0 space-y-1 sm:space-y-2">
-      {/* اسم المنتج */}
-      <h3 className="font-semibold text-sm sm:text-lg text-foreground leading-tight line-clamp-2">
+    <div className="flex-1 min-w-0 space-y-1.5">
+      {/* Product name */}
+      <h3 className="text-sm sm:text-base font-medium text-foreground leading-tight line-clamp-2">
         {name}
       </h3>
       
-      {/* سعر الوحدة */}
-      <p className="text-base sm:text-lg font-semibold text-foreground">{price}</p>
+      {/* Unit price */}
+      <p className="text-sm sm:text-base font-medium text-foreground">{price}</p>
 
-      {/* المواصفات */}
-      <div className="flex flex-wrap justify-start gap-1 sm:gap-2">
-        {size && (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-secondary/80 
-            text-secondary-foreground rounded-full text-xs font-medium">
-            <Ruler className="w-3 h-3" />
-            {size}
+      {/* Specs */}
+      <div className="flex flex-wrap justify-start gap-2">
+        {color && (
+          <span className="text-xs text-muted-foreground">
+            {color}
           </span>
         )}
-        {color && (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-secondary/80 
-            text-secondary-foreground rounded-full text-xs font-medium">
-            <Palette className="w-3 h-3" />
-            {color}
+        {color && size && (
+          <span className="text-xs text-muted-foreground">·</span>
+        )}
+        {size && (
+          <span className="text-xs text-muted-foreground">
+            {size}
           </span>
         )}
       </div>
 
-      {/* الإضافات */}
+      {/* Add-ons */}
       {addOns?.length ? (
-        <div className="pt-1 sm:pt-2 border-t border-border/50">
-          <div className="flex items-center justify-start gap-1 text-xs text-muted-foreground mb-1">
-            <Sparkles className="w-3 h-3" />
+        <div className="pt-1.5 border-t border-border/50">
+          <div className="flex items-center justify-start gap-1 text-[11px] tracking-wider uppercase text-muted-foreground mb-1">
             <span>{t("addons")}:</span>
           </div>
           <div className="flex flex-wrap justify-start gap-1">
             {addOns.map((addon, i) => (
               <span 
                 key={i} 
-                className="px-1.5 py-0.5 bg-primary/10 text-primary text-xs rounded-md"
+                className="px-1.5 py-0.5 border border-border text-xs"
               >
                 {addon}
               </span>

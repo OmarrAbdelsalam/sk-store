@@ -1,6 +1,7 @@
 "use client";
 import { memo, useMemo } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { Gift, Truck, TrendingUp } from "lucide-react";
 import OrderSummaryActions from "./OrderSummaryActions";
 
 type OrderSummaryProps = {
@@ -14,6 +15,10 @@ type OrderSummaryProps = {
     code: string;
   } | null;
   onCheckoutClick?: () => void;
+  bogoDiscount?: number;
+  freeShippingApplied?: boolean;
+  freeShippingThreshold?: number;
+  subtotal?: number;
 };
 
 const OrderSummary = memo(
@@ -24,30 +29,104 @@ const OrderSummary = memo(
     currency = "EGP",
     discount,
     onCheckoutClick,
+    bogoDiscount = 0,
+    freeShippingApplied = false,
+    freeShippingThreshold,
+    subtotal,
   }: OrderSummaryProps) => {
     const t = useTranslations("OrderSummary");
     const locale = useLocale();
     const dir = locale === "ar" ? "rtl" : "ltr";
+    const isAr = locale === "ar";
+
+    const effectiveSubtotal = subtotal ?? totalPriceFallback;
+    const effectiveShipping = freeShippingApplied ? 0 : shippingPrice;
 
     const total = useMemo(
-      () => totalPriceFallback + shippingPrice - (discount?.amount || 0),
-      [totalPriceFallback, shippingPrice, discount?.amount]
+      () => totalPriceFallback + effectiveShipping - (discount?.amount || 0) - bogoDiscount,
+      [totalPriceFallback, effectiveShipping, discount?.amount, bogoDiscount]
     );
 
-    return (
-      <div dir={dir} className="space-y-6">
-        {/* Total Only */}
-        <div className="flex justify-between items-center py-4 border-t border-gray-200 dark:border-gray-800">
-          <span className="text-lg font-bold text-foreground">
-            {t("total")}
-          </span>
-          <span className="text-2xl font-bold text-foreground">
-            {total.toLocaleString()} <span className="text-base">{currency}</span>
-          </span>
-        </div>
+    // Free shipping progress
+    const freeShippingProgress = freeShippingThreshold
+      ? Math.min((effectiveSubtotal / freeShippingThreshold) * 100, 100)
+      : 0;
+    const remainingForFreeShipping = freeShippingThreshold
+      ? Math.max(freeShippingThreshold - effectiveSubtotal, 0)
+      : 0;
 
-        {/* Actions */}
-        <OrderSummaryActions onCheckoutClick={onCheckoutClick} />
+    return (
+      <div dir={dir} className="lg:sticky lg:top-8">
+        <div className="border border-border">
+          {/* Header */}
+          <div className="px-5 sm:px-6 py-4 border-b border-border">
+            <h2 className="text-xs sm:text-sm font-medium tracking-widest uppercase">
+              Order Summary
+            </h2>
+          </div>
+
+          <div className="p-5 sm:p-6 space-y-4">
+            {/* BOGO Banner */}
+            {bogoDiscount > 0 && (
+              <div className="flex items-center gap-2.5 px-4 py-3 bg-emerald-100 border border-emerald-300 text-emerald-900">
+                <Gift className="w-4 h-4 shrink-0" />
+                <span className="text-xs font-medium tracking-wide">
+                  {isAr
+                    ? `اشتري 1 واحصل على 1 مجاناً — وفّرت ${bogoDiscount} جنيه`
+                    : `Buy 1 Get 1 Free — You saved ${bogoDiscount} EGP`}
+                </span>
+              </div>
+            )}
+
+            {/* Free Shipping Badge / Progress */}
+            {freeShippingApplied ? (
+              <div className="flex items-center gap-2.5 px-4 py-3 bg-emerald-100 border border-emerald-300 text-emerald-900">
+                <Truck className="w-4 h-4 shrink-0" />
+                <span className="text-xs font-semibold tracking-wide">{isAr ? "شحن مجاني!" : "Free Shipping Applied"}</span>
+              </div>
+            ) : freeShippingThreshold ? (
+              <div className="px-4 py-3 border border-border/60 space-y-2">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <TrendingUp className="w-3.5 h-3.5 shrink-0" />
+                  <span>
+                    {isAr
+                      ? `أضف ${remainingForFreeShipping} جنيه للشحن المجاني`
+                      : `Add ${remainingForFreeShipping} EGP more for free shipping`}
+                  </span>
+                </div>
+                <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                    style={{ width: `${freeShippingProgress}%` }}
+                  />
+                </div>
+              </div>
+            ) : null}
+
+            {/* BOGO Discount Line */}
+            {bogoDiscount > 0 && (
+              <div className="flex justify-between items-center text-xs text-emerald-700">
+                <span className="tracking-wider uppercase">
+                  {isAr ? "خصم اشتري 1 واحصل على 1" : "BOGO Discount"}
+                </span>
+                <span>-{bogoDiscount} {currency}</span>
+              </div>
+            )}
+
+            {/* Total */}
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium tracking-wider uppercase">
+                {t("total")}
+              </span>
+              <span className="text-xl sm:text-2xl font-light tracking-wider">
+                {Math.max(0, total).toLocaleString()} <span className="text-xs tracking-wider uppercase">{currency}</span>
+              </span>
+            </div>
+
+            {/* Actions */}
+            <OrderSummaryActions onCheckoutClick={onCheckoutClick} />
+          </div>
+        </div>
       </div>
     );
   }

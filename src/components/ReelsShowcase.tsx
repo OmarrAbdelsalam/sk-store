@@ -26,7 +26,15 @@ export const ReelsShowcase = () => {
   });
 
   const [selectedReel, setSelectedReel] = useState<SocialProofVideoWithPrice | null>(null);
-  const [videos, setVideos] = useState<SocialProofVideoWithPrice[]>([]);
+  const [videos, setVideos] = useState<SocialProofVideoWithPrice[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const local = localStorage.getItem('reels_showcase_cache');
+        if (local) return JSON.parse(local);
+      } catch (e) {}
+    }
+    return [];
+  });
   const [loading, setLoading] = useState(true);
   const [isMuted, setIsMuted] = useState(false); // Start with sound enabled
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -63,6 +71,9 @@ export const ReelsShowcase = () => {
         
         console.log('Videos with prices:', videosWithPrices);
         setVideos(videosWithPrices);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('reels_showcase_cache', JSON.stringify(videosWithPrices));
+        }
       } catch (error) {
         console.error('Failed to load social proof videos:', error);
       } finally {
@@ -122,16 +133,22 @@ export const ReelsShowcase = () => {
     }
   };
 
-  if (loading) {
+  if (loading && videos.length === 0) {
     return (
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
-          <div className="flex gap-4">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="flex-[0_0_60%] md:flex-[0_0_40%] lg:flex-[0_0_30%]">
-                <div className="aspect-[2/3] bg-gray-200 rounded-xl animate-pulse" />
-              </div>
-            ))}
+          <div className="text-center mb-10">
+            <div className="h-8 w-48 bg-muted animate-pulse mx-auto mb-2 rounded" />
+            <div className="w-24 h-[1px] bg-muted mx-auto mt-3" />
+          </div>
+          <div className="overflow-hidden">
+            <div className="flex -ml-4">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="flex-[0_0_60%] md:flex-[0_0_40%] lg:flex-[0_0_30%] pl-4 min-w-0">
+                  <div className="aspect-[2/3] bg-muted rounded-xl animate-pulse" />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>

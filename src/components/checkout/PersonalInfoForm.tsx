@@ -1,6 +1,5 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User, Phone } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { memo, useState, useCallback } from "react";
 
@@ -34,36 +33,29 @@ const PersonalInfoForm = memo(({ formData, onInputChange }: PersonalInfoFormProp
   }, [onInputChange]);
   
   return (
-    <div className="bg-white dark:bg-card rounded-2xl border border-border/50 shadow-sm overflow-hidden">
+    <div className="border border-border">
       {/* Header */}
-      <div className="bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 px-4 sm:px-6 py-3 sm:py-4 border-b border-border/50">
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div className="p-1.5 sm:p-2 bg-primary/10 rounded-full">
-            <User className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-          </div>
-          <h3 className="text-base sm:text-lg font-semibold">{t("title")}</h3>
-        </div>
+      <div className="px-5 sm:px-6 py-4 border-b border-border">
+        <h3 className="text-xs sm:text-sm font-medium tracking-widest uppercase">{t("title")}</h3>
       </div>
 
-      <div className="p-4 sm:p-6 space-y-4">
+      <div className="p-5 sm:p-6 space-y-5">
         <div>
-          <Label htmlFor="name" className="text-sm font-medium flex items-center gap-2 mb-2">
-            <User className="w-3.5 h-3.5 text-muted-foreground" />
+          <Label htmlFor="name" className="text-xs font-medium tracking-wider uppercase text-muted-foreground mb-2.5 block">
             {t("name")}
           </Label>
           <Input
             id="name"
             value={formData.name}
             onChange={(e) => onInputChange("name", e.target.value)}
-            className="h-11 rounded-xl"
+            className="h-12 rounded-none border-border bg-transparent focus-visible:ring-1 focus-visible:ring-foreground text-sm"
             placeholder={t("namePlaceholder")}
             required
           />
         </div>
 
         <div>
-          <Label htmlFor="phone" className="text-sm font-medium flex items-center gap-2 mb-2">
-            <Phone className="w-3.5 h-3.5 text-muted-foreground" />
+          <Label htmlFor="phone" className="text-xs font-medium tracking-wider uppercase text-muted-foreground mb-2.5 block">
             {t("phone")}
           </Label>
           <Input
@@ -72,12 +64,12 @@ const PersonalInfoForm = memo(({ formData, onInputChange }: PersonalInfoFormProp
             inputMode="tel"
             value={formData.phone}
             onChange={(e) => handlePhoneChange(e.target.value)}
-            className={`h-11 rounded-xl ${phoneError ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+            className={`h-12 rounded-none border-border bg-transparent focus-visible:ring-1 focus-visible:ring-foreground text-sm ${phoneError ? "border-red-500 focus-visible:ring-red-500" : ""}`}
             placeholder={t("phonePlaceholder")}
             required
           />
           {phoneError && (
-            <p className="text-sm text-red-500 mt-1">{t("phoneError")}</p>
+            <p className="text-xs text-red-500 mt-2">{t("phoneError")}</p>
           )}
         </div>
       </div>

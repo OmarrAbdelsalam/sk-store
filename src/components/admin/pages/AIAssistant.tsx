@@ -3,8 +3,8 @@ import ComingSoon from "./ComingSoon";
 const AIAssistantPage = () => {
   return (
     <ComingSoon 
-      title="المساعد الذكي"
-      description="المساعد الذكي غير متاح في النسخة التجريبية."
+      title="الAssistant الذكي"
+      description="الAssistant الذكي غير متاح في Trial Version."
     />
   );
 };

@@ -3,8 +3,8 @@ import ComingSoon from "./ComingSoon";
 const ProductEditPage = () => {
   return (
     <ComingSoon 
-      title="تعديل المنتج"
-      description="تعديل المنتجات غير متاح في النسخة التجريبية."
+      title="Edit Product"
+      description="Edit Productات غير متاح في Trial Version."
     />
   );
 };

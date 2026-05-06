@@ -85,7 +85,7 @@ const CustomerLovePage = () => {
       const data = await customerLoveService.getAllItems();
       setItems(data);
     } catch {
-      toast.error("فشل في تحميل البيانات");
+      toast.error("Failed to load data");
     } finally {
       setIsLoading(false);
     }
@@ -124,11 +124,11 @@ const CustomerLovePage = () => {
     e.preventDefault();
 
     if (!currentImageUrl && !imageFile) {
-      toast.error("يرجى رفع صورة");
+      toast.error("Please upload an image");
       return;
     }
     if (!customerName.trim()) {
-      toast.error("يرجى إدخال اسم العميل");
+      toast.error("يرجى In Customer Name");
       return;
     }
 
@@ -138,7 +138,7 @@ const CustomerLovePage = () => {
 
       if (imageFile) {
         const res = await uploadFile(imageFile, "customer-love");
-        if (!res.success || !res.data) throw new Error(res.error || "فشل رفع الصورة");
+        if (!res.success || !res.data) throw new Error(res.error || "Failed to upload image");
         finalImageUrl = res.data.url;
       }
 
@@ -152,16 +152,16 @@ const CustomerLovePage = () => {
 
       if (editingItem) {
         await customerLoveService.updateItem(editingItem.id, payload);
-        toast.success("تم تحديث التقييم بنجاح");
+        toast.success("تم Refresh Rating بنجاح");
       } else {
         await customerLoveService.createItem(payload);
-        toast.success("تم إضافة التقييم بنجاح");
+        toast.success("تم إضافة Rating بنجاح");
       }
 
       closeModal();
       fetchItems();
     } catch (err: any) {
-      toast.error(err.message || "حدث خطأ أثناء الحفظ");
+      toast.error(err.message || "An error occurred while saving");
     } finally {
       setIsSubmitting(false);
     }
@@ -173,9 +173,9 @@ const CustomerLovePage = () => {
       setItems((prev) =>
         prev.map((i) => (i.id === item.id ? { ...i, is_active: !i.is_active } : i))
       );
-      toast.success(item.is_active ? "تم الإخفاء" : "تم الإظهار");
+      toast.success(item.is_active ? "Hidden" : "Visible");
     } catch {
-      toast.error("فشل في تغيير الحالة");
+      toast.error("فشل في تغيير Status");
     }
   };
 
@@ -183,10 +183,10 @@ const CustomerLovePage = () => {
     if (!deleteId) return;
     try {
       await customerLoveService.deleteItem(deleteId);
-      toast.success("تم الحذف");
+      toast.success("Deleted");
       setItems((prev) => prev.filter((i) => i.id !== deleteId));
     } catch {
-      toast.error("فشل في الحذف");
+      toast.error("Failed to delete");
     } finally {
       setDeleteId(null);
     }
@@ -205,14 +205,14 @@ const CustomerLovePage = () => {
       <PageHeader
         icon={Star}
         title="Customer Love"
-        subtitle="إدارة تقييمات وصور العملاء التي تظهر في الصفحة الرئيسية"
+        subtitle="إدارة تقييمات وصور العملاء التي تظهر في الصفحة الMain"
         actions={
           <Button
             onClick={() => openModal()}
             className="bg-[hsl(var(--luxury-charcoal))] text-white hover:bg-[hsl(var(--luxury-charcoal))]/90 gap-2 rounded-xl shadow-lg shadow-[hsl(var(--luxury-charcoal))]/20 transition-all hover:scale-[1.02]"
           >
             <Plus size={18} />
-            إضافة تقييم
+            Add Review
           </Button>
         }
       />
@@ -223,8 +223,8 @@ const CustomerLovePage = () => {
           <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
             <Star className="text-gray-300" size={32} />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-1">لا توجد تقييمات حالياً</h3>
-          <p className="text-gray-500 text-sm">أضف تقييمات العملاء لتظهر في الصفحة الرئيسية</p>
+          <h3 className="text-lg font-medium text-gray-900 mb-1">No reviews available</h3>
+          <p className="text-gray-500 text-sm">أضف تقييمات العملاء لتظهر في الصفحة الMain</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
@@ -252,7 +252,7 @@ const CustomerLovePage = () => {
                 {/* Featured badge */}
                 {item.is_featured && (
                   <span className="absolute top-2 right-2 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                    مميز
+                    Featured
                   </span>
                 )}
 
@@ -310,11 +310,11 @@ const CustomerLovePage = () => {
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent
           className="sm:max-w-[500px] p-0 overflow-hidden bg-white border-none shadow-2xl rounded-[32px]"
-          dir="rtl"
+          dir="ltr"
         >
           <div className="bg-[hsl(var(--luxury-cream))]/30 px-6 pt-5 pb-4 border-b border-gray-100">
             <DialogTitle className="text-xl text-[hsl(var(--luxury-charcoal))] font-luxury font-bold">
-              {editingItem ? "تعديل التقييم" : "إضافة تقييم جديد"}
+              {editingItem ? "Edit Review" : "Add Review جديد"}
             </DialogTitle>
           </div>
 
@@ -322,7 +322,7 @@ const CustomerLovePage = () => {
             {/* Image Upload */}
             <div className="space-y-2">
               <Label className="text-sm font-semibold text-[hsl(var(--luxury-charcoal))]">
-                صورة العميل <span className="text-red-500">*</span>
+                صورة Customer <span className="text-red-500">*</span>
               </Label>
               <input
                 id="cl-image"
@@ -352,14 +352,14 @@ const CustomerLovePage = () => {
                     <div className="w-12 h-12 rounded-full bg-[hsl(var(--luxury-cream))] flex items-center justify-center text-[hsl(var(--luxury-charcoal))] mb-1 group-hover:scale-110 transition-transform">
                       <ImageIcon size={20} />
                     </div>
-                    <p className="text-sm font-medium text-gray-600">اضغط لرفع صورة</p>
-                    <p className="text-xs text-gray-400">PNG, JPG حتى 5MB</p>
+                    <p className="text-sm font-medium text-gray-600">Click to upload image</p>
+                    <p className="text-xs text-gray-400">PNG, JPG Up to 5MB</p>
                   </>
                 )}
                 {(imageFile || currentImageUrl) && (
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <p className="text-white font-medium flex items-center gap-2">
-                      <Pencil size={16} /> تغيير الصورة
+                      <Pencil size={16} /> Change Image
                     </p>
                   </div>
                 )}
@@ -369,12 +369,12 @@ const CustomerLovePage = () => {
             {/* Customer Name */}
             <div className="space-y-2">
               <Label className="text-sm font-semibold text-[hsl(var(--luxury-charcoal))]">
-                اسم العميل <span className="text-red-500">*</span>
+                Customer Name <span className="text-red-500">*</span>
               </Label>
               <Input
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
-                placeholder="مثال: Sarah Ahmed"
+                placeholder="Example: Sarah Ahmed"
                 className="h-11 rounded-xl border-gray-200 bg-gray-50/50 focus:bg-white focus:border-[hsl(var(--luxury-charcoal))]"
               />
             </div>
@@ -382,7 +382,7 @@ const CustomerLovePage = () => {
             {/* Review Text */}
             <div className="space-y-2">
               <Label className="text-sm font-semibold text-[hsl(var(--luxury-charcoal))]">
-                نص التقييم
+                Review Text
               </Label>
               <Textarea
                 value={reviewText}
@@ -396,7 +396,7 @@ const CustomerLovePage = () => {
             {/* Rating */}
             <div className="space-y-2">
               <Label className="text-sm font-semibold text-[hsl(var(--luxury-charcoal))]">
-                التقييم
+                Rating
               </Label>
               <StarPicker value={rating} onChange={setRating} />
             </div>
@@ -417,7 +417,7 @@ const CustomerLovePage = () => {
                 />
               </button>
               <Label className="text-sm font-medium text-gray-700 cursor-pointer" onClick={() => setIsFeatured((v) => !v)}>
-                تمييز هذا التقييم
+                تمييز هذا Rating
               </Label>
             </div>
 
@@ -429,7 +429,7 @@ const CustomerLovePage = () => {
                 onClick={closeModal}
                 className="flex-1 h-12 rounded-xl border-gray-200 text-gray-600 hover:bg-gray-50"
               >
-                إلغاء
+                Cancel
               </Button>
               <Button
                 type="submit"
@@ -439,12 +439,12 @@ const CustomerLovePage = () => {
                 {isSubmitting ? (
                   <>
                     <Loader2 className="ml-2 animate-spin" size={18} />
-                    جاري الحفظ...
+                    Saving......
                   </>
                 ) : (
                   <>
                     <Save className="ml-2" size={18} />
-                    حفظ
+                    Save
                   </>
                 )}
               </Button>
@@ -455,24 +455,24 @@ const CustomerLovePage = () => {
 
       {/* Delete Confirm */}
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
-        <AlertDialogContent className="bg-white rounded-[32px] border-none shadow-2xl" dir="rtl">
+        <AlertDialogContent className="bg-white rounded-[32px] border-none shadow-2xl" dir="ltr">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-luxury font-bold text-[hsl(var(--luxury-charcoal))]">
-              حذف التقييم
+              Delete Rating
             </AlertDialogTitle>
             <AlertDialogDescription className="text-gray-500">
-              هل أنت متأكد من حذف هذا التقييم؟ لا يمكن التراجع عن هذا الإجراء.
+              هل أنت متأكد from Delete هذا Rating؟ لا يمكن التراجع عن هذا الإجراء.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2 mt-4">
             <AlertDialogCancel className="rounded-xl border-gray-200 hover:bg-gray-50 text-gray-600 h-11">
-              إلغاء
+              Cancel
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               className="bg-red-50 text-red-600 hover:bg-red-100 rounded-xl h-11 border border-red-100 shadow-none"
             >
-              حذف
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -10,20 +10,20 @@ interface StatusConfig {
 }
 
 const statusConfigs: Record<StatusType, StatusConfig> = {
-  success: { bg: "bg-green-100", text: "text-green-600", label: "ناجح" },
+  success: { bg: "bg-green-100", text: "text-green-600", label: "Success" },
   warning: { bg: "bg-yellow-100", text: "text-yellow-600", label: "تحذير" },
-  error: { bg: "bg-red-100", text: "text-red-600", label: "خطأ" },
-  info: { bg: "bg-blue-100", text: "text-blue-600", label: "معلومات" },
-  active: { bg: "bg-green-100", text: "text-green-600", label: "نشط" },
-  expired: { bg: "bg-red-100", text: "text-red-600", label: "منتهي" },
-  in_stock: { bg: "bg-green-100", text: "text-green-600", label: "متوفر" },
-  low_stock: { bg: "bg-yellow-100", text: "text-yellow-600", label: "منخفض" },
-  out_of_stock: { bg: "bg-red-100", text: "text-red-600", label: "نفذ" },
-  paid: { bg: "bg-green-100", text: "text-green-600", label: "مدفوعة", icon: CheckCircle },
-  pending: { bg: "bg-yellow-100", text: "text-yellow-600", label: "قيد الانتظار", icon: Clock },
-  overdue: { bg: "bg-red-100", text: "text-red-600", label: "متأخرة", icon: AlertCircle },
-  inbound: { bg: "bg-green-100", text: "text-green-600", label: "إدخال" },
-  outbound: { bg: "bg-orange-100", text: "text-orange-600", label: "إخراج" },
+  error: { bg: "bg-red-100", text: "text-red-600", label: "Error" },
+  info: { bg: "bg-blue-100", text: "text-blue-600", label: "Info" },
+  active: { bg: "bg-green-100", text: "text-green-600", label: "Active" },
+  expired: { bg: "bg-red-100", text: "text-red-600", label: "Expired" },
+  in_stock: { bg: "bg-green-100", text: "text-green-600", label: "In Stock" },
+  low_stock: { bg: "bg-yellow-100", text: "text-yellow-600", label: "Low Stock" },
+  out_of_stock: { bg: "bg-red-100", text: "text-red-600", label: "Out of Stock" },
+  paid: { bg: "bg-green-100", text: "text-green-600", label: "Paid", icon: CheckCircle },
+  pending: { bg: "bg-yellow-100", text: "text-yellow-600", label: "Pending", icon: Clock },
+  overdue: { bg: "bg-red-100", text: "text-red-600", label: "Overdue", icon: AlertCircle },
+  inbound: { bg: "bg-green-100", text: "text-green-600", label: "In" },
+  outbound: { bg: "bg-orange-100", text: "text-orange-600", label: "Out" },
 };
 
 interface StatusBadgeProps {

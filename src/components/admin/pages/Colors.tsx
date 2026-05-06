@@ -55,7 +55,7 @@ const ColorsPage = () => {
       setFilteredColors(data);
     } catch (error) {
       console.error("Error fetching colors:", error);
-      toast.error("فشل في تحميل الألوان");
+      toast.error("فشل في تحميل Colors");
     } finally {
       setIsLoading(false);
     }
@@ -96,13 +96,13 @@ const ColorsPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.error("لا يمكن إضافة أو تعديل الألوان - جميع الألوان محددة مسبقاً في المكتبة");
+    toast.error("لا يمكن إضافة أو Edit Colors - جميع Colors محددة مسبقاً في المكتبة");
     handleCloseModal();
   };
 
   const confirmDelete = async () => {
     if (!deleteId) return;
-    toast.error("لا يمكن حذف الألوان - جميع الألوان محددة مسبقاً في المكتبة");
+    toast.error("لا يمكن Delete Colors - جميع Colors محددة مسبقاً في المكتبة");
     setDeleteId(null);
   };
 
@@ -114,15 +114,15 @@ const ColorsPage = () => {
     <div className="space-y-6">
       <PageHeader
         icon={Palette}
-        title="إدارة الألوان"
-        subtitle={`${filteredColors.length} لون متاح - ابحث بالعربي أو الإنجليزي`}
+        title="إدارة Colors"
+        subtitle={`${filteredColors.length} Available Color - Search`}
         actions={
           <div className="flex gap-3 items-center">
             <div className="relative">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
               <Input
                 type="text"
-                placeholder="ابحث عن لون..."
+                placeholder="Search for color..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pr-10 w-64 h-11 rounded-xl border-gray-200 focus:border-[hsl(var(--luxury-charcoal))]"
@@ -154,22 +154,22 @@ const ColorsPage = () => {
             <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
               <Palette className="text-gray-300" size={32} />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-1">لا توجد نتائج</h3>
-            <p className="text-gray-500 text-sm">جرب البحث بكلمات أخرى</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-1">No results</h3>
+            <p className="text-gray-500 text-sm">Try searching with other words</p>
           </div>
         )}
       </div>
 
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
-        <AlertDialogContent className="bg-white rounded-[32px] border-none shadow-2xl" dir="rtl">
+        <AlertDialogContent className="bg-white rounded-[32px] border-none shadow-2xl" dir="ltr">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl font-luxury font-bold text-[hsl(var(--luxury-charcoal))]">تنبيه</AlertDialogTitle>
+            <AlertDialogTitle className="text-xl font-luxury font-bold text-[hsl(var(--luxury-charcoal))]">Alert</AlertDialogTitle>
             <AlertDialogDescription className="text-gray-500">
-              لا يمكن حذف الألوان - جميع الألوان محددة مسبقاً في المكتبة
+              لا يمكن Delete Colors - جميع Colors محددة مسبقاً في المكتبة
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2 sm:gap-0 mt-4">
-            <AlertDialogCancel className="rounded-xl border-gray-200 hover:bg-gray-50 text-gray-600 h-11">حسناً</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-xl border-gray-200 hover:bg-gray-50 text-gray-600 h-11">OK</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

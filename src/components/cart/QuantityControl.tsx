@@ -1,6 +1,5 @@
 "use client";
 import { Plus, Minus } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { memo } from "react";
 
 interface QuantityControlProps {
@@ -12,32 +11,25 @@ interface QuantityControlProps {
 
 const QuantityControl = memo(({ quantity, onIncrease, onDecrease, disableIncrease }: QuantityControlProps) => {
   return (
-    <div className="inline-flex items-center bg-secondary/50 rounded-full p-1">
-      <Button
-        variant="ghost"
-        size="icon"
+    <div className="inline-flex items-center border border-border">
+      <button
         onClick={onDecrease}
-        aria-label="تقليل الكمية"
-        className="h-8 w-8 rounded-full hover:bg-background hover:shadow-sm 
-          active:scale-90 transition-all duration-200"
+        aria-label="Decrease quantity"
+        className="h-8 w-8 flex items-center justify-center text-foreground hover:bg-muted transition-colors active:scale-90"
       >
-        <Minus className="h-3.5 w-3.5" />
-      </Button>
-      <span className="text-base font-semibold min-w-[2.5rem] text-center tabular-nums 
-        select-none transition-all duration-200">
+        <Minus className="h-3 w-3" />
+      </button>
+      <span className="text-sm font-medium min-w-[2.5rem] text-center tabular-nums select-none border-x border-border">
         {quantity}
       </span>
-      <Button
-        variant="ghost"
-        size="icon"
+      <button
         onClick={onIncrease}
         disabled={disableIncrease}
-        aria-label="زيادة الكمية"
-        className="h-8 w-8 rounded-full hover:bg-background hover:shadow-sm 
-          active:scale-90 transition-all duration-200 disabled:opacity-40"
+        aria-label="Increase quantity"
+        className="h-8 w-8 flex items-center justify-center text-foreground hover:bg-muted transition-colors active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed"
       >
-        <Plus className="h-3.5 w-3.5" />
-      </Button>
+        <Plus className="h-3 w-3" />
+      </button>
     </div>
   );
 });

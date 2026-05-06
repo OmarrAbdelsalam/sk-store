@@ -13,6 +13,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import Image from "next/image";
+import PromotionBadges from "@/components/product/PromotionBadges";
 
 type ColorOption = { id: number | string; label: string; hexa?: string; disabled?: boolean };
 type SizeOption  = { name: string; disabled?: boolean };
@@ -22,6 +23,7 @@ interface ProductInfoProps {
   description?: string;
   price: number | string;
   beforePrice?: number | null;
+  productId?: string;
 
   colorOptions?: ColorOption[];
   sizeOptions?: SizeOption[];
@@ -46,6 +48,7 @@ const ProductInfo = React.memo(function ProductInfo({
   description,
   price,
   beforePrice,
+  productId,
   colorOptions = [],
   sizeOptions = [],
   hasSizes = false,
@@ -101,6 +104,9 @@ const ProductInfo = React.memo(function ProductInfo({
             {priceText}
           </p>
         </div>
+
+        {/* Promotion Badges */}
+        {productId && <PromotionBadges productId={productId} />}
       </div>
 
       {/* اختيار اللون (ID) */}

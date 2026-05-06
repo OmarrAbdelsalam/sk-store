@@ -3,11 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
-import { Package, Calendar, MapPin, CreditCard, ChevronDown, ChevronUp } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Package, ChevronDown, ChevronUp, ArrowRight } from "lucide-react";
 import { getOrCreateSessionId } from "@/lib/session";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { OrderItemReview } from "@/components/orders/OrderItemReview";
 import { API_ROUTES } from "@/lib/api-routes";
 
@@ -123,46 +120,51 @@ export default function MyOrdersPage() {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusStyle = (status: string) => {
     switch (status.toLowerCase()) {
       case "pending":
-        return "bg-yellow-100 text-yellow-800";
+        return "border-amber-500 text-amber-700 bg-amber-50 dark:bg-amber-950/20 dark:text-amber-400";
       case "confirmed":
-        return "bg-blue-100 text-blue-800";
+        return "border-blue-500 text-blue-700 bg-blue-50 dark:bg-blue-950/20 dark:text-blue-400";
       case "shipped":
-        return "bg-purple-100 text-purple-800";
+        return "border-purple-500 text-purple-700 bg-purple-50 dark:bg-purple-950/20 dark:text-purple-400";
       case "delivered":
-        return "bg-green-100 text-green-800";
+        return "border-green-600 text-green-700 bg-green-50 dark:bg-green-950/20 dark:text-green-400";
       case "cancelled":
-        return "bg-red-100 text-red-800";
+        return "border-red-500 text-red-700 bg-red-50 dark:bg-red-950/20 dark:text-red-400";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "border-border text-muted-foreground";
     }
   };
 
+  // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen" dir={dir}>
-        <div className="container mx-auto px-4 py-16">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">{t("loading")}</p>
+      <div className="min-h-screen bg-background" dir={dir}>
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
+          <div className="flex flex-col items-center gap-4">
+            <div className="animate-spin h-8 w-8 border-2 border-foreground border-t-transparent" />
+            <p className="text-xs tracking-widest uppercase text-muted-foreground">{t("loading")}</p>
           </div>
         </div>
       </div>
     );
   }
 
+  // Error state
   if (error) {
     return (
-      <div className="min-h-screen" dir={dir}>
-        <div className="container mx-auto px-4 py-16">
-          <Card>
-            <CardContent className="pt-6 text-center">
-              <p className="text-destructive mb-4">{error}</p>
-              <Button onClick={() => router.push("/")}>{t("backToHome")}</Button>
-            </CardContent>
-          </Card>
+      <div className="min-h-screen bg-background" dir={dir}>
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
+          <div className="border border-border p-8 text-center space-y-4">
+            <p className="text-sm text-muted-foreground">{error}</p>
+            <button
+              onClick={() => router.push("/")}
+              className="h-11 px-8 bg-foreground text-background text-xs font-medium tracking-widest uppercase hover:bg-foreground/90 transition-colors"
+            >
+              {t("backToHome")}
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -170,93 +172,104 @@ export default function MyOrdersPage() {
 
   return (
     <div className="min-h-screen bg-background" dir={dir}>
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold mb-2">{t("title")}</h1>
-          <p className="text-sm md:text-base text-muted-foreground">{t("subtitle")}</p>
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
+        {/* Page Title */}
+        <div className="mb-8 sm:mb-12">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-light tracking-wider uppercase">{t("title")}</h1>
+          <div className="h-px w-12 bg-foreground mt-3" />
+          <p className="text-xs tracking-wider text-muted-foreground mt-3">{t("subtitle")}</p>
         </div>
 
+        {/* Empty State */}
         {orders.length === 0 ? (
-          <Card>
-            <CardContent className="pt-6 text-center py-12">
-              <Package className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-xl font-semibold mb-2">{t("noOrders")}</h3>
-              <p className="text-muted-foreground mb-6">{t("noOrdersDesc")}</p>
-              <Button onClick={() => router.push("/")}>{t("startShopping")}</Button>
-            </CardContent>
-          </Card>
+          <div className="border border-border p-10 sm:p-16 text-center space-y-5">
+            <Package className="h-10 w-10 text-muted-foreground/40 mx-auto" />
+            <h3 className="text-sm font-medium tracking-widest uppercase">{t("noOrders")}</h3>
+            <p className="text-xs text-muted-foreground tracking-wider">{t("noOrdersDesc")}</p>
+            <button
+              onClick={() => router.push("/")}
+              className="h-11 px-8 bg-foreground text-background text-xs font-medium tracking-widest uppercase hover:bg-foreground/90 transition-colors inline-flex items-center gap-2"
+            >
+              {t("startShopping")}
+              <ArrowRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
         ) : (
-          <div className="space-y-4">
-            {orders.map((order) => (
-              <Card key={order.id}>
-                <CardHeader>
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        <Package className="h-5 w-5" />
-                        #{order.id}
-                      </CardTitle>
-                      <div className="space-y-1 mt-2 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4" />
-                          {formatDate(order.orderDate)}
+          <div className="space-y-6">
+            {orders.map((order) => {
+              const isOpen = openOrderId === order.id;
+              return (
+                <div key={order.id} className="border border-border">
+                  {/* Order Header */}
+                  <div className="p-5 sm:p-6">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-3">
+                          <h3 className="text-sm font-medium tracking-wider">
+                            #{order.id}
+                          </h3>
+                          <span className={`px-2.5 py-0.5 text-[10px] font-medium tracking-wider uppercase border ${getStatusStyle(order.orderStatus)}`}>
+                            {t(`status.${order.orderStatus.toLowerCase()}`)}
+                          </span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4" />
-                          {t("expectedDelivery")}: {getExpectedDeliveryDate(order.orderDate)}
+                        <div className="space-y-1">
+                          <p className="text-xs text-muted-foreground">
+                            {formatDate(order.orderDate)}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {t("expectedDelivery")}: {getExpectedDeliveryDate(order.orderDate)}
+                          </p>
                         </div>
                       </div>
-                    </div>
-                    <div className="flex flex-col items-start md:items-end gap-2">
-                      <span
-                        className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
-                          order.orderStatus
-                        )}`}
-                      >
-                        {t(`status.${order.orderStatus.toLowerCase()}`)}
-                      </span>
-                      <p className="text-lg font-bold">
-                        {order.totalAmount} {isAr ? "جنيه" : "EGP"}
-                      </p>
+                      <div className="text-start sm:text-end">
+                        <span className="text-xl font-light tracking-wider">
+                          {order.totalAmount}
+                        </span>
+                        <span className="text-xs tracking-wider uppercase text-muted-foreground ml-1.5">
+                          {isAr ? "جنيه" : "EGP"}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </CardHeader>
 
-                <CardContent>
-                  <Collapsible
-                    open={openOrderId === order.id}
-                    onOpenChange={() =>
-                      setOpenOrderId(openOrderId === order.id ? null : order.id)
-                    }
+                  {/* Expand Toggle */}
+                  <button
+                    onClick={() => setOpenOrderId(isOpen ? null : order.id)}
+                    className="w-full flex items-center justify-between px-5 sm:px-6 py-3 border-t border-border text-xs tracking-widest uppercase text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors"
                   >
-                    <CollapsibleTrigger asChild>
-                      <Button variant="ghost" className="w-full justify-between">
-                        <span>{t("viewDetails")}</span>
-                        {openOrderId === order.id ? (
-                          <ChevronUp className="h-4 w-4" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </CollapsibleTrigger>
+                    <span>{t("viewDetails")}</span>
+                    {isOpen ? (
+                      <ChevronUp className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
+                  </button>
 
-                    <CollapsibleContent className="space-y-6 pt-4">
-                      {/* Items */}
-                      <div>
-                        <h4 className="font-semibold mb-3">{t("items")}</h4>
-                        <div className="space-y-3">
+                  {/* Expanded Details */}
+                  {isOpen && (
+                    <div className="border-t border-border">
+                      {/* Items Section */}
+                      <div className="p-5 sm:p-6">
+                        <h4 className="text-xs font-medium tracking-widest uppercase text-muted-foreground mb-4">
+                          {t("items")}
+                        </h4>
+                        <div className="space-y-0">
                           {order.items.map((item, idx) => {
                             const colorName = isAr ? item.colorNameAr : item.colorNameEn;
                             return (
                               <div key={idx} className="space-y-2">
-                                <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
-                                  <div className="flex-1">
-                                    <p className="font-medium">{item.productName}</p>
-                                    <p className="text-sm text-muted-foreground">
-                                      {colorName} • {item.sizeName} • {t("qty")}: {item.quantity}
+                                <div className="flex justify-between items-center py-3 border-b border-border/50 last:border-0">
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium">{item.productName}</p>
+                                    <p className="text-xs text-muted-foreground mt-0.5">
+                                      {colorName && `${colorName}`}
+                                      {colorName && item.sizeName && " · "}
+                                      {item.sizeName && `${item.sizeName}`}
+                                      {(colorName || item.sizeName) && " · "}
+                                      {t("qty")}: {item.quantity}
                                     </p>
                                   </div>
-                                  <p className="font-semibold">
+                                  <p className="text-sm font-medium flex-shrink-0">
                                     {item.subtotal} {isAr ? "جنيه" : "EGP"}
                                   </p>
                                 </div>
@@ -279,82 +292,82 @@ export default function MyOrdersPage() {
                       </div>
 
                       {/* Shipping Address */}
-                      <div>
-                        <h4 className="font-semibold mb-3 flex items-center gap-2">
-                          <MapPin className="h-4 w-4" />
+                      <div className="px-5 sm:px-6 pb-5 sm:pb-6">
+                        <h4 className="text-xs font-medium tracking-widest uppercase text-muted-foreground mb-3">
                           {t("shippingAddress")}
                         </h4>
-                        <div className="p-4 bg-muted rounded-lg space-y-1 text-sm">
+                        <div className="border border-border/50 p-4 space-y-1.5 text-sm">
                           <p>
-                            <strong>{t("name")}:</strong> {order.customerName}
+                            <span className="text-xs text-muted-foreground">{t("name")}:</span>{" "}
+                            {order.customerName}
                           </p>
                           <p>
-                            <strong>{t("phone")}:</strong> {order.phoneNumber}
+                            <span className="text-xs text-muted-foreground">{t("phone")}:</span>{" "}
+                            {order.phoneNumber}
                           </p>
                           <p>
-                            <strong>{isAr ? "المحافظة" : "Governorate"}:</strong> {order.government}
+                            <span className="text-xs text-muted-foreground">{isAr ? "المحافظة" : "Governorate"}:</span>{" "}
+                            {order.government}
                           </p>
                           <p>
-                            <strong>{isAr ? "المدينة" : "City"}:</strong> {order.city}
+                            <span className="text-xs text-muted-foreground">{isAr ? "المدينة" : "City"}:</span>{" "}
+                            {order.city}
                           </p>
                           {order.detailedAddress && (
                             <p>
-                              <strong>{t("address")}:</strong> {order.detailedAddress}
+                              <span className="text-xs text-muted-foreground">{t("address")}:</span>{" "}
+                              {order.detailedAddress}
                             </p>
                           )}
                           {order.notes && (
                             <p>
-                              <strong>{t("notes")}:</strong> {order.notes}
+                              <span className="text-xs text-muted-foreground">{t("notes")}:</span>{" "}
+                              {order.notes}
                             </p>
                           )}
                         </div>
                       </div>
 
-                      {/* Payment & Summary */}
-                      <div>
-                        <h4 className="font-semibold mb-3 flex items-center gap-2">
-                          <CreditCard className="h-4 w-4" />
+                      {/* Payment Summary */}
+                      <div className="px-5 sm:px-6 pb-5 sm:pb-6">
+                        <h4 className="text-xs font-medium tracking-widest uppercase text-muted-foreground mb-3">
                           {t("paymentSummary")}
                         </h4>
-                        <div className="p-4 bg-muted rounded-lg space-y-2 text-sm">
+                        <div className="border border-border/50 p-4 space-y-2.5 text-sm">
                           <div className="flex justify-between">
-                            <span>{t("subtotal")}:</span>
-                            <span>
-                              {order.subTotal} {isAr ? "جنيه" : "EGP"}
-                            </span>
+                            <span className="text-xs tracking-wider uppercase text-muted-foreground">{t("subtotal")}</span>
+                            <span>{order.subTotal} {isAr ? "جنيه" : "EGP"}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span>{t("shipping")}:</span>
-                            <span>
-                              {order.shippingCost} {isAr ? "جنيه" : "EGP"}
-                            </span>
+                            <span className="text-xs tracking-wider uppercase text-muted-foreground">{t("shipping")}</span>
+                            <span>{order.shippingCost} {isAr ? "جنيه" : "EGP"}</span>
                           </div>
                           {order.discountAmount > 0 && (
-                            <div className="flex justify-between text-green-600">
-                              <span>{t("discount")}:</span>
-                              <span>
-                                -{order.discountAmount} {isAr ? "جنيه" : "EGP"}
-                              </span>
+                            <div className="flex justify-between">
+                              <span className="text-xs tracking-wider uppercase text-muted-foreground">{t("discount")}</span>
+                              <span>-{order.discountAmount} {isAr ? "جنيه" : "EGP"}</span>
                             </div>
                           )}
-                          <div className="flex justify-between font-bold text-base pt-2 border-t">
-                            <span>{t("total")}:</span>
-                            <span>
-                              {order.totalAmount} {isAr ? "جنيه" : "EGP"}
-                            </span>
+                          <div className="border-t border-foreground pt-3 mt-1">
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm font-medium tracking-wider uppercase">{t("total")}</span>
+                              <span className="text-lg font-light tracking-wider">
+                                {order.totalAmount} <span className="text-xs">{isAr ? "جنيه" : "EGP"}</span>
+                              </span>
+                            </div>
                           </div>
-                          <div className="pt-2 border-t">
-                            <span className="text-muted-foreground">
+                          <div className="pt-2 border-t border-border/50">
+                            <span className="text-xs text-muted-foreground tracking-wider uppercase">
                               {t("paymentMethod")}: {order.paymentMethod}
                             </span>
                           </div>
                         </div>
                       </div>
-                    </CollapsibleContent>
-                  </Collapsible>
-                </CardContent>
-              </Card>
-            ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

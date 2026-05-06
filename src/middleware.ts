@@ -23,25 +23,7 @@ function stripLocalePrefix(pathname: string, locales: string[]) {
 }
 
 export default function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl;
-  const locales = [...routing.locales];
-  const defaultLocale = routing.defaultLocale;
-  const locale = getLocaleFromPath(pathname, locales, defaultLocale);
-  const pathWithoutLocale = stripLocalePrefix(pathname, locales);
-
-  const isAdminLogin = pathWithoutLocale === ADMIN_LOGIN_PATH;
-  const token = req.cookies.get('access_token')?.value ?? null;
-
-  // لو داخل /admin/login وعنده توكن → ودّيه للوحة التحكم
-  if (isAdminLogin && token) {
-    const backTo = req.nextUrl.searchParams.get('from') || `/${locale}${ADMIN_PREFIX}`;
-    const url = req.nextUrl.clone();
-    url.pathname = backTo;
-    url.search = '';
-    return NextResponse.redirect(url);
-  }
-
-  // شغّل intl middleware للباقي
+  // Run intl middleware for all routes (auth is handled client-side by ProtectedRoute)
   return intlMiddleware(req);
 }
 

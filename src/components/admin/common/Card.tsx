@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { ReactNode } from "react";
 
 interface CardProps {
@@ -8,16 +7,11 @@ interface CardProps {
   noPadding?: boolean;
 }
 
-const Card = ({ children, className = "", delay = 0, noPadding = false }: CardProps) => {
+const Card = ({ children, className = "", noPadding = false }: CardProps) => {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay }}
-      className={`bg-white rounded-[20px] lg:rounded-[24px] shadow-lg shadow-gray-200/50 ${noPadding ? "" : "p-4 lg:p-6"} ${className}`}
-    >
+    <div className={`content-card ${noPadding ? "" : "p-4 lg:p-5"} ${className}`}>
       {children}
-    </motion.div>
+    </div>
   );
 };
 

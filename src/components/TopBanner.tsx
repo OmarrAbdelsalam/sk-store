@@ -1,34 +1,22 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import { marqueeService, MarqueeItem, MarqueeSettings } from "@/services/marquee";
 
-const TopBanner = () => {
-  const [items, setItems] = useState<MarqueeItem[]>([]);
-  const [settings, setSettings] = useState<MarqueeSettings | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+export default async function TopBanner() {
+  let items: MarqueeItem[] = [];
+  let settings: MarqueeSettings | null = null;
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [itemsData, settingsData] = await Promise.all([
-          marqueeService.getActiveItems('top_banner'),
-          marqueeService.getSettings('top_banner')
-        ]);
-        setItems(itemsData);
-        setSettings(settingsData);
-      } catch (error) {
-        console.error("Error loading top banner:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  try {
+    const [itemsData, settingsData] = await Promise.all([
+      marqueeService.getActiveItems('top_banner'),
+      marqueeService.getSettings('top_banner')
+    ]);
+    items = itemsData || [];
+    settings = settingsData || null;
+  } catch (error) {
+    console.error("Error loading top banner:", error);
+  }
 
-    loadData();
-  }, []);
-
-  // Don't render if loading, inactive, or no items
-  if (isLoading || !settings?.is_active || items.length === 0) {
+  // Don't render if inactive or no items
+  if (!settings?.is_active || items.length === 0) {
     return null;
   }
 
@@ -43,30 +31,37 @@ const TopBanner = () => {
         color: settings.text_color || "#ffffff" 
       }}
     >
-      <div className="py-2.5 flex items-center justify-center relative overflow-hidden">
-        <div 
-            className={`whitespace-nowrap font-medium text-xs md:text-sm tracking-widest uppercase ${shouldAnimate ? 'animate-marquee' : ''}`}
-            style={{ 
-                animationDuration: shouldAnimate ? `${settings.scroll_speed || 30}s` : undefined
-            }}
-        >
-          {items.map((item, idx) => (
-            <span key={item.id} className="mx-8">
-              {item.text}
-              {shouldAnimate && idx < items.length - 1 && <span className="mx-4 opacity-50">•</span>}
-            </span>
-          ))}
-          {/* Duplicate for seamless loop - only if animating */}
-          {shouldAnimate && items.map((item, idx) => (
-            <span key={`dup-${item.id}`} className="mx-8">
-              {item.text}
-              {idx < items.length - 1 && <span className="mx-4 opacity-50">•</span>}
-            </span>
-          ))}
-        </div>
+      <div className="py-2.5 flex items-center overflow-hidden">
+        {shouldAnimate ? (
+          /* Two identical strips side-by-side, each scrolling left */
+          <div className="flex shrink-0 animate-marquee" style={{ animationDuration: `${settings.scroll_speed || 30}s` }}>
+            {/* Strip 1 */}
+            <div className="flex items-center shrink-0 font-medium text-xs md:text-sm tracking-widest uppercase">
+              {items.map((item) => (
+                <span key={item.id} className="flex items-center shrink-0">
+                  <span className="mx-6 md:mx-8 whitespace-nowrap">{item.text}</span>
+                  <span className="opacity-50">•</span>
+                </span>
+              ))}
+            </div>
+            {/* Strip 2 (duplicate) */}
+            <div className="flex items-center shrink-0 font-medium text-xs md:text-sm tracking-widest uppercase">
+              {items.map((item) => (
+                <span key={`d-${item.id}`} className="flex items-center shrink-0">
+                  <span className="mx-6 md:mx-8 whitespace-nowrap">{item.text}</span>
+                  <span className="opacity-50">•</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center justify-center w-full font-medium text-xs md:text-sm tracking-widest uppercase">
+            <span className="mx-6 md:mx-8 whitespace-nowrap">{items[0]?.text}</span>
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-export default TopBanner;
+

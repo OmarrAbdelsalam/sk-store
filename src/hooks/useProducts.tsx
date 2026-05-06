@@ -75,10 +75,25 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 export const useProducts = () => {
   const locale = useLocale() as 'ar' | 'en';
   const [products, setProducts] = useState<Product[]>(() => {
-    // Initialize from cache if available
+    // Initialize from memory cache if available
     const cached = productsCache[locale];
     if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
       return cached.products;
+    }
+    
+    // Initialize from localStorage for instant display on reload
+    if (typeof window !== 'undefined') {
+      try {
+        const localData = localStorage.getItem(`products_cache_${locale}`);
+        if (localData) {
+          const parsed = JSON.parse(localData);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
+        }
+      } catch (e) {
+        console.error("Failed to read products from localStorage", e);
+      }
     }
     return [];
   });
@@ -108,12 +123,21 @@ export const useProducts = () => {
       const result = await fetchProducts(1, 100); // Get more products for better UX
       const mappedProducts = result.items.map(item => mapApiProductToUI(item, locale));
       
-      // Update cache
+      // Update memory cache
       productsCache[locale] = {
         products: mappedProducts,
         timestamp: Date.now(),
       };
       productsCache.rawData = result.items;
+
+      // Update localStorage cache
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(`products_cache_${locale}`, JSON.stringify(mappedProducts));
+        } catch (e) {
+          console.error("Failed to save products to localStorage", e);
+        }
+      }
 
       setProducts(mappedProducts);
     } catch (err: any) {

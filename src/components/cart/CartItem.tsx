@@ -1,6 +1,5 @@
 "use client";
 import { Trash2, AlertCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { memo, useCallback, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import CartItemImage from "./CartItemImage";
@@ -75,21 +74,19 @@ const CartItem = memo(({ item, onUpdateQuantity, onRemove, maxQuantity }: CartIt
   // حساب السعر الإجمالي للمنتج
   const priceStr = item.price || '0';
   const numericPrice = parseFloat(String(priceStr).replace(/[^\d.]/g, "")) || 0;
-  const totalPrice = (numericPrice * item.quantity).toFixed(2);
   const currency = String(priceStr).includes("EGP")
     ? "EGP"
     : String(priceStr).replace(/[\d.,\s]/g, "").trim() || "EGP";
 
   return (
     <div
-      className={`group relative bg-background rounded-xl border border-border/50 
-        hover:border-border transition-all duration-300 overflow-hidden
+      className={`group relative border-b border-border transition-all duration-300
         ${isRemoving ? "opacity-0 scale-95 -translate-x-4" : "opacity-100 scale-100 translate-x-0"}`}
     >
-      <div className="p-4">
+      <div className="py-5 sm:py-6">
         {/* Desktop Layout */}
         <div className="hidden sm:block">
-          <div className="flex gap-4">
+          <div className="flex gap-5">
             <CartItemImage src={item.image} alt={displayName} />
             <div className="flex-1 min-w-0">
               <div className="flex justify-between items-start gap-2">
@@ -100,17 +97,14 @@ const CartItem = memo(({ item, onUpdateQuantity, onRemove, maxQuantity }: CartIt
                   color={displayColor}
                   addOns={item.addOns}
                 />
-                <Button
-                  variant="ghost"
-                  size="icon"
+                <button
                   onClick={handleRemove}
-                  className="h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive 
-                    hover:bg-destructive/10 transition-all duration-200 flex-shrink-0"
+                  className="p-2 text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
                   title={t("remove")}
                   aria-label={t("remove")}
                 >
                   <Trash2 className="h-4 w-4" />
-                </Button>
+                </button>
               </div>
               <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
                 <QuantityControl
@@ -120,28 +114,21 @@ const CartItem = memo(({ item, onUpdateQuantity, onRemove, maxQuantity }: CartIt
                   disableIncrease={!canIncrease}
                 />
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-xs tracking-wider uppercase text-muted-foreground">
                     {isAr ? "الإجمالي:" : "Total:"}
                   </span>
-                  <span className="text-lg font-bold text-foreground">
-                    {totalPrice} {currency}
+                  <span className="text-base font-medium text-foreground">
+                    {(numericPrice * item.quantity).toLocaleString()} <span className="text-xs">{currency}</span>
                   </span>
                 </div>
               </div>
               {isMaxReached && (
-                <div
-                  className="mt-3 flex items-center gap-2 text-amber-600 dark:text-amber-500 
-                  text-sm bg-amber-50 dark:bg-amber-950/30 px-3 py-2 rounded-lg"
-                >
-                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground border border-border px-3 py-2">
+                  <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
                   <span>
                     {item.quantity === 1
-                      ? isAr
-                        ? "هذه القطعة الأخيرة المتاحة"
-                        : "This is the last available piece"
-                      : isAr
-                        ? `هذه آخر ${item.quantity} قطع متاحة`
-                        : `These are the last ${item.quantity} pieces available`}
+                      ? isAr ? "هذه القطعة الأخيرة المتاحة" : "This is the last available piece"
+                      : isAr ? `هذه آخر ${item.quantity} قطع متاحة` : `These are the last ${item.quantity} pieces available`}
                   </span>
                 </div>
               )}
@@ -151,7 +138,6 @@ const CartItem = memo(({ item, onUpdateQuantity, onRemove, maxQuantity }: CartIt
 
         {/* Mobile Layout */}
         <div className="sm:hidden">
-          {/* الصف الأول: الصورة + التفاصيل + زر الحذف */}
           <div className="flex items-start gap-3">
             <CartItemImage src={item.image} alt={displayName} />
             <div className="flex-1 min-w-0 text-start">
@@ -163,20 +149,16 @@ const CartItem = memo(({ item, onUpdateQuantity, onRemove, maxQuantity }: CartIt
                 addOns={item.addOns}
               />
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
+            <button
               onClick={handleRemove}
-              className="h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive 
-                hover:bg-destructive/10 transition-all duration-200 flex-shrink-0 -me-1"
+              className="p-1.5 text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
               title={t("remove")}
               aria-label={t("remove")}
             >
               <Trash2 className="h-4 w-4" />
-            </Button>
+            </button>
           </div>
 
-          {/* الكمية والسعر في صف واحد */}
           <div className="flex items-center justify-between mt-4">
             <QuantityControl
               quantity={item.quantity}
@@ -185,29 +167,22 @@ const CartItem = memo(({ item, onUpdateQuantity, onRemove, maxQuantity }: CartIt
               disableIncrease={!canIncrease}
             />
             <div className="flex items-center gap-1.5">
-              <span className="text-xs text-muted-foreground">
+              <span className="text-[10px] tracking-wider uppercase text-muted-foreground">
                 {isAr ? "الإجمالي:" : "Total:"}
               </span>
-              <span className="text-base font-bold text-foreground">
-                {totalPrice} {currency}
+              <span className="text-sm font-medium text-foreground">
+                {(numericPrice * item.quantity).toLocaleString()} <span className="text-xs">{currency}</span>
               </span>
             </div>
           </div>
 
           {isMaxReached && (
-            <div
-              className="mt-3 flex items-center justify-center gap-2 text-amber-600 dark:text-amber-500 
-              text-xs bg-amber-50 dark:bg-amber-950/30 px-3 py-2 rounded-lg"
-            >
+            <div className="mt-3 flex items-center justify-center gap-2 text-xs text-muted-foreground border border-border px-3 py-2">
               <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
               <span>
                 {item.quantity === 1
-                  ? isAr
-                    ? "هذه القطعة الأخيرة المتاحة"
-                    : "This is the last available piece"
-                  : isAr
-                    ? `هذه آخر ${item.quantity} قطع متاحة`
-                    : `These are the last ${item.quantity} pieces available`}
+                  ? isAr ? "هذه القطعة الأخيرة المتاحة" : "This is the last available piece"
+                  : isAr ? `هذه آخر ${item.quantity} قطع متاحة` : `These are the last ${item.quantity} pieces available`}
               </span>
             </div>
           )}

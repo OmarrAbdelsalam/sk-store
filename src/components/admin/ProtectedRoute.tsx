@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter, usePathname } from '@/i18n/navigation';
+import { usePathname } from 'next/navigation';
 import { useEffect, useState } from "react";
 
 interface ProtectedRouteProps {
@@ -21,7 +21,6 @@ const isAuthenticated = (): boolean => {
   
   // Sync cookie with localStorage
   if (isValid) {
-    // Make sure cookie is set
     const cookieExists = document.cookie.includes('access_token=');
     if (!cookieExists) {
       document.cookie = `access_token=${token}; Max-Age=${60 * 60 * 24 * 7}; Path=/; SameSite=Lax`;
@@ -32,7 +31,6 @@ const isAuthenticated = (): boolean => {
 };
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const router = useRouter();
   const pathname = usePathname();
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthed, setIsAuthed] = useState(false);
@@ -44,21 +42,20 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       setIsLoading(false);
       
       if (!authenticated) {
-        // Save current path to redirect back after login
+        // Use window.location to avoid i18n routing issues
         const currentPath = pathname || '/admin';
-        router.push(`/admin/login?from=${encodeURIComponent(currentPath)}`);
+        window.location.href = `/en/admin/login?from=${encodeURIComponent(currentPath)}`;
       }
     };
 
     checkAuth();
-  }, [router, pathname]);
+  }, [pathname]);
 
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
           <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-          <p className="text-muted-foreground">جاري التحميل...</p>
         </div>
       </div>
     );

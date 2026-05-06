@@ -4,9 +4,25 @@ import { useEffect, useState } from "react";
 import { marqueeService, MarqueeItem, MarqueeSettings } from "@/services/marquee";
 
 const MovingTicker = () => {
-  const [items, setItems] = useState<MarqueeItem[]>([]);
-  const [settings, setSettings] = useState<MarqueeSettings | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [items, setItems] = useState<MarqueeItem[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const local = localStorage.getItem('ticker_items_cache');
+        if (local) return JSON.parse(local);
+      } catch (e) {}
+    }
+    return [];
+  });
+  const [settings, setSettings] = useState<MarqueeSettings | null>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const local = localStorage.getItem('ticker_settings_cache');
+        if (local) return JSON.parse(local);
+      } catch (e) {}
+    }
+    return null;
+  });
+  const [isLoading, setIsLoading] = useState(!items.length);
 
   useEffect(() => {
     const loadData = async () => {
@@ -17,6 +33,11 @@ const MovingTicker = () => {
         ]);
         setItems(itemsData);
         setSettings(settingsData);
+        
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('ticker_items_cache', JSON.stringify(itemsData));
+          localStorage.setItem('ticker_settings_cache', JSON.stringify(settingsData));
+        }
       } catch (error) {
         console.error("Error loading ticker:", error);
       } finally {
@@ -49,10 +70,10 @@ const MovingTicker = () => {
         <div className="flex items-center">
           {items.map((item) => (
             <div key={`set1-${item.id}`} className="flex items-center">
-              <span className="text-[10px] md:text-xs font-medium tracking-[0.3em] uppercase px-12">
+              <span className="text-xs md:text-sm font-medium tracking-[0.25em] uppercase px-14">
                 {item.text}
               </span>
-              <span className="opacity-30 text-xs">•</span>
+              <span className="opacity-30 text-base px-2">✦</span>
             </div>
           ))}
         </div>
@@ -61,10 +82,10 @@ const MovingTicker = () => {
         <div className="flex items-center">
           {items.map((item) => (
             <div key={`set2-${item.id}`} className="flex items-center">
-              <span className="text-[10px] md:text-xs font-medium tracking-[0.3em] uppercase px-12">
+              <span className="text-xs md:text-sm font-medium tracking-[0.25em] uppercase px-14">
                 {item.text}
               </span>
-              <span className="opacity-30 text-xs">•</span>
+              <span className="opacity-30 text-base px-2">✦</span>
             </div>
           ))}
         </div>

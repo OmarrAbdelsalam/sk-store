@@ -29,7 +29,7 @@ const InventoryTable = ({ inventory, filter, onFilterChange, filterOptions }: In
               <Package size={18} className="lg:hidden text-white" />
               <Package size={20} className="hidden lg:block text-white" />
             </div>
-            <h3 className="font-bold text-gray-800 text-sm lg:text-base">المخزون الحالي</h3>
+            <h3 className="font-bold text-gray-800 text-sm lg:text-base">Current Inventory</h3>
           </div>
           <FilterTabs options={filterOptions} activeKey={filter} onChange={onFilterChange} />
         </div>
@@ -38,12 +38,12 @@ const InventoryTable = ({ inventory, filter, onFilterChange, filterOptions }: In
       <div className="overflow-x-auto">
         <div className="min-w-[700px]">
           <div className="grid grid-cols-6 gap-4 px-4 lg:px-6 py-2 lg:py-3 bg-gray-50 text-xs lg:text-sm font-medium text-gray-500">
-            <span>المنتج</span>
+            <span>Product</span>
             <span>SKU</span>
-            <span>الفئة</span>
-            <span>الكمية</span>
-            <span>الموقع</span>
-            <span>الحالة</span>
+            <span>Category</span>
+            <span>Quantity</span>
+            <span>Location</span>
+            <span>Status</span>
           </div>
 
           <div className="divide-y divide-gray-100">

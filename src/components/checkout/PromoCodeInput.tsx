@@ -2,10 +2,9 @@
 
 import { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tag, X, Loader2, AlertCircle } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 import { applyDiscount, deleteDiscount } from "@/lib/api/discount";
 import { getOrCreateSessionId } from "@/lib/session";
 import DiscountBreakdown from "@/components/ui/DiscountBreakdown";
@@ -27,13 +26,15 @@ interface PromoCodeInputProps {
     finalTotal: number;
   } | null;
   disabled?: boolean;
+  phoneNumber?: string;
 }
 
 export default function PromoCodeInput({ 
   onDiscountApplied, 
   onDiscountRemoved, 
   appliedDiscount,
-  disabled = false 
+  disabled = false,
+  phoneNumber,
 }: PromoCodeInputProps) {
   const t = useTranslations("PromoCode");
   const locale = useLocale();
@@ -54,7 +55,7 @@ export default function PromoCodeInput({
     setIsApplying(true);
     try {
       const sessionId = getOrCreateSessionId();
-      const result = await applyDiscount(sessionId, promoCode.trim());
+      const result = await applyDiscount(sessionId, promoCode.trim(), phoneNumber);
 
       if (result.succeeded) {
         onDiscountApplied({
@@ -109,87 +110,79 @@ export default function PromoCodeInput({
 
   return (
     <div className="space-y-3">
-      {/* رسالة الخطأ */}
+      {/* Error message */}
       {errorMessage && (
-        <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-          <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-red-600">{errorMessage}</p>
+        <div className="p-3 border border-red-300 bg-red-50/50">
+          <p className="text-xs text-red-600">{errorMessage}</p>
         </div>
       )}
 
-      {/* عرض الخصم المطبق */}
+      {/* Applied discount */}
       {appliedDiscount && (
         <div className="space-y-3">
-          {/* زر الإزالة */}
+          {/* Remove button */}
           <div className="flex justify-end">
-            <Button
-              variant="ghost"
-              size="sm"
+            <button
               onClick={handleRemoveDiscount}
-              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              className="inline-flex items-center gap-1.5 text-xs tracking-wider uppercase text-muted-foreground hover:text-foreground transition-colors"
               disabled={disabled || isRemoving}
             >
               {isRemoving ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   {isAr ? "جاري الإزالة..." : "Removing..."}
                 </>
               ) : (
                 <>
-                  <X className="w-4 h-4 mr-1" />
-                  {isAr ? "إزالة الخصم" : "Remove Discount"}
+                  <X className="w-3.5 h-3.5" />
+                  {isAr ? "إزالة الخصم" : "Remove"}
                 </>
               )}
-            </Button>
+            </button>
           </div>
 
-          {/* تفاصيل الخصم */}
+          {/* Discount details */}
           <DiscountBreakdown discount={appliedDiscount} />
         </div>
       )}
 
-      {/* إدخال كود الخصم */}
+      {/* Promo code input */}
       {!appliedDiscount && (
-        <div className="space-y-2">
-          <Label htmlFor="promo-code" className="text-sm font-medium">
+        <div className="space-y-2.5">
+          <Label htmlFor="promo-code" className="text-xs font-medium tracking-wider uppercase text-muted-foreground">
             {t("label")}
           </Label>
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Tag className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground ${
-                isAr ? "right-3" : "left-3"
-              }`} />
-              <Input
-                id="promo-code"
-                type="text"
-                placeholder={t("placeholder")}
-                value={promoCode}
-                onChange={(e) => {
-                  setPromoCode(e.target.value.toUpperCase());
-                  clearError();
-                }}
-                onKeyPress={handleKeyPress}
-                disabled={isApplying || disabled}
-                className={`${isAr ? "pr-10" : "pl-10"} uppercase`}
-                maxLength={20}
-              />
-            </div>
-            <Button
+          <div className="flex gap-0">
+            <Input
+              id="promo-code"
+              type="text"
+              placeholder={t("placeholder")}
+              value={promoCode}
+              onChange={(e) => {
+                setPromoCode(e.target.value.toUpperCase());
+                clearError();
+              }}
+              onKeyPress={handleKeyPress}
+              disabled={isApplying || disabled}
+              className="uppercase rounded-none border-border bg-transparent h-11 text-sm focus-visible:ring-1 focus-visible:ring-foreground border-r-0"
+              maxLength={20}
+            />
+            <button
               onClick={handleApplyPromoCode}
               disabled={isApplying || !promoCode.trim() || disabled}
-              className="px-6"
+              className="h-11 px-5 bg-foreground text-background text-xs font-medium tracking-wider uppercase hover:bg-foreground/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap"
             >
               {isApplying ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   {t("applying")}
                 </>
               ) : (
                 t("apply")
               )}
-            </Button>
+            </button>
           </div>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-[11px] text-muted-foreground">
             {t("hint")}
           </p>
         </div>

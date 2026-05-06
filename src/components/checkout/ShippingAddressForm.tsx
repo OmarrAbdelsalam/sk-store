@@ -1,7 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { MapPin, Check, ChevronsUpDown, Building, FileText } from "lucide-react";
+import { Check, ChevronsUpDown } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { memo, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -35,33 +35,30 @@ const ShippingAddressForm = memo(({ formData, egyptGovernorates, onInputChange }
   const [open, setOpen] = useState(false);
   
   return (
-    <div className="bg-white dark:bg-card rounded-2xl border border-border/50 shadow-sm overflow-hidden">
+    <div className="border border-border">
       {/* Header */}
-      <div className="bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 px-4 sm:px-6 py-3 sm:py-4 border-b border-border/50">
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div className="p-1.5 sm:p-2 bg-primary/10 rounded-full">
-            <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-          </div>
-          <h3 className="text-base sm:text-lg font-semibold">{t("title")}</h3>
-        </div>
+      <div className="px-5 sm:px-6 py-4 border-b border-border">
+        <h3 className="text-xs sm:text-sm font-medium tracking-widest uppercase">{t("title")}</h3>
       </div>
 
-      <div className="p-4 sm:p-6 space-y-4">
+      <div className="p-5 sm:p-6 space-y-5">
         <div>
-          <Label htmlFor="governorate" className="text-sm font-medium mb-2 block">{t("governorate")}</Label>
+          <Label htmlFor="governorate" className="text-xs font-medium tracking-wider uppercase text-muted-foreground mb-2.5 block">
+            {t("governorate")}
+          </Label>
           <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
                 role="combobox"
                 aria-expanded={open}
-                className="w-full justify-between bg-background h-11 rounded-xl"
+                className="w-full justify-between bg-transparent h-12 rounded-none border-border text-sm font-normal"
               >
                 {formData.governorate || t("selectGovernorate")}
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-full p-0" align="start">
+            <PopoverContent className="w-full p-0 rounded-none" align="start">
               <Command>
                 <CommandInput placeholder={t("searchGovernorate")} />
                 <CommandEmpty>{t("noGovernorateFound")}</CommandEmpty>
@@ -91,8 +88,7 @@ const ShippingAddressForm = memo(({ formData, egyptGovernorates, onInputChange }
         </div>
 
         <div>
-          <Label htmlFor="city" className="text-sm font-medium flex items-center gap-2 mb-2">
-            <Building className="w-3.5 h-3.5 text-muted-foreground" />
+          <Label htmlFor="city" className="text-xs font-medium tracking-wider uppercase text-muted-foreground mb-2.5 block">
             {t("city")}
           </Label>
           <Input
@@ -100,14 +96,13 @@ const ShippingAddressForm = memo(({ formData, egyptGovernorates, onInputChange }
             placeholder={t("cityPlaceholder")}
             value={formData.city}
             onChange={(e) => onInputChange("city", e.target.value)}
-            className="h-11 rounded-xl"
+            className="h-12 rounded-none border-border bg-transparent focus-visible:ring-1 focus-visible:ring-foreground text-sm"
             required
           />
         </div>
 
         <div>
-          <Label htmlFor="detailedAddress" className="text-sm font-medium flex items-center gap-2 mb-2">
-            <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
+          <Label htmlFor="detailedAddress" className="text-xs font-medium tracking-wider uppercase text-muted-foreground mb-2.5 block">
             {t("detailedAddress")}
           </Label>
           <Textarea
@@ -115,14 +110,13 @@ const ShippingAddressForm = memo(({ formData, egyptGovernorates, onInputChange }
             placeholder={t("detailedAddressPlaceholder")}
             value={formData.detailedAddress}
             onChange={(e) => onInputChange("detailedAddress", e.target.value)}
-            className="min-h-[80px] rounded-xl resize-none"
+            className="min-h-[80px] rounded-none border-border bg-transparent focus-visible:ring-1 focus-visible:ring-foreground text-sm resize-none"
             required
           />
         </div>
 
         <div>
-          <Label htmlFor="notes" className="text-sm font-medium flex items-center gap-2 mb-2">
-            <FileText className="w-3.5 h-3.5 text-muted-foreground" />
+          <Label htmlFor="notes" className="text-xs font-medium tracking-wider uppercase text-muted-foreground mb-2.5 block">
             {t("notes")}
           </Label>
           <Textarea
@@ -130,7 +124,7 @@ const ShippingAddressForm = memo(({ formData, egyptGovernorates, onInputChange }
             placeholder={t("notesPlaceholder")}
             value={formData.notes}
             onChange={(e) => onInputChange("notes", e.target.value)}
-            className="min-h-[60px] rounded-xl resize-none"
+            className="min-h-[60px] rounded-none border-border bg-transparent focus-visible:ring-1 focus-visible:ring-foreground text-sm resize-none"
           />
         </div>
       </div>

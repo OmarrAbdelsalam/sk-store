@@ -1,5 +1,7 @@
-// Discount API utilities for frontend-only store
-import { applyDiscount as applyDiscountLocal } from "@/lib/api/cart";
+// Discount API - uses Supabase via promotionService
+import { promotionService } from "@/services/promotions";
+import { getLocalCart, applyDiscountToCart, removeDiscountFromCart } from "@/lib/localStorage";
+import { getOrCreateSessionId } from "@/lib/session";
 
 export interface DiscountResponse {
   succeeded: boolean;
@@ -11,41 +13,61 @@ export interface DiscountResponse {
   finalTotal?: number;
 }
 
-// Apply discount code
-export const applyDiscount = async (sessionId: string, code: string): Promise<DiscountResponse> => {
+// Apply discount code - validates against Supabase with session + phone context
+export const applyDiscount = async (
+  sessionId: string,
+  code: string,
+  phoneNumber?: string
+): Promise<DiscountResponse> => {
   try {
-    const result = await applyDiscountLocal(code);
+    const cart = getLocalCart();
+    const subtotal = cart.subtotal;
+
+    const result = await promotionService.validatePromoCode(code, subtotal, {
+      sessionId: sessionId || getOrCreateSessionId(),
+      phoneNumber: phoneNumber,
+    });
+
+    if (!result.valid) {
+      return {
+        succeeded: false,
+        message: result.errorMessage || "Invalid promo code",
+      };
+    }
+
+    // Apply to local cart
+    applyDiscountToCart(code.toUpperCase(), result.discountAmount!);
+
+    const percentage =
+      result.discountType === "percentage"
+        ? result.discountValue!
+        : Math.round((result.discountAmount! / subtotal) * 100);
+
     return {
-      succeeded: result.success,
-      message: result.message || '',
+      succeeded: true,
+      message: "Promo code applied successfully",
       discountValue: result.discountAmount,
-      discountPercentage: result.discountAmount,
+      discountPercentage: percentage,
       discountAmount: result.discountAmount,
-      originalTotal: 0,
-      finalTotal: 0,
+      originalTotal: subtotal,
+      finalTotal: subtotal - result.discountAmount!,
     };
   } catch (error) {
+    console.error("Error applying discount:", error);
     return {
       succeeded: false,
-      message: 'حدث خطأ في تطبيق كود الخصم',
+      message: "An error occurred while applying the promo code",
     };
   }
 };
 
 // Remove discount
-export const removeDiscount = async (sessionId: string): Promise<DiscountResponse> => {
+export const removeDiscount = async (_sessionId?: string): Promise<DiscountResponse> => {
   try {
-    const { removeDiscount: removeDiscountLocal } = await import("@/lib/api/cart");
-    await removeDiscountLocal();
-    return {
-      succeeded: true,
-      message: 'تم إزالة الخصم بنجاح',
-    };
-  } catch (error) {
-    return {
-      succeeded: false,
-      message: 'حدث خطأ في إزالة الخصم',
-    };
+    removeDiscountFromCart();
+    return { succeeded: true, message: "Discount removed" };
+  } catch {
+    return { succeeded: false, message: "Failed to remove discount" };
   }
 };
 

@@ -46,7 +46,7 @@ const ComingSoon = ({ title, description }: ComingSoonProps) => {
             transition={{ delay: 0.4 }}
             className="text-gray-600 mb-6 leading-relaxed"
           >
-            {description || "هذه الميزة غير متاحة في النسخة التجريبية. تم تحويل المتجر إلى frontend-only مع الاحتفاظ بوظائف Dropbox فقط."}
+            {description || "هذه الميزة not available in trial version. Store converted to frontend-only while keeping functions of Dropbox only."}
           </motion.p>
 
           <motion.div
@@ -56,8 +56,8 @@ const ComingSoon = ({ title, description }: ComingSoonProps) => {
             className="space-y-3"
           >
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-700">
-              <p className="font-medium mb-1">النسخة التجريبية</p>
-              <p>يمكنك استخدام وظائف Dropbox لرفع الملفات فقط</p>
+              <p className="font-medium mb-1">Trial Version</p>
+              <p>You can use functions Dropbox لرفع الملفات only</p>
             </div>
 
             <Button
@@ -65,7 +65,7 @@ const ComingSoon = ({ title, description }: ComingSoonProps) => {
               className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
             >
               <ArrowLeft className="w-4 h-4 ml-2" />
-              العودة للوحة التحكم
+              Back to Dashboard
             </Button>
           </motion.div>
         </div>

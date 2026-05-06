@@ -1,14 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, usePathname } from '@/i18n/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { useSearchParams } from 'next/navigation';
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Eye, EyeOff, Loader2, Mail, Lock } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { setAuthToken } from "@/lib/auth";
 
@@ -24,17 +20,26 @@ const Login = ({ redirectTo }: LoginProps) => {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [finalRedirect, setFinalRedirect] = useState(redirectTo || "/admin");
+  const [finalRedirect, setFinalRedirect] = useState(redirectTo || "/en/admin");
 
   useEffect(() => {
-    // Get redirect path from URL params or use default
     const fromParam = searchParams.get('from');
     if (fromParam) {
       setFinalRedirect(fromParam);
     } else if (redirectTo) {
       setFinalRedirect(redirectTo);
+    } else {
+      setFinalRedirect("/en/admin");
     }
   }, [searchParams, redirectTo]);
+
+  useEffect(() => {
+    const token = localStorage.getItem("access_token");
+    const expiresAt = localStorage.getItem("token_expires_at");
+    if (token && expiresAt && Date.now() < parseInt(expiresAt)) {
+      window.location.href = finalRedirect;
+    }
+  }, [finalRedirect]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,167 +53,138 @@ const Login = ({ redirectTo }: LoginProps) => {
       });
 
       if (error) {
-        console.error("Login error:", error.message);
-        setError("البريد الإلكتروني أو كلمة المرور غير صحيحة");
+        setError("Invalid email or password");
         setIsLoading(false);
         return;
       }
 
       if (data.session) {
-        // Store auth token using our helper (sets cookie & localStorage)
         setAuthToken(data.session.access_token);
-        
-        // Store token expiry for ProtectedRoute check
-        const expiresAt = Date.now() + (7 * 24 * 60 * 60 * 1000); // 7 days
+        const expiresAt = Date.now() + (7 * 24 * 60 * 60 * 1000);
         localStorage.setItem("token_expires_at", expiresAt.toString());
-        
-        // Store user info if needed
         localStorage.setItem("user", JSON.stringify(data.user));
-        
-        router.push(finalRedirect);
+        window.location.href = finalRedirect;
       } else {
-        setError("فشل تسجيل الدخول: لم يتم العثور على جلسة");
+        setError("Login failed: Session not found");
         setIsLoading(false);
       }
 
     } catch (err) {
-      console.error("Unexpected error:", err);
-      setError("حدث خطأ في الاتصال، حاول مرة أخرى");
+      setError("Connection error, please try again");
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f8f7] flex items-center justify-center p-6 relative overflow-hidden" dir="rtl">
-      {/* Background Texture - Minimal & Calm */}
-      <div 
-        className="absolute inset-0 opacity-[0.03] pointer-events-none"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-        }}
-      />
+    <div className="min-h-screen bg-background flex" dir="ltr">
+      {/* Left side - Minimal Branding */}
+      <div className="hidden lg:flex lg:w-1/2 bg-foreground relative overflow-hidden items-center justify-center">
+        <div className="relative z-10 text-center flex flex-col items-center px-12">
+          <div className="w-16 h-16 border-2 border-background/20 flex items-center justify-center mb-10">
+            <span className="text-background font-light text-2xl tracking-widest">SK</span>
+          </div>
+          <h1 className="text-4xl font-light text-background tracking-wider uppercase mb-4">
+            Admin Portal
+          </h1>
+          <div className="h-px w-16 bg-background/30 mb-6" />
+          <p className="text-background/50 text-sm tracking-wider leading-relaxed max-w-sm">
+            Manage your storefront, track orders, and analyze your growth all in one place.
+          </p>
+        </div>
+      </div>
 
-      {/* Decorative blurred circles for subtle luxury feel */}
-      <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-[#e6e2dd] rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
-      <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-[#f0edea] rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
+      {/* Right side - Login Form */}
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-12">
+        <div className="w-full max-w-[380px]">
+          {/* Mobile Logo */}
+          <div className="lg:hidden text-center mb-12 flex flex-col items-center">
+            <div className="w-14 h-14 border-2 border-foreground flex items-center justify-center mb-5">
+              <span className="text-foreground font-light text-xl tracking-widest">SK</span>
+            </div>
+            <h1 className="text-xl font-light tracking-widest uppercase">Admin Portal</h1>
+          </div>
 
-      <div className="w-full max-w-md relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }} 
-          className="bg-white/80 backdrop-blur-xl rounded-[2rem] p-8 md:p-12 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/60"
-        >
-          {/* Logo / Branding */}
-          <div className="text-center mb-10">
-            <h1 className="text-4xl font-luxury text-[#1c1c1c] mb-2 tracking-wide font-medium">
-              SK Bags
-            </h1>
-            <p className="text-[#8c8c8c] text-xs tracking-[0.2em] uppercase font-medium">
-              Admin Portal
+          {/* Header */}
+          <div className="mb-8 sm:mb-10">
+            <h2 className="text-2xl sm:text-3xl font-light tracking-wider uppercase">Welcome back</h2>
+            <div className="h-px w-12 bg-foreground mt-3" />
+            <p className="text-xs tracking-wider text-muted-foreground mt-3">
+              Sign in to your account to continue
             </p>
           </div>
 
-          <div className="text-center mb-8 space-y-2">
-            <h2 className="text-xl font-bold text-[#2d2d2d]">مرحباً بعودتك</h2>
-            <p className="text-gray-500 font-light text-sm">سجل دخولك للمتابعة إلى لوحة التحكم</p>
-          </div>
-
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Error */}
             {error && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                className="p-3 rounded-lg bg-red-50 border border-red-100 text-red-600 text-sm text-center"
-              >
-                {error}
-              </motion.div>
+              <div className="p-4 border border-red-300 bg-red-50/50 dark:bg-red-950/20">
+                <p className="text-xs text-red-600 dark:text-red-400 tracking-wider">{error}</p>
+              </div>
             )}
 
-            <div className="space-y-5">
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-[#2d2d2d] font-medium text-sm">
-                  البريد الإلكتروني
-                </Label>
-                <div className="relative group">
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="example@skbags.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="h-12 bg-[#fbfbfb] border-gray-100 focus:bg-white focus:border-[#d4d1cd] focus:ring-0 rounded-xl transition-all duration-300 text-sm"
-                    dir="ltr"
-                  />
-                  <Mail className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 opacity-60" />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-[#2d2d2d] font-medium text-sm">
-                  كلمة المرور
-                </Label>
-                <div className="relative group">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="h-12 bg-[#fbfbfb] border-gray-100 focus:bg-white focus:border-[#d4d1cd] focus:ring-0 rounded-xl transition-all duration-300 text-sm"
-                    dir="ltr"
-                  />
-                  <Lock className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 opacity-60" />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
+            {/* Email */}
+            <div>
+              <label htmlFor="email" className="text-xs font-medium tracking-wider uppercase text-muted-foreground mb-2.5 block">
+                Email Address
+              </label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="admin@skbags.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="h-12 rounded-none border-border bg-transparent focus-visible:ring-1 focus-visible:ring-foreground text-sm"
+                required
+              />
             </div>
 
-            <div className="flex items-center justify-between mt-2">
-              <div className="flex items-center gap-2">
-                <Checkbox 
-                  id="remember" 
-                  className="rounded border-[#e0e0e0] data-[state=checked]:bg-[#2d2d2d] data-[state=checked]:border-[#2d2d2d]" 
+            {/* Password */}
+            <div>
+              <label htmlFor="password" className="text-xs font-medium tracking-wider uppercase text-muted-foreground mb-2.5 block">
+                Password
+              </label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="h-12 rounded-none border-border bg-transparent focus-visible:ring-1 focus-visible:ring-foreground text-sm pr-12"
+                  required
                 />
-                <Label htmlFor="remember" className="text-gray-500 cursor-pointer text-xs">
-                  تذكرني
-                </Label>
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1.5"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
-              <button 
-                type="button" 
-                className="text-[#2d2d2d] hover:underline underline-offset-4 text-xs font-medium transition-all"
-              >
-                نسيت كلمة المرور؟
-              </button>
             </div>
 
-            <Button
+            {/* Submit */}
+            <button
               type="submit"
-              className="w-full h-12 bg-[#2d2d2d] hover:bg-[#000000] text-white rounded-xl text-sm tracking-wide font-medium shadow-lg shadow-gray-200 hover:shadow-xl transition-all duration-300 mt-6"
+              className="w-full h-13 py-4 bg-foreground text-background text-xs font-medium tracking-widest uppercase
+                transition-all duration-300 hover:bg-foreground/90 active:scale-[0.99]
+                disabled:opacity-50 disabled:cursor-not-allowed
+                flex items-center justify-center gap-2"
               disabled={isLoading}
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="w-4 h-4 ml-2 animate-spin" />
-                  جاري التحميل...
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Signing in...
                 </>
               ) : (
-                "تسجيل الدخول"
+                "Sign In"
               )}
-            </Button>
-
-
+            </button>
           </form>
-        </motion.div>
-        
-        <div className="mt-8 text-center text-xs text-[#8c8c8c]">
-           <p>© {new Date().getFullYear()} SK Bags. Designed for excellence.</p>
+
+          <p className="text-center text-[11px] tracking-wider uppercase text-muted-foreground mt-16">
+            © {new Date().getFullYear()} SK Bags. All rights reserved.
+          </p>
         </div>
       </div>
     </div>

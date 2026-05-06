@@ -32,7 +32,7 @@ const OperationsTable = ({ operations, filter, onFilterChange, filterOptions }: 
               <TrendingUp size={20} className="hidden lg:block text-white" />
             </div>
             <div>
-              <h3 className="font-bold text-gray-800 text-sm lg:text-base">آخر العمليات</h3>
+              <h3 className="font-bold text-gray-800 text-sm lg:text-base">Recent Operations</h3>
               <p className="text-xs text-gray-400">Inbound & Outbound</p>
             </div>
           </div>
@@ -43,14 +43,14 @@ const OperationsTable = ({ operations, filter, onFilterChange, filterOptions }: 
       <div className="overflow-x-auto">
         <div className="min-w-[800px]">
           <div className="grid grid-cols-8 gap-4 px-4 lg:px-6 py-2 lg:py-3 bg-gray-50 text-xs lg:text-sm font-medium text-gray-500">
-            <span>النوع</span>
-            <span>المنتج</span>
+            <span>Type</span>
+            <span>Product</span>
             <span>BATCH NUMBER</span>
-            <span>العميل</span>
-            <span>الكمية</span>
-            <span>الموقع</span>
-            <span>الوقت</span>
-            <span>الإجراءات</span>
+            <span>Customer</span>
+            <span>Quantity</span>
+            <span>Location</span>
+            <span>Time</span>
+            <span>Actions</span>
           </div>
 
           <div className="divide-y divide-gray-100">
@@ -70,11 +70,11 @@ const OperationsTable = ({ operations, filter, onFilterChange, filterOptions }: 
                   >
                     {operation.type === "inbound" ? (
                       <>
-                        <ArrowDownCircle size={12} /> إدخال
+                        <ArrowDownCircle size={12} /> In
                       </>
                     ) : (
                       <>
-                        <ArrowUpCircle size={12} /> إخراج
+                        <ArrowUpCircle size={12} /> Out
                       </>
                     )}
                   </span>

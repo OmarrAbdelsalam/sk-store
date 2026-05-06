@@ -28,16 +28,23 @@ import {
 import { PageHeader, Card } from "@/components/admin/common";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 
 // Services
 import { heroService, HeroSettings, DEFAULT_HERO } from "@/services/hero";
 import { customerLoveService, CustomerLoveItem, CustomerLoveSettings } from "@/services/customerLove";
 import { moreToDiscoverService, MoreToDiscoverItem, MoreToDiscoverSettings } from "@/services/moreToDiscover";
-import { ourVibesService, OurVibesItem, OurVibesSettings } from "@/services/ourVibes";
 import { mobileHeroService, MobileHero, DEFAULT_MOBILE_HERO, FILE_LIMITS } from "@/services/mobileHero";
 import { marqueeService, MarqueeItem, MarqueeSettings, DEFAULT_MARQUEE_SETTINGS } from "@/services/marquee";
 import { productService } from "@/services/products";
+import { socialProofsAdminService, SocialProofAdmin } from "@/services/admin/socialProofs";
 import { DropboxImg } from "@/components/DropboxImage";
 import { uploadFile } from "@/api/admin/upload";
 
@@ -73,14 +80,14 @@ const HomepagePage = () => {
   const [moreSaving, setMoreSaving] = useState(false);
   const moreImageRef = useRef<HTMLInputElement>(null);
 
-  // ===================== OUR VIBES STATE =====================
-  const [vibesItems, setVibesItems] = useState<OurVibesItem[]>([]);
-  const [vibesSettings, setVibesSettings] = useState<OurVibesSettings | null>(null);
+  // ===================== OUR VIBES (REELS) STATE =====================
+  const [vibesItems, setVibesItems] = useState<SocialProofAdmin[]>([]);
   const [vibesSaving, setVibesSaving] = useState(false);
   const [products, setProducts] = useState<{ id: string; name_en: string }[]>([]);
-  const [newVibe, setNewVibe] = useState({ video_url: '', thumbnail_url: '', caption: '', product_id: '' });
-  const vibesVideoRef = useRef<HTMLInputElement>(null);
+  const [newVibe, setNewVibe] = useState({ video_url: '', thumbnail_url: '', title_en: '', product_id: '', is_featured: true });
   const vibesThumbnailRef = useRef<HTMLInputElement>(null);
+  const vibesVideoRef = useRef<HTMLInputElement>(null);
+  const [vibesVideoUploading, setVibesVideoUploading] = useState(false);
 
   // ===================== MOBILE HERO STATE =====================
   const [mobileHero, setMobileHero] = useState<MobileHero | null>(null);
@@ -119,7 +126,7 @@ const HomepagePage = () => {
             mobileHeroService.getActive(),
             customerLoveService.getAllItems(),
             moreToDiscoverService.getAllItems(),
-            ourVibesService.getAllItems(),
+            socialProofsAdminService.getAll(),
             productService.getAll(),
             marqueeService.getAllItems('top_banner'),
             marqueeService.getSettings('top_banner'),
@@ -150,12 +157,12 @@ const HomepagePage = () => {
       if (heroSettings) {
         setHero(heroSettings);
         setHeroForm({
-            title: heroSettings.title,
-            subtitle: heroSettings.subtitle,
-            description: heroSettings.description,
-            button_text: heroSettings.button_text,
-            button_link: heroSettings.button_link,
-            image_url: heroSettings.image_url,
+            title: heroSettings.title || '',
+            subtitle: heroSettings.subtitle || '',
+            description: heroSettings.description || '',
+            button_text: heroSettings.button_text || '',
+            button_link: heroSettings.button_link || '',
+            image_url: heroSettings.image_url || '',
         });
       }
 
@@ -164,11 +171,11 @@ const HomepagePage = () => {
       if (mobileSettings) {
         setMobileHero(mobileSettings);
         setMobileHeroForm({
-            button_text: mobileSettings.button_text,
-            button_link: mobileSettings.button_link,
-            text_color: mobileSettings.text_color,
-            media_url: mobileSettings.media_url,
-            media_type: mobileSettings.media_type,
+            button_text: mobileSettings.button_text || '',
+            button_link: mobileSettings.button_link || '',
+            text_color: mobileSettings.text_color || '#ffffff',
+            media_url: mobileSettings.media_url || '',
+            media_type: mobileSettings.media_type || 'image',
         });
       }
 
@@ -191,14 +198,11 @@ const HomepagePage = () => {
          console.error('Failed to load more to discover settings:', e);
        }
 
-       // Handle Our Vibes
-       setVibesItems(ourVibesData as OurVibesItem[]);
+       // Handle Our Vibes (Reels - social_proofs)
+       setVibesItems(ourVibesData as SocialProofAdmin[]);
        try {
-         const ovSettings = await ourVibesService.getSettings();
-         setVibesSettings(ovSettings);
-       } catch (e) {
-         console.error('Failed to load our vibes settings:', e);
-       }
+         // no separate settings needed for social_proofs
+       } catch (e) { console.error(e); }
 
        // Handle Products
        setProducts((productsData as any[]).map((p: any) => ({ id: p.id, name_en: p.name_en })));
@@ -237,12 +241,12 @@ const HomepagePage = () => {
       const data = await heroService.getActive();
       setHero(data);
       setHeroForm({
-        title: data.title,
-        subtitle: data.subtitle,
-        description: data.description,
-        button_text: data.button_text,
-        button_link: data.button_link,
-        image_url: data.image_url,
+        title: data.title || '',
+        subtitle: data.subtitle || '',
+        description: data.description || '',
+        button_text: data.button_text || '',
+        button_link: data.button_link || '',
+        image_url: data.image_url || '',
       });
     } catch (error) { console.error(error); }
   };
@@ -413,47 +417,51 @@ const HomepagePage = () => {
     }
   };
 
-  // ===================== OUR VIBES HANDLERS =====================
+  // ===================== OUR VIBES (REELS) HANDLERS =====================
   const handleVibesVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    const path = await uploadToStorage(file);
-    if (path) {
-      setNewVibe({ ...newVibe, video_url: path });
+    setVibesVideoUploading(true);
+    try {
+      const path = await uploadToStorage(file);
+      if (path) {
+        setNewVibe({ ...newVibe, video_url: path });
+        toast({ title: "Uploaded", description: "Video uploaded successfully" });
+      }
+    } catch {
+      toast({ title: "Error", description: "Failed to upload video", variant: "destructive" });
+    } finally {
+      setVibesVideoUploading(false);
     }
   };
 
   const handleVibesThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     const path = await uploadToStorage(file);
-    if (path) {
-      setNewVibe({ ...newVibe, thumbnail_url: path });
-    }
+    if (path) setNewVibe({ ...newVibe, thumbnail_url: path });
   };
 
   const handleAddVibe = async () => {
-    if (!newVibe.video_url || !newVibe.caption) {
-      toast({ title: "Error", description: "Video and caption are required", variant: "destructive" });
+    if (!newVibe.video_url) {
+      toast({ title: "Error", description: "Video URL is required", variant: "destructive" });
       return;
     }
-
     setVibesSaving(true);
     try {
-      const item = await ourVibesService.createItem({
+      const item = await socialProofsAdminService.create({
         video_url: newVibe.video_url,
-        caption: newVibe.caption,
+        title_en: newVibe.title_en || undefined,
         thumbnail_url: newVibe.thumbnail_url || undefined,
         product_id: newVibe.product_id || undefined,
+        is_featured: newVibe.is_featured,
       });
-      setVibesItems([...vibesItems, item]);
-      setNewVibe({ video_url: '', thumbnail_url: '', caption: '', product_id: '' });
-      toast({ title: "Added", description: "Vibe added successfully" });
+      setVibesItems([item, ...vibesItems]);
+      setNewVibe({ video_url: '', thumbnail_url: '', title_en: '', product_id: '', is_featured: true });
+      toast({ title: "Added", description: "Reel added successfully" });
     } catch (error) {
-      console.error("Error adding vibe:", error);
-      toast({ title: "Error", description: "Failed to add vibe", variant: "destructive" });
+      console.error("Error adding reel:", error);
+      toast({ title: "Error", description: "Failed to add reel", variant: "destructive" });
     } finally {
       setVibesSaving(false);
     }
@@ -461,12 +469,21 @@ const HomepagePage = () => {
 
   const handleDeleteVibe = async (id: string) => {
     try {
-      await ourVibesService.deleteItem(id);
+      await socialProofsAdminService.delete(id);
       setVibesItems(vibesItems.filter(item => item.id !== id));
-      toast({ title: "Deleted", description: "Vibe removed" });
+      toast({ title: "Deleted", description: "Reel removed" });
     } catch (error) {
       console.error("Error deleting:", error);
       toast({ title: "Error", description: "Failed to delete", variant: "destructive" });
+    }
+  };
+
+  const handleToggleFeatured = async (item: SocialProofAdmin) => {
+    try {
+      await socialProofsAdminService.update(item.id, { is_featured: !item.is_featured });
+      setVibesItems(vibesItems.map(v => v.id === item.id ? { ...v, is_featured: !v.is_featured } : v));
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to update", variant: "destructive" });
     }
   };
 
@@ -576,7 +593,7 @@ const HomepagePage = () => {
     { id: 'featuresTicker' as TabType, label: 'Features Ticker', icon: ArrowRightLeft },
     { id: 'customerLove' as TabType, label: 'Customer Love', icon: Heart },
     { id: 'moreToDiscover' as TabType, label: 'More to Discover', icon: Grid3X3 },
-    { id: 'ourVibes' as TabType, label: 'Our Vibes', icon: Film },
+    { id: 'ourVibes' as TabType, label: 'Reels', icon: Film },
   ];
 
   if (isLoading) {
@@ -599,7 +616,7 @@ const HomepagePage = () => {
       <PageHeader
         icon={Layout}
         title="Homepage Sections"
-        subtitle="Manage Hero, Customer Love, More to Discover, and Our Vibes sections"
+        subtitle="Manage Hero, Customer Love, More to Discover, and Reels sections"
       />
 
       {/* Tabs */}
@@ -608,10 +625,10 @@ const HomepagePage = () => {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium transition-colors whitespace-nowrap ${
+            className={`px-4 py-2 rounded-xl flex items-center gap-2 text-sm font-medium transition-colors whitespace-nowrap shadow-sm ${
               activeTab === tab.id
-                ? 'bg-gray-900 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? 'bg-primary text-white ring-1 ring-primary/20'
+                : 'bg-white border border-gray-100 text-gray-600 hover:border-primary hover:text-primary'
             }`}
           >
             <tab.icon className="w-4 h-4" />
@@ -639,7 +656,7 @@ const HomepagePage = () => {
                   <h2 className="font-playfair text-xl font-bold mb-2">{heroForm.title}</h2>
                   <p className="text-xs text-gray-600 mb-2 italic">{heroForm.subtitle}</p>
                   <p className="text-xs text-gray-500 mb-3 line-clamp-3">{heroForm.description}</p>
-                  <button className="px-3 py-1.5 bg-black text-white text-xs rounded">
+                  <button className="px-3 py-1.5 bg-[hsl(var(--luxury-charcoal))] text-white text-xs rounded-lg">
                     {heroForm.button_text}
                   </button>
                 </div>
@@ -736,7 +753,7 @@ const HomepagePage = () => {
               <Button
                 onClick={handleHeroSave}
                 disabled={heroSaving}
-                className="w-full bg-gray-900 hover:bg-gray-800"
+                className="w-full rounded-xl shadow-md bg-primary hover:bg-primary/90 text-white"
               >
                 {heroSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                 Save Hero Section
@@ -759,7 +776,7 @@ const HomepagePage = () => {
               <Eye className="w-4 h-4" />
               Preview (Mobile)
             </h3>
-            <div className="bg-gray-900 rounded-2xl overflow-hidden mx-auto" style={{ width: '200px', height: '400px' }}>
+            <div className="bg-[hsl(var(--luxury-charcoal))] rounded-2xl overflow-hidden mx-auto shadow-2xl border-4 border-white" style={{ width: '200px', height: '400px' }}>
               <div className="relative w-full h-full">
                 {mobileHeroForm.media_url && (
                   mobileHeroForm.media_type === 'video' ? (
@@ -871,7 +888,7 @@ const HomepagePage = () => {
               <Button
                 onClick={handleMobileHeroSave}
                 disabled={mobileHeroSaving}
-                className="w-full bg-gray-900 hover:bg-gray-800"
+                className="w-full rounded-xl shadow-md bg-primary hover:bg-primary/90 text-white"
               >
                 {mobileHeroSaving ? (
                   <>
@@ -912,8 +929,8 @@ const HomepagePage = () => {
                 <div 
                   className="py-3 px-4 flex items-center justify-center relative overflow-hidden"
                   style={{ 
-                    backgroundColor: topBannerSettings.background_color,
-                    color: topBannerSettings.text_color
+                    backgroundColor: topBannerSettings.background_color || '#000000',
+                    color: topBannerSettings.text_color || '#ffffff'
                   }}
                 >
                   <div className="whitespace-nowrap font-medium text-sm tracking-widest uppercase">
@@ -1026,12 +1043,12 @@ const HomepagePage = () => {
                   <div className="flex gap-2 items-center">
                     <input
                       type="color"
-                      value={topBannerSettings.background_color}
+                      value={topBannerSettings.background_color || '#000000'}
                       onChange={(e) => setTopBannerSettings({ ...topBannerSettings, background_color: e.target.value })}
                       className="w-12 h-12 rounded-lg border cursor-pointer p-1"
                     />
                     <Input
-                      value={topBannerSettings.background_color}
+                      value={topBannerSettings.background_color || ''}
                       onChange={(e) => setTopBannerSettings({ ...topBannerSettings, background_color: e.target.value })}
                       placeholder="#000000"
                       dir="ltr"
@@ -1045,12 +1062,12 @@ const HomepagePage = () => {
                   <div className="flex gap-2 items-center">
                     <input
                       type="color"
-                      value={topBannerSettings.text_color}
+                      value={topBannerSettings.text_color || '#ffffff'}
                       onChange={(e) => setTopBannerSettings({ ...topBannerSettings, text_color: e.target.value })}
                       className="w-12 h-12 rounded-lg border cursor-pointer p-1"
                     />
                     <Input
-                      value={topBannerSettings.text_color}
+                      value={topBannerSettings.text_color || ''}
                       onChange={(e) => setTopBannerSettings({ ...topBannerSettings, text_color: e.target.value })}
                       placeholder="#ffffff"
                       dir="ltr"
@@ -1063,7 +1080,7 @@ const HomepagePage = () => {
                   <Button
                     onClick={handleTopBannerSave}
                     disabled={topBannerSaving}
-                    className="w-full bg-black hover:bg-gray-800 text-white"
+                    className="w-full rounded-xl shadow-md bg-primary hover:bg-primary/90 text-white"
                   >
                     {topBannerSaving ? (
                       <>
@@ -1106,8 +1123,8 @@ const HomepagePage = () => {
                 <div 
                   className="py-3 px-4 flex items-center overflow-hidden"
                   style={{ 
-                    backgroundColor: tickerSettings.background_color,
-                    color: tickerSettings.text_color
+                    backgroundColor: tickerSettings.background_color || '#000000',
+                    color: tickerSettings.text_color || '#ffffff'
                   }}
                 >
                   <div className="whitespace-nowrap font-medium text-sm tracking-[0.3em] uppercase flex">
@@ -1232,12 +1249,12 @@ const HomepagePage = () => {
                   <div className="flex gap-2 items-center">
                     <input
                       type="color"
-                      value={tickerSettings.background_color}
+                      value={tickerSettings.background_color || '#000000'}
                       onChange={(e) => setTickerSettings({ ...tickerSettings, background_color: e.target.value })}
                       className="w-12 h-12 rounded-lg border cursor-pointer p-1"
                     />
                     <Input
-                      value={tickerSettings.background_color}
+                      value={tickerSettings.background_color || ''}
                       onChange={(e) => setTickerSettings({ ...tickerSettings, background_color: e.target.value })}
                       placeholder="#000000"
                       dir="ltr"
@@ -1251,12 +1268,12 @@ const HomepagePage = () => {
                   <div className="flex gap-2 items-center">
                     <input
                       type="color"
-                      value={tickerSettings.text_color}
+                      value={tickerSettings.text_color || '#ffffff'}
                       onChange={(e) => setTickerSettings({ ...tickerSettings, text_color: e.target.value })}
                       className="w-12 h-12 rounded-lg border cursor-pointer p-1"
                     />
                     <Input
-                      value={tickerSettings.text_color}
+                      value={tickerSettings.text_color || ''}
                       onChange={(e) => setTickerSettings({ ...tickerSettings, text_color: e.target.value })}
                       placeholder="#ffffff"
                       dir="ltr"
@@ -1269,7 +1286,7 @@ const HomepagePage = () => {
                   <Button
                     onClick={handleTickerSave}
                     disabled={tickerSaving}
-                    className="w-full bg-black hover:bg-gray-800 text-white"
+                    className="w-full rounded-xl shadow-md bg-primary hover:bg-primary/90 text-white"
                   >
                     {tickerSaving ? (
                       <>
@@ -1297,16 +1314,16 @@ const HomepagePage = () => {
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold flex items-center gap-2">
                 <Heart className="w-4 h-4 text-pink-500" />
-                Customer Love Images ({customerLoveItems.length})
+                Customer Love Images ({customerLoveItems.length}/8)
               </h3>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => customerLoveImageRef.current?.click()}
-                disabled={customerLoveSaving}
+                disabled={customerLoveSaving || customerLoveItems.length >= 8}
               >
                 {customerLoveSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
-                Add Image
+                {customerLoveItems.length >= 8 ? 'Max 8 Images' : 'Add Image'}
               </Button>
               <input
                 ref={customerLoveImageRef}
@@ -1327,7 +1344,7 @@ const HomepagePage = () => {
                   )}
                   <button
                     onClick={() => handleDeleteCustomerLoveItem(item.id)}
-                    className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                   >
                     <Trash2 className="w-3 h-3" />
                   </button>
@@ -1352,16 +1369,16 @@ const HomepagePage = () => {
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold flex items-center gap-2">
                 <Grid3X3 className="w-4 h-4 text-blue-500" />
-                More to Discover Images ({moreItems.length})
+                More to Discover Images ({moreItems.length}/2)
               </h3>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => moreImageRef.current?.click()}
-                disabled={moreSaving}
+                disabled={moreSaving || moreItems.length >= 2}
               >
                 {moreSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
-                Add Image
+                {moreItems.length >= 2 ? 'Max 2 Images' : 'Add Image'}
               </Button>
               <input
                 ref={moreImageRef}
@@ -1382,7 +1399,7 @@ const HomepagePage = () => {
                   )}
                   <button
                     onClick={() => handleDeleteMoreItem(item.id)}
-                    className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                   >
                     <Trash2 className="w-3 h-3" />
                   </button>
@@ -1403,26 +1420,44 @@ const HomepagePage = () => {
       {/* ===================== OUR VIBES TAB ===================== */}
       {activeTab === 'ourVibes' && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-          {/* Add New Vibe */}
+          {/* Add New Reel */}
           <Card className="p-4">
             <h3 className="font-semibold mb-4 flex items-center gap-2">
               <Plus className="w-4 h-4" />
-              Add New Vibe
+              Add New Reel
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-1 block">Video (Required)</label>
-                <div className="flex gap-2">
-                  <Input
-                    value={newVibe.video_url}
-                    onChange={(e) => setNewVibe({ ...newVibe, video_url: e.target.value })}
-                    placeholder="Upload or paste Dropbox path"
-                    dir="ltr"
-                    className="flex-1"
-                  />
-                  <Button variant="outline" size="sm" onClick={() => vibesVideoRef.current?.click()}>
-                    <Video className="w-4 h-4" />
-                  </Button>
+                <div className="space-y-2">
+                  {/* Upload button */}
+                  <div
+                    onClick={() => vibesVideoRef.current?.click()}
+                    className={`w-full h-32 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-2 cursor-pointer transition-all ${
+                      newVibe.video_url
+                        ? "border-green-300 bg-green-50"
+                        : "border-gray-200 hover:border-indigo-400 hover:bg-indigo-50/30"
+                    }`}
+                  >
+                    {vibesVideoUploading ? (
+                      <>
+                        <Loader2 className="w-6 h-6 animate-spin text-indigo-500" />
+                        <p className="text-xs text-gray-500">Uploading...</p>
+                      </>
+                    ) : newVibe.video_url ? (
+                      <>
+                        <Video className="w-6 h-6 text-green-600" />
+                        <p className="text-xs text-green-700 font-medium">Video uploaded ✓</p>
+                        <p className="text-[10px] text-gray-400 truncate max-w-[180px]">{newVibe.video_url.split('/').pop()}</p>
+                      </>
+                    ) : (
+                      <>
+                        <Video className="w-6 h-6 text-gray-400" />
+                        <p className="text-xs text-gray-600 font-medium">Click to upload video</p>
+                        <p className="text-[10px] text-gray-400">MP4, MOV, WebM</p>
+                      </>
+                    )}
+                  </div>
                   <input
                     ref={vibesVideoRef}
                     type="file"
@@ -1430,6 +1465,15 @@ const HomepagePage = () => {
                     onChange={handleVibesVideoUpload}
                     className="hidden"
                   />
+                  {newVibe.video_url && (
+                    <button
+                      type="button"
+                      onClick={() => setNewVibe({ ...newVibe, video_url: '' })}
+                      className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1"
+                    >
+                      <X className="w-3 h-3" /> Remove video
+                    </button>
+                  )}
                 </div>
               </div>
               <div>
@@ -1438,7 +1482,7 @@ const HomepagePage = () => {
                   <Input
                     value={newVibe.thumbnail_url}
                     onChange={(e) => setNewVibe({ ...newVibe, thumbnail_url: e.target.value })}
-                    placeholder="Optional thumbnail image"
+                    placeholder="Thumbnail image URL"
                     dir="ltr"
                     className="flex-1"
                   />
@@ -1455,65 +1499,86 @@ const HomepagePage = () => {
                 </div>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Caption (Required)</label>
+                <label className="text-sm font-medium text-gray-700 mb-1 block">Title (Optional)</label>
                 <Input
-                  value={newVibe.caption}
-                  onChange={(e) => setNewVibe({ ...newVibe, caption: e.target.value })}
-                  placeholder="English caption..."
+                  value={newVibe.title_en}
+                  onChange={(e) => setNewVibe({ ...newVibe, title_en: e.target.value })}
+                  placeholder="Reel title..."
                   dir="ltr"
                 />
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-1 block">Link to Product (Optional)</label>
-                <select
-                  value={newVibe.product_id}
-                  onChange={(e) => setNewVibe({ ...newVibe, product_id: e.target.value })}
-                  className="w-full p-2 border rounded-lg text-sm"
+                <Select
+                  value={newVibe.product_id || "none"}
+                  onValueChange={(value) => setNewVibe({ ...newVibe, product_id: value === "none" ? "" : value })}
                 >
-                  <option value="">No product link</option>
-                  {products.map((p) => (
-                    <option key={p.id} value={p.id}>{p.name_en}</option>
-                  ))}
-                </select>
+                  <SelectTrigger className="w-full rounded-xl border-gray-200">
+                    <SelectValue placeholder="No product link" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No product link</SelectItem>
+                    {products.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>{p.name_en}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center gap-3">
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={newVibe.is_featured}
+                    onChange={(e) => setNewVibe({ ...newVibe, is_featured: e.target.checked })}
+                  />
+                  <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                </label>
+                <span className="text-sm font-medium text-gray-700">Show on homepage (Featured)</span>
               </div>
             </div>
             <Button
               onClick={handleAddVibe}
-              disabled={vibesSaving || !newVibe.video_url || !newVibe.caption}
-              className="mt-4 bg-purple-600 hover:bg-purple-700"
+              disabled={vibesSaving || !newVibe.video_url}
+              className="mt-4 rounded-xl shadow-md bg-primary hover:bg-primary/90 text-white"
             >
               {vibesSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
-              Add Vibe
+              Add Reel
             </Button>
           </Card>
 
-          {/* Existing Vibes */}
+          {/* Existing Reels */}
           <Card className="p-4">
             <h3 className="font-semibold mb-4 flex items-center gap-2">
-              <Film className="w-4 h-4 text-purple-500" />
-              Vibes ({vibesItems.length})
+              <Film className="w-4 h-4 text-primary" />
+              Reels ({vibesItems.length})
             </h3>
-            
+
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {vibesItems.map((item) => (
                 <div key={item.id} className="relative group bg-gray-100 rounded-lg overflow-hidden">
-                  <div className="aspect-[9/16] bg-gray-200">
+                  <div className="aspect-[9/16] bg-gray-200 relative">
                     {item.thumbnail_url ? (
-                      item.thumbnail_url.startsWith('/') ? (
-                        <DropboxImg src={item.thumbnail_url} alt={item.caption} className="w-full h-full object-cover" />
-                      ) : (
-                        <img src={item.thumbnail_url} alt={item.caption} className="w-full h-full object-cover" />
-                      )
+                      <img src={item.thumbnail_url} alt={item.title_en || "Reel"} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
                         <Video className="w-8 h-8 text-gray-400" />
                       </div>
                     )}
+                    {/* Featured badge */}
+                    <div
+                      onClick={() => handleToggleFeatured(item)}
+                      className={`absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-bold cursor-pointer transition-colors ${
+                        item.is_featured ? "bg-primary text-white shadow-sm" : "bg-gray-200 text-gray-500"
+                      }`}
+                    >
+                      {item.is_featured ? "Featured" : "Hidden"}
+                    </div>
                   </div>
                   <div className="p-2">
-                    <p className="text-xs font-medium truncate">{item.caption}</p>
+                    <p className="text-xs font-medium truncate">{item.title_en || item.video_url}</p>
                     {item.product && (
-                      <p className="text-xs text-purple-600 truncate flex items-center gap-1 mt-1">
+                      <p className="text-xs text-primary truncate flex items-center gap-1 mt-1">
                         <Package className="w-3 h-3" />
                         {item.product.name_en}
                       </p>
@@ -1521,18 +1586,18 @@ const HomepagePage = () => {
                   </div>
                   <button
                     onClick={() => handleDeleteVibe(item.id)}
-                    className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                   >
                     <Trash2 className="w-3 h-3" />
                   </button>
                 </div>
               ))}
             </div>
-            
+
             {vibesItems.length === 0 && (
               <div className="text-center py-12 text-gray-400">
                 <Film className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                <p>No vibes yet. Add some videos!</p>
+                <p>No reels yet. Add some videos!</p>
               </div>
             )}
           </Card>
