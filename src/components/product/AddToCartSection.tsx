@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ShoppingBag, Check, Loader2 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import React, { useState, useCallback, useRef } from "react";
 
 interface AddToCartSectionProps {
   totalPrice: number;
@@ -27,35 +27,12 @@ const AddToCartSection = React.memo(({
   const isAr = locale === "ar";
   const router = useRouter();
   const [buttonState, setButtonState] = useState<ButtonState>("idle");
-  const [bottomOffset, setBottomOffset] = useState(0);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Prefetch cart page on hover
   const handleCartHover = React.useCallback(() => {
     router.prefetch(`/${locale}/cart`);
   }, [locale, router]);
-
-  // Push button up when footer comes into view
-  useEffect(() => {
-    const footer = document.querySelector("footer");
-    if (!footer) return;
-
-    const handleScroll = () => {
-      const footerRect = footer.getBoundingClientRect();
-      const windowHeight = window.innerHeight;
-
-      if (footerRect.top < windowHeight) {
-        // Footer is visible — push button up by how much footer is showing
-        setBottomOffset(windowHeight - footerRect.top);
-      } else {
-        setBottomOffset(0);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll(); // initial check
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   const handleAddToCart = useCallback(async () => {
     if (buttonState !== "idle") return;
@@ -119,10 +96,9 @@ const AddToCartSection = React.memo(({
   return (
     <>
       
-      {/* Mobile button - fixed at bottom, stops above footer */}
+      {/* Mobile button - fixed at bottom always */}
       <div 
-        className="fixed left-0 right-0 z-50 bg-background border-t border-border p-4 lg:hidden shadow-lg transition-[bottom] duration-100"
-        style={{ bottom: `${bottomOffset}px` }}
+        className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border p-4 lg:hidden shadow-lg"
         dir={dir}
       >
         <Button
