@@ -40,6 +40,13 @@ export const ReelsShowcase = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const locale = useLocale();
 
+  const [mounted, setMounted] = useState(false);
+
+  // Ensure component only renders on client to avoid hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Load social proof videos and fetch product prices
   useEffect(() => {
     const loadVideos = async () => {
@@ -133,9 +140,9 @@ export const ReelsShowcase = () => {
     }
   };
 
-  if (loading && videos.length === 0) {
+  if (!mounted || (loading && videos.length === 0)) {
     return (
-      <section className="py-16 bg-white">
+      <section className="py-16 bg-[#F9F9F9]">
         <div className="container mx-auto px-4">
           <div className="text-center mb-10">
             <div className="h-8 w-48 bg-muted animate-pulse mx-auto mb-2 rounded" />
@@ -160,7 +167,7 @@ export const ReelsShowcase = () => {
   }
 
   return (
-    <section className="py-16 bg-white">
+    <section className="py-16 bg-[#F9F9F9]">
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-10">
