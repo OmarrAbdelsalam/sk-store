@@ -78,13 +78,8 @@ const OrderSummary = memo(
               </div>
             )}
 
-            {/* Free Shipping Badge / Progress */}
-            {freeShippingApplied ? (
-              <div className="flex items-center gap-2.5 px-4 py-3 bg-emerald-100 border border-emerald-300 text-emerald-900">
-                <Truck className="w-4 h-4 shrink-0" />
-                <span className="text-xs font-semibold tracking-wide">{isAr ? "شحن مجاني!" : "Free Shipping Applied"}</span>
-              </div>
-            ) : freeShippingThreshold ? (
+            {/* Free Shipping Progress */}
+            {!freeShippingApplied && freeShippingThreshold ? (
               <div className="px-4 py-3 border border-border/60 space-y-2">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <TrendingUp className="w-3.5 h-3.5 shrink-0" />

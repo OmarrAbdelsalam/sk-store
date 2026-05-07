@@ -75,10 +75,28 @@ export default function CartPageClient() {
 
   return (
     <div dir={dir} className="animate-fade-in">
-      {/* Page Title */}
-      <div className="mb-6 sm:mb-10">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-light tracking-wider uppercase">{t("title")}</h1>
-        <div className="h-px w-12 bg-foreground mt-3" />
+      {/* Page Title & Free Shipping Banner */}
+      <div className="mb-6 sm:mb-10 flex flex-col gap-6">
+        <div>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-light tracking-wider uppercase">{t("title")}</h1>
+          <div className="h-px w-12 bg-foreground mt-3" />
+        </div>
+
+        {/* Prominent Free Shipping Success Banner */}
+        {freeShippingApplied && (
+          <div className="w-full bg-emerald-900 text-emerald-50 py-3 px-4 flex flex-col sm:flex-row items-center justify-center text-center animate-fade-in shadow-sm">
+            <div className="flex items-center gap-2 font-medium tracking-[0.1em] uppercase text-xs sm:text-sm">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 text-emerald-300">
+                <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" fill="currentColor" />
+              </svg>
+              <span>{isAr ? "لقد حصلت عليها! الشحن المجاني لك" : "YOU GOT IT! FREE SHIPPING UNLOCKED"}</span>
+            </div>
+            <span className="hidden sm:inline-block text-emerald-500/50 mx-2 sm:mx-3">•</span>
+            <span className="font-light text-xs sm:text-sm text-emerald-50/80 tracking-wide mt-1 sm:mt-0">
+              {isAr ? "أكمل طلبك الآن للاستفادة من العرض" : "Complete your order now to claim this offer"}
+            </span>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-12">
