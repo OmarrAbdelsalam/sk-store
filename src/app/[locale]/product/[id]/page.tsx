@@ -60,6 +60,8 @@ export default function ProductDetailPage() {
           <link rel="prefetch" href={`/${locale}/cart`} />
           <link rel="prefetch" href={`/${locale}/checkout`} />
         </div>
+        {/* Spacer for fixed Add to Cart button on mobile */}
+        <div className="h-24 lg:hidden" />
       </div>
     </div>
   );

@@ -170,6 +170,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
       try {
         const updatedCart = addToLocalCart({ ...product, quantity: quantityToAdd }, quantityToAdd);
         setCart(updatedCart);
+        // Dispatch event after a short delay so CartButton animates
+        // AFTER the Add to Cart button has visually changed to "Added"
+        if (typeof window !== "undefined") {
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent("cart-item-added"));
+          }, 400);
+        }
       } catch (error) {
         console.error("Error adding to cart:", error);
       }

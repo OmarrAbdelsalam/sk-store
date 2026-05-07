@@ -98,11 +98,25 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'cart-bounce': {
+					'0%': { transform: 'scale(1) rotate(0deg)' },
+					'40%': { transform: 'scale(1.15) rotate(-6deg)' },
+					'70%': { transform: 'scale(0.95) rotate(3deg)' },
+					'100%': { transform: 'scale(1) rotate(0deg)' },
+				},
+				'badge-pop': {
+					'0%': { transform: 'scale(1)' },
+					'40%': { transform: 'scale(1.3)' },
+					'70%': { transform: 'scale(0.92)' },
+					'100%': { transform: 'scale(1)' },
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'cart-bounce': 'cart-bounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)',
+				'badge-pop': 'badge-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
 			}
 		}
 	},
