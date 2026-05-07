@@ -212,7 +212,7 @@ All code is TypeScript. Stack: Next.js 14, React Query, Supabase direct client, 
   - _Requirements: 11.1, 11.2, 11.3, 11.4_
 
 - [x] 15. Final checkpoint — Ensure all tests pass
-  - Run `npx tsc --noEmit` to confirm zero type errors across all modified files
+و   - Run `npx tsc --noEmit` to confirm zero type errors across all modified files
   - Manually verify: create a promo code in admin → apply it in cart → place order → confirm `applied_promotions` is recorded in Supabase
   - Ensure all tests pass, ask the user if questions arise.
 

@@ -91,8 +91,7 @@ export default function CartPageClient() {
               </svg>
               <span>{isAr ? "لقد حصلت عليها! الشحن المجاني لك" : "YOU GOT IT! FREE SHIPPING UNLOCKED"}</span>
             </div>
-            <span className="hidden sm:inline-block text-emerald-500/50 mx-2 sm:mx-3">•</span>
-            <span className="font-light text-xs sm:text-sm text-emerald-50/80 tracking-wide mt-1 sm:mt-0">
+            <span className="font-light text-xs sm:text-sm text-emerald-50/80 tracking-wide mt-1 sm:mt-0 sm:ml-3">
               {isAr ? "أكمل طلبك الآن للاستفادة من العرض" : "Complete your order now to claim this offer"}
             </span>
           </div>
@@ -126,11 +125,6 @@ export default function CartPageClient() {
               ))}
             </Suspense>
           </div>
-
-          {/* Upsell Section */}
-          <Suspense fallback={null}>
-            <CartUpsell />
-          </Suspense>
         </div>
 
         {/* Order Summary */}
@@ -147,6 +141,11 @@ export default function CartPageClient() {
           </Suspense>
         </div>
       </div>
+
+      {/* Upsell Section - Full width below cart and order summary */}
+      <Suspense fallback={null}>
+        <CartUpsell />
+      </Suspense>
     </div>
   );
 }

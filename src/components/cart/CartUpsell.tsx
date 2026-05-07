@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useProducts, type Product } from "@/hooks/useProducts";
 import { useCart } from "@/hooks/useCart";
 import { useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import DropboxImage from "@/components/DropboxImage";
-import { Plus } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function CartUpsell() {
   const locale = useLocale();
@@ -15,6 +15,7 @@ export default function CartUpsell() {
   const { items, addToCart } = useCart();
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
   const [mounted, setMounted] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -69,6 +70,14 @@ export default function CartUpsell() {
     return [...shuffle(sameCategory), ...shuffle(other)].slice(0, 8);
   }, [products, cartProductIds, cartCategoryIds]);
 
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+      const { scrollLeft, clientWidth } = scrollRef.current;
+      const scrollTo = direction === 'left' ? scrollLeft - clientWidth : scrollLeft + clientWidth;
+      scrollRef.current.scrollTo({ left: scrollTo, behavior: 'smooth' });
+    }
+  };
+
   if (!mounted || isLoading || suggestions.length === 0) return null;
 
   const handleAddToCart = (product: Product, e: React.MouseEvent) => {
@@ -99,24 +108,47 @@ export default function CartUpsell() {
   };
 
   return (
-    <div className="mt-8 sm:mt-12">
+    <div className="mt-8 sm:mt-12 relative group">
       {/* Section Header */}
-      <div className="mb-5 sm:mb-6">
-        <h2 className="text-sm sm:text-base font-medium tracking-widest uppercase">
-          You Might Also Like
-        </h2>
-        <div className="h-px w-12 bg-foreground mt-3" />
+      <div className="mb-5 sm:mb-6 flex items-center justify-between">
+        <div>
+          <h2 className="text-sm sm:text-base font-medium tracking-widest uppercase">
+            You Might Also Like
+          </h2>
+          <div className="h-px w-12 bg-foreground mt-3" />
+        </div>
+
+        {/* Navigation Arrows for Desktop */}
+        <div className="hidden lg:flex items-center gap-2">
+          <button
+            onClick={() => scroll('left')}
+            className="w-8 h-8 rounded-full border border-border flex items-center justify-center hover:bg-foreground hover:text-background transition-colors"
+            aria-label="Scroll left"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => scroll('right')}
+            className="w-8 h-8 rounded-full border border-border flex items-center justify-center hover:bg-foreground hover:text-background transition-colors"
+            aria-label="Scroll right"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* Scrollable product row */}
-      <div className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide pb-2 -mx-1 px-1">
+      <div 
+        ref={scrollRef}
+        className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide pb-2 -mx-1 px-1"
+      >
         {suggestions.map((product) => {
           const isAdded = addedIds.has(String(product.id)) || cartProductIds.has(String(product.id));
 
           return (
             <div
               key={product.id}
-              className="flex-shrink-0 w-[140px] sm:w-[180px] cursor-pointer group"
+              className="flex-shrink-0 w-[140px] sm:w-[180px] cursor-pointer group/item"
               onClick={() => router.push(`/${locale}/product/${product.id}`)}
             >
               {/* Image */}
@@ -134,7 +166,7 @@ export default function CartUpsell() {
                 {!isAdded && (
                   <button
                     onClick={(e) => handleAddToCart(product, e)}
-                    className="absolute bottom-2 right-2 w-8 h-8 bg-foreground text-background flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200 hover:bg-foreground/80"
+                    className="absolute bottom-2 right-2 w-8 h-8 bg-foreground text-background flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover/item:opacity-100 transition-opacity duration-200 hover:bg-foreground/80"
                     aria-label="Add to cart"
                   >
                     <Plus className="w-4 h-4" />
