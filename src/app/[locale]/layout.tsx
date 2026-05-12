@@ -10,11 +10,12 @@ import { Toaster } from '@/components/ui/toaster';
 import CommonLayout from '@/components/CommonLayout';
 import TopBanner from '@/components/TopBanner';
 import { Cairo, Inter, Playfair_Display } from 'next/font/google';
-import { defaultMetadata } from '@/lib/metadata';
+import { generateDefaultMetadata } from '@/lib/metadata';
 import SEOHead from '@/components/SEOHead';
 import { Analytics } from '@vercel/analytics/next';
 import type { Metadata } from 'next';
 import StorefrontProviders from '@/components/StorefrontProviders';
+import { siteOgImage } from '@/lib/site';
 
 const cairo = Cairo({
   subsets: ['arabic'],
@@ -37,7 +38,14 @@ const playfair = Playfair_Display({
   display: 'swap',
 });
 
-export const metadata: Metadata = defaultMetadata;
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return generateDefaultMetadata(locale);
+}
 
 
 
@@ -60,17 +68,17 @@ export default async function LocaleLayout({
     <html lang={locale} dir={dir} suppressHydrationWarning>
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="apple-touch-icon" href="/yhouse-logo.png" />
-        <meta name="theme-color" content="#042d87" />
+        <link rel="apple-touch-icon" href="/SK_Logo.svg" />
+        <meta name="theme-color" content="#111111" />
         
         {/* Open Graph - Explicit tags for better compatibility */}
-        <meta property="og:image" content="https://scrubhousev1.vercel.app/yhouse-logo.png" />
+        <meta property="og:image" content={siteOgImage} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:image:type" content="image/png" />
         
         {/* Twitter Card - Explicit tags */}
-        <meta name="twitter:image" content="https://scrubhousev1.vercel.app/yhouse-logo.png" />
+        <meta name="twitter:image" content={siteOgImage} />
         <meta name="twitter:card" content="summary_large_image" />
       </head>
       <body className={`${cairo.variable} ${inter.variable} ${playfair.variable} ${(locale as string) === 'ar' ? 'font-cairo' : 'font-inter'}`}>

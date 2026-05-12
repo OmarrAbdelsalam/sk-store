@@ -6,13 +6,14 @@ export default async function TopBanner() {
 
   try {
     const [itemsData, settingsData] = await Promise.all([
-      marqueeService.getActiveItems('top_banner'),
-      marqueeService.getSettings('top_banner')
+      marqueeService.getActiveItems('top_banner').catch(() => []),
+      marqueeService.getSettings('top_banner').catch(() => null)
     ]);
     items = itemsData || [];
     settings = settingsData || null;
   } catch (error) {
-    console.error("Error loading top banner:", error);
+    // Silently fail - banner is non-critical
+    return null;
   }
 
   // Don't render if inactive or no items

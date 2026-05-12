@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
-export const alt = 'HouseScrub - السكراب الطبي رقم واحد في مصر';
+export const alt = 'SK Bags - Premium handmade bags delivered across Egypt';
 
 export const size = {
   width: 1200,
@@ -14,7 +14,7 @@ export default async function TwitterImage() {
     (
       <div
         style={{
-          background: 'linear-gradient(135deg, #042d87 0%, #0f766e 100%)',
+          background: 'linear-gradient(135deg, #111111 0%, #7c5f4a 100%)',
           width: '100%',
           height: '100%',
           display: 'flex',
@@ -41,7 +41,7 @@ export default async function TwitterImage() {
               textAlign: 'center',
             }}
           >
-            HouseScrub
+            SK Bags
           </div>
           <div
             style={{
@@ -50,7 +50,7 @@ export default async function TwitterImage() {
               textAlign: 'center',
             }}
           >
-            هاوس سكراب
+            شنط هاند ميد بريميم
           </div>
           <div
             style={{
@@ -59,7 +59,7 @@ export default async function TwitterImage() {
               textAlign: 'center',
             }}
           >
-            الزي الطبي الفاخر
+            Premium handmade bags
           </div>
         </div>
       </div>

@@ -1,5 +1,25 @@
 import ProductGrid from "@/components/ProductGrid";
 import { Suspense } from "react";
+import { generatePageMetadata } from "@/lib/metadata";
+import type { Metadata } from "next";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const isAr = locale === "ar";
+
+  return generatePageMetadata({
+    title: isAr ? "منتجات SK Bags" : "SK Bags Products",
+    description: isAr
+      ? "تسوقي كل شنط SK Bags الهاند ميد البريميم بتصميمات أنيقة وخامات عالية الجودة وتوصيل لكل أنحاء مصر."
+      : "Shop all SK Bags premium handmade bags with elegant designs, high-quality materials, and delivery across Egypt.",
+    path: "/products",
+    locale,
+  });
+}
 
 const ProductGridSkeleton = () => (
   <div className="container mx-auto px-4 py-12">

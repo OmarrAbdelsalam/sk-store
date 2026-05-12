@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
-export const alt = 'HouseScrub - السكراب الطبي رقم واحد في مصر';
+export const alt = 'SK Bags - شنط هاند ميد بريميم بتوصيل لكل أنحاء مصر';
 export const size = {
   width: 1200,
   height: 630,
@@ -13,7 +13,7 @@ export default async function Image() {
     (
       <div
         style={{
-          background: 'linear-gradient(135deg, #042d87 0%, #0f766e 100%)',
+          background: 'linear-gradient(135deg, #111111 0%, #7c5f4a 100%)',
           width: '100%',
           height: '100%',
           display: 'flex',
@@ -40,7 +40,7 @@ export default async function Image() {
               textAlign: 'center',
             }}
           >
-            HouseScrub
+            SK Bags
           </div>
           <div
             style={{
@@ -49,7 +49,7 @@ export default async function Image() {
               textAlign: 'center',
             }}
           >
-            هاوس سكراب
+            شنط هاند ميد بريميم
           </div>
           <div
             style={{
@@ -58,7 +58,7 @@ export default async function Image() {
               textAlign: 'center',
             }}
           >
- السكراب رقم واحد في مصر 
+            توصيل لكل أنحاء مصر
            </div>
           <div
             style={{
@@ -68,7 +68,7 @@ export default async function Image() {
               maxWidth: '800px',
             }}
           >
-            متجر متخصص في بيع الزي الطبي والإكسسوارات الطبية عالية الجودة
+            تصميمات أنيقة وخامات عالية الجودة لكل يوم ومناسبة
           </div>
         </div>
       </div>

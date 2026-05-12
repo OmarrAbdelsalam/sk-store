@@ -2,12 +2,25 @@ import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import CartPageClient from "@/components/cart/CartPageClient";
 import { generatePageMetadata } from "@/lib/metadata";
+import type { Metadata } from "next";
 
-export const metadata = generatePageMetadata({
-  title: "سلة التسوق",
-  description: "عرض وإدارة منتجات سلة التسوق الخاصة بك - HouseScrub",
-  path: "/cart",
-});
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const isAr = locale === "ar";
+
+  return generatePageMetadata({
+    title: isAr ? "سلة التسوق" : "Shopping Cart",
+    description: isAr
+      ? "عرض وإدارة شنط SK Bags المختارة قبل إتمام الطلب والتوصيل لأي مكان في مصر."
+      : "Review and manage your selected SK Bags handmade bags before checkout and delivery across Egypt.",
+    path: "/cart",
+    locale,
+  });
+}
 
 export default function CartPage() {
   return (

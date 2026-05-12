@@ -2,7 +2,7 @@
 
 ## الملفات المطلوبة:
 
-يجب إنشاء الأيقونات التالية من `yhouse-logo.png`:
+يجب إنشاء الأيقونات التالية من `SK_Logo.svg`:
 
 ### 1. Favicon
 - **favicon.ico** (16x16, 32x32, 48x48)
@@ -21,7 +21,7 @@
 
 ### الطريقة 1: أدوات أونلاين (الأسهل)
 1. اذهب إلى: https://realfavicongenerator.net/
-2. ارفع ملف `yhouse-logo.png`
+2. ارفع ملف `SK_Logo.svg`
 3. اختر الإعدادات المناسبة
 4. حمّل الملفات وضعها في مجلد `/public/`
 
@@ -34,13 +34,13 @@ node scripts/generate-icons.js
 ### الطريقة 3: باستخدام ImageMagick
 ```bash
 # Icon 192x192
-magick yhouse-logo.png -resize 192x192 icon-192.png
+magick SK_Logo.svg -resize 192x192 icon-192.png
 
 # Icon 512x512
-magick yhouse-logo.png -resize 512x512 icon-512.png
+magick SK_Logo.svg -resize 512x512 icon-512.png
 
 # Apple Icon 180x180
-magick yhouse-logo.png -resize 180x180 apple-icon.png
+magick SK_Logo.svg -resize 180x180 apple-icon.png
 
 # Favicon (يحتاج أداة خاصة)
 ```

@@ -106,7 +106,7 @@ const Footer = () => {
                 variant="ghost" 
                 size="sm" 
                 className="text-primary-foreground hover:text-white justify-start w-full p-0 h-auto"
-                onClick={() => window.open("https://www.facebook.com/housescrub/", "_blank")}
+                onClick={() => window.open("https://www.facebook.com/skbags/", "_blank")}
               >
                 <span className="text-sm">{t('Footer.facebook')}</span>
               </Button>
@@ -114,7 +114,7 @@ const Footer = () => {
                 variant="ghost" 
                 size="sm" 
                 className="text-primary-foreground hover:text-white justify-start w-full p-0 h-auto"
-                onClick={() => window.open("https://www.instagram.com/housescrub/", "_blank")}
+                onClick={() => window.open("https://www.instagram.com/skbags/", "_blank")}
               >
                 <span className="text-sm">{t('Footer.instagram')}</span>
               </Button>
@@ -147,7 +147,7 @@ const Footer = () => {
                 variant="ghost" 
                 size="sm" 
                 className="text-primary-foreground hover:text-white"
-                onClick={() => window.open("https://www.instagram.com/housescrub/", "_blank")}
+                onClick={() => window.open("https://www.instagram.com/skbags/", "_blank")}
                 aria-label="Instagram"
               >
                 <Instagram className="h-5 w-5" />
@@ -156,7 +156,7 @@ const Footer = () => {
                 variant="ghost" 
                 size="sm" 
                 className="text-primary-foreground hover:text-white"
-                onClick={() => window.open("https://www.facebook.com/housescrub/", "_blank")}
+                onClick={() => window.open("https://www.facebook.com/skbags/", "_blank")}
                 aria-label="Facebook"
               >
                 <Facebook className="h-5 w-5" />

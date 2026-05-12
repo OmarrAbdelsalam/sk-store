@@ -1,4 +1,14 @@
 import Script from "next/script";
+import {
+  siteBrand,
+  siteContact,
+  siteDescriptionAr,
+  siteDescriptionEn,
+  siteLogo,
+  siteTaglineAr,
+  siteTaglineEn,
+  siteUrl,
+} from "@/lib/site";
 
 interface OrganizationSchemaProps {
   locale?: string;
@@ -8,43 +18,28 @@ export function OrganizationSchema({ locale = "ar" }: OrganizationSchemaProps) {
   const schema = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "HouseScrub",
-    alternateName: locale === "ar" ? "هاوس سكراب" : "HouseScrub",
-    slogan: locale === "ar" ? "السكراب الطبي رقم واحد في مصر" : "Egypt's #1 Medical Scrubs Store",
-    url: process.env.NEXT_PUBLIC_SITE_URL || "https://scrubhousev1.vercel.app",
-    logo: `${process.env.NEXT_PUBLIC_SITE_URL || "https://scrubhousev1.vercel.app"}/yhouse-logo.png`,
-    description:
-      locale === "ar"
-        ? "السكراب الطبي رقم واحد في مصر. متجر متخصص في بيع الزي الطبي الفاخر والإكسسوارات الطبية عالية الجودة. توصيل لجميع أنحاء مصر خلال 3-7 أيام عمل."
-        : "Egypt's #1 Medical Scrubs Store. Specialized in luxury medical scrubs and high-quality medical accessories. Delivery to all parts of Egypt within 3-7 business days.",
-    telephone: "+20-150-188-1005",
-    email: "info@housescrub.com",
-    address: [
-      {
-        "@type": "PostalAddress",
-        addressLocality: locale === "ar" ? "المنصورة" : "Mansoura",
-        addressRegion: locale === "ar" ? "الدقهلية" : "Dakahlia",
-        addressCountry: "EG",
-      },
-      {
-        "@type": "PostalAddress",
-        addressLocality: locale === "ar" ? "طنطا" : "Tanta",
-        addressRegion: locale === "ar" ? "الغربية" : "Gharbia",
-        addressCountry: "EG",
-      },
-    ],
+    name: siteBrand,
+    alternateName: locale === "ar" ? "اس كي باجز" : siteBrand,
+    slogan: locale === "ar" ? siteTaglineAr : siteTaglineEn,
+    url: siteUrl,
+    logo: siteLogo,
+    description: locale === "ar" ? siteDescriptionAr : siteDescriptionEn,
+    telephone: siteContact.phoneInternational,
+    email: siteContact.email,
+    areaServed: {
+      "@type": "Country",
+      name: locale === "ar" ? "مصر" : "Egypt",
+    },
     contactPoint: {
       "@type": "ContactPoint",
-      telephone: "+20-150-188-1005",
+      telephone: siteContact.phoneInternational,
       contactType: "customer service",
       availableLanguage: ["Arabic", "English"],
       areaServed: "EG",
     },
     sameAs: [
-      // Add your social media links here
-      // "https://facebook.com/housescrub",
-      // "https://instagram.com/housescrub",
-      // "https://twitter.com/housescrub",
+      "https://www.instagram.com/skbags/",
+      "https://www.facebook.com/skbags/",
     ],
   };
 
@@ -62,21 +57,12 @@ interface WebsiteSchemaProps {
 }
 
 export function WebsiteSchema({ locale = "ar" }: WebsiteSchemaProps) {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://scrubhousev1.vercel.app";
-  
   const schema = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "HouseScrub - هاوس سكراب",
+    name: locale === "ar" ? `${siteBrand} - شنط هاند ميد بريميم` : siteBrand,
     url: siteUrl,
-    potentialAction: {
-      "@type": "SearchAction",
-      target: {
-        "@type": "EntryPoint",
-        urlTemplate: `${siteUrl}/${locale}/search?q={search_term_string}`,
-      },
-      "query-input": "required name=search_term_string",
-    },
+    description: locale === "ar" ? siteDescriptionAr : siteDescriptionEn,
     inLanguage: locale === "ar" ? "ar-EG" : "en-US",
   };
 
@@ -106,7 +92,7 @@ export function ProductSchema({
   price,
   currency = "EGP",
   availability = "InStock",
-  brand = "HouseScrub",
+  brand = siteBrand,
 }: ProductSchemaProps) {
   const schema = {
     "@context": "https://schema.org",
@@ -184,15 +170,15 @@ export function FAQSchema({ locale = "ar" }: FAQSchemaProps) {
     },
     {
       question: "كيف يمكنني التواصل معكم؟",
-      answer: "يمكنك التواصل معنا عبر الواتساب على رقم 01501881005 أو عبر البريد الإلكتروني info@housescrub.com",
+      answer: `يمكنك التواصل معنا عبر الواتساب على رقم ${siteContact.phone} أو عبر البريد الإلكتروني ${siteContact.email}.`,
     },
     {
       question: "هل المنتجات أصلية؟",
-      answer: "نعم، جميع منتجاتنا أصلية 100% ومصنوعة من خامات عالية الجودة مخصصة للاستخدام الطبي.",
+      answer: "نعم، منتجات SK Bags هاند ميد ومصنوعة من خامات عالية الجودة مع اهتمام بالتفاصيل والتشطيب.",
     },
     {
-      question: "أين مقر الشركة؟",
-      answer: "لدينا فروع في المنصورة وطنطا، ونوفر التوصيل لجميع أنحاء مصر.",
+      question: "هل التوصيل متاح لكل المحافظات؟",
+      answer: "نعم، نوفر التوصيل لكل أنحاء مصر.",
     },
   ] : [
     {
@@ -209,15 +195,15 @@ export function FAQSchema({ locale = "ar" }: FAQSchemaProps) {
     },
     {
       question: "How can I contact you?",
-      answer: "You can contact us via WhatsApp at 01501881005 or via email at info@housescrub.com",
+      answer: `You can contact us via WhatsApp at ${siteContact.phone} or by email at ${siteContact.email}.`,
     },
     {
       question: "Are the products original?",
-      answer: "Yes, all our products are 100% original and made from high-quality materials designed for medical use.",
+      answer: "Yes, SK Bags products are handmade from high-quality materials with careful finishing and attention to detail.",
     },
     {
-      question: "Where is the company located?",
-      answer: "We have branches in Mansoura and Tanta, and we deliver to all parts of Egypt.",
+      question: "Do you deliver across Egypt?",
+      answer: "Yes, delivery is available across Egypt.",
     },
   ];
 

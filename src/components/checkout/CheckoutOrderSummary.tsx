@@ -77,7 +77,7 @@ const CheckoutOrderSummary = memo(({
               <div key={item.id} className="flex gap-4 pb-4 border-b border-border/50 last:border-0 last:pb-0">
                 <div className="relative w-16 h-20 bg-muted overflow-hidden flex-shrink-0">
                   <Image
-                    src={item.image || "/yhouse-logo.png"}
+                    src={item.image || "/SK_Logo.svg"}
                     alt={item.name}
                     fill
                     sizes="64px"

@@ -1,27 +1,39 @@
 import { Metadata } from "next";
+import {
+  siteBrand,
+  siteDescriptionAr,
+  siteDescriptionEn,
+  siteOgImage,
+  siteTaglineAr,
+  siteTaglineEn,
+  siteUrl,
+} from "./site";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://scrubhousev1.vercel.app";
-const siteName = "HouseScrub | السكراب الطبي رقم واحد في مصر";
-const siteDescription = "HouseScrub - السكراب الطبي رقم واحد في مصر. متجر متخصص في بيع الزي الطبي الفاخر والإكسسوارات الطبية عالية الجودة. توصيل لجميع أنحاء مصر خلال 3-7 أيام. فروع في المنصورة وطنطا. للتواصل: 01501881005";
-const phoneNumber = "+20-150-188-1005";
-const whatsappNumber = "201501881005";
+const siteName = `${siteBrand} | ${siteTaglineAr}`;
+const siteDescription = siteDescriptionAr;
 
 export const defaultMetadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: `${siteName}`,
+    default: siteName,
     template: `%s | ${siteName}`,
   },
   description: siteDescription,
   keywords: [
-    "زي طبي",
-    "سكراب طبي",
-    "ملابس طبية",
-    "إكسسوارات طبية",
-    "زي تمريض",
-    "medical scrubs",
-    "medical uniforms",
-    "healthcare apparel",
+    "SK Bags",
+    "sk bags",
+    "شنط هاند ميد",
+    "شنط handmade",
+    "شنط بريميم",
+    "شنط كروشيه",
+    "شنط يد",
+    "شنط كتف",
+    "شنط كروس",
+    "شنط نسائية",
+    "شنط مصر",
+    "handmade bags Egypt",
+    "premium handmade bags",
+    "crochet bags",
   ],
   authors: [{ name: siteName }],
   creator: siteName,
@@ -37,24 +49,24 @@ export const defaultMetadata: Metadata = {
     alternateLocale: ["en_US"],
     url: siteUrl,
     siteName,
-    title: `${siteName}`,
+    title: siteName,
     description: siteDescription,
     images: [
       {
-        url: `${siteUrl}/yhouse-logo.png`,
+        url: siteOgImage,
         width: 1200,
         height: 630,
-        alt: `${siteName} Logo`,
+        alt: `${siteBrand} - ${siteTaglineAr}`,
         type: "image/png",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: `${siteName} | الزي الطبي الفاخر`,
+    title: `${siteBrand} | ${siteTaglineEn}`,
     description: siteDescription,
-    images: [`${siteUrl}/yhouse-logo.png`],
-    creator: "@housescrub",
+    images: [siteOgImage],
+    creator: "@skbags",
   },
   robots: {
     index: true,
@@ -70,10 +82,10 @@ export const defaultMetadata: Metadata = {
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "32x32" },
-      { url: "/yhouse-logo.png", sizes: "192x192", type: "image/png" },
+      { url: "/SK_Logo.svg", sizes: "any", type: "image/svg+xml" },
     ],
     apple: [
-      { url: "/yhouse-logo.png", sizes: "180x180", type: "image/png" },
+      { url: "/SK_Logo.svg", sizes: "any", type: "image/svg+xml" },
     ],
   },
   manifest: "/manifest.json",
@@ -83,6 +95,43 @@ export const defaultMetadata: Metadata = {
     // bing: "your-bing-verification-code",
   },
 };
+
+export function generateDefaultMetadata(locale = "ar"): Metadata {
+  const isAr = locale === "ar";
+  const localizedTitle = `${siteBrand} | ${isAr ? siteTaglineAr : siteTaglineEn}`;
+  const localizedDescription = isAr ? siteDescriptionAr : siteDescriptionEn;
+  const localizedUrl = `${siteUrl}/${locale}`;
+
+  return {
+    ...defaultMetadata,
+    title: {
+      default: localizedTitle,
+      template: `%s | ${siteBrand}`,
+    },
+    description: localizedDescription,
+    alternates: {
+      canonical: localizedUrl,
+      languages: {
+        ar: `${siteUrl}/ar`,
+        en: `${siteUrl}/en`,
+      },
+    },
+    openGraph: {
+      ...defaultMetadata.openGraph,
+      locale: isAr ? "ar_EG" : "en_US",
+      alternateLocale: isAr ? ["en_US"] : ["ar_EG"],
+      url: localizedUrl,
+      siteName: siteBrand,
+      title: localizedTitle,
+      description: localizedDescription,
+    },
+    twitter: {
+      ...defaultMetadata.twitter,
+      title: localizedTitle,
+      description: localizedDescription,
+    },
+  };
+}
 
 export function generatePageMetadata({
   title,
@@ -97,22 +146,27 @@ export function generatePageMetadata({
   path?: string;
   locale?: string;
 }): Metadata {
-  const url = `${siteUrl}${path}`;
-  const ogImage = image ? (image.startsWith('http') ? image : `${siteUrl}${image}`) : `${siteUrl}/yhouse-logo.png`;
+  const normalizedPath = path === "" || path === "/" ? "" : path.startsWith("/") ? path : `/${path}`;
+  const localePath = locale ? `/${locale}${normalizedPath}` : normalizedPath || "/";
+  const url = `${siteUrl}${localePath}`;
+  const ogImage = image ? (image.startsWith("http") ? image : `${siteUrl}${image}`) : siteOgImage;
+  const resolvedDescription =
+    description || (locale === "en" ? siteDescriptionEn : siteDescriptionAr);
 
   return {
+    metadataBase: new URL(siteUrl),
     title,
-    description: description || siteDescription,
+    description: resolvedDescription,
     alternates: {
       canonical: url,
       languages: {
-        ar: `${siteUrl}/ar${path}`,
-        en: `${siteUrl}/en${path}`,
+        ar: `${siteUrl}/ar${normalizedPath}`,
+        en: `${siteUrl}/en${normalizedPath}`,
       },
     },
     openGraph: {
       title,
-      description: description || siteDescription,
+      description: resolvedDescription,
       url,
       siteName,
       locale: locale === "ar" ? "ar_EG" : "en_US",
@@ -130,7 +184,7 @@ export function generatePageMetadata({
     twitter: {
       card: "summary_large_image",
       title,
-      description: description || siteDescription,
+      description: resolvedDescription,
       images: [ogImage],
     },
   };

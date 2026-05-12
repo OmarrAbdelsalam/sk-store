@@ -1,10 +1,9 @@
 import { MetadataRoute } from 'next';
-
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://scrubhousev1.vercel.app';
+import { siteUrl } from '@/lib/site';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const locales = ['ar', 'en'];
-  const routes = ['', '/cart', '/checkout', '/about', '/contact'];
+  const routes = ['', '/products', '/cart', '/checkout', '/my-orders'];
 
   const sitemap: MetadataRoute.Sitemap = [];
 

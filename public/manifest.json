@@ -1,28 +1,28 @@
 {
-  "name": "HouseScrub - السكراب الطبي رقم واحد في مصر",
-  "short_name": "HouseScrub",
-  "description": "متجر متخصص في بيع الزي الطبي الفاخر والإكسسوارات الطبية عالية الجودة",
+  "name": "SK Bags - شنط هاند ميد بريميم",
+  "short_name": "SK Bags",
+  "description": "شنط هاند ميد بريميم بتصميمات أنيقة وخامات عالية الجودة وتوصيل لكل أنحاء مصر.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#0f766e",
+  "theme_color": "#111111",
   "orientation": "portrait-primary",
   "dir": "rtl",
   "lang": "ar",
   "icons": [
     {
-      "src": "/yhouse-logo.png",
+      "src": "/SK_Logo.svg",
       "sizes": "any",
-      "type": "image/png",
+      "type": "image/svg+xml",
       "purpose": "any maskable"
     }
   ],
-  "categories": ["shopping", "medical", "healthcare"],
+  "categories": ["shopping", "fashion", "lifestyle"],
   "screenshots": [
     {
-      "src": "/yhouse-logo.png",
+      "src": "/hero.webp",
       "sizes": "1280x720",
-      "type": "image/png"
+      "type": "image/webp"
     }
   ]
 }

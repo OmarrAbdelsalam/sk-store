@@ -1,6 +1,26 @@
 import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import Hero from "@/components/Hero";
+import { generatePageMetadata } from "@/lib/metadata";
+import type { Metadata } from "next";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const isAr = locale === "ar";
+
+  return generatePageMetadata({
+    title: isAr ? "SK Bags | شنط هاند ميد بريميم" : "SK Bags | Premium Handmade Bags",
+    description: isAr
+      ? "اكتشفي شنط SK Bags الهاند ميد البريميم بتصميمات أنيقة وخامات عالية الجودة وتوصيل لكل أنحاء مصر."
+      : "Shop premium handmade bags by SK Bags, crafted with elegant designs and high-quality materials, with delivery across Egypt.",
+    path: "",
+    locale,
+  });
+}
 
 // Lazy loaded components (Code Splitting)
 const NewArrivals = dynamic(() => import("@/components/NewArrivals"));
@@ -22,17 +42,17 @@ const Index = () => {
     <div className="min-h-screen">
       {/* SEO Content - Hidden visually but accessible for SEO */}
       <div className="sr-only">
-        <h1>House Scrub - Premium Medical Scrubs and Healthcare Uniforms | ملابس طبية فاخرة</h1>
+        <h1>SK Bags - شنط هاند ميد بريميم بتوصيل لكل أنحاء مصر</h1>
         <p>
-          Shop high-quality medical scrubs, healthcare uniforms, and professional medical wear. 
-          Free shipping across Egypt. تسوق ملابس طبية عالية الجودة مع شحن مجاني في مصر.
+          Shop premium handmade bags by SK Bags, crafted with elegant designs and high-quality materials.
+          تسوقي شنط هاند ميد بريميم من SK Bags مع توصيل لكل أنحاء مصر.
         </p>
         <nav aria-label="Quick Links">
           <ul>
             <li><a href="#products">Browse Products</a></li>
             <li><a href="/cart">Shopping Cart</a></li>
             <li><a href="/my-orders">Track Orders</a></li>
-            <li><a href="https://wa.me/+201501881005" target="_blank" rel="noopener noreferrer">Contact Us on WhatsApp</a></li>
+            <li><a href="https://wa.me/201501881005" target="_blank" rel="noopener noreferrer">Contact Us on WhatsApp</a></li>
           </ul>
         </nav>
       </div>

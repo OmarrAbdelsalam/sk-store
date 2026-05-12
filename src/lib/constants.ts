@@ -5,7 +5,7 @@ export const CONTACT_INFO = {
   phoneInternational: "+20-150-188-1005",
   whatsapp: "201501881005",
   whatsappLink: "https://wa.me/201501881005",
-  email: "info@housescrub.com",
+  email: "info@skbags.com",
   
   locations: {
     ar: [
