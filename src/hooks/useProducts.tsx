@@ -72,6 +72,35 @@ const productsCache: {
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
+/**
+ * Seed the products cache with server-fetched data.
+ * Called by ProductsCacheSeeder to avoid redundant client-side fetches.
+ */
+export const seedProductsCache = (rawProducts: ProductApi[], locale: 'ar' | 'en') => {
+  // Only seed if cache is empty or stale
+  const cached = productsCache[locale];
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    return; // Cache is still fresh, don't overwrite
+  }
+
+  const mappedProducts = rawProducts.map(item => mapApiProductToUI(item, locale));
+
+  productsCache[locale] = {
+    products: mappedProducts,
+    timestamp: Date.now(),
+  };
+  productsCache.rawData = rawProducts;
+
+  // Also update localStorage
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem(`products_cache_${locale}`, JSON.stringify(mappedProducts));
+    } catch (e) {
+      // Ignore storage errors
+    }
+  }
+};
+
 export const useProducts = () => {
   const locale = useLocale() as 'ar' | 'en';
   const [products, setProducts] = useState<Product[]>(() => {

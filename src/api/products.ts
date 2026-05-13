@@ -56,6 +56,7 @@ export type ProductApi = {
   created_at?: string;
   updated_at?: string;
   is_active?: number;
+  chain_type?: 'gold' | 'silver' | 'both' | null;
 };
 
 type Paged<T> = {
@@ -127,6 +128,7 @@ function mapRow(row: any): ProductApi {
     created_at: row.created_at,
     updated_at: row.updated_at,
     is_active: row.is_active,
+    chain_type: row.chain_type || null,
   };
 }
 

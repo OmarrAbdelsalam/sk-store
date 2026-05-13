@@ -338,25 +338,9 @@ const ProductGrid = ({ isFullPage = false }: ProductGridProps) => {
 
   const isBusy = loading || serverLoading;
 
-  // Don't render until mounted to avoid hydration mismatch
+  // Don't render until mounted (ssr: false handles this)
   if (!mounted) {
-    return (
-      <section id="products" className="py-2 md:py-6 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-6">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="space-y-2 md:space-y-4 animate-pulse">
-                <div className="aspect-[3/4] w-full rounded-lg bg-muted" />
-                <div className="space-y-2">
-                  <div className="h-4 bg-muted rounded w-3/4" />
-                  <div className="h-4 bg-muted rounded w-1/2" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-    );
+    return null;
   }
 
   /* Render */
@@ -438,17 +422,7 @@ const ProductGrid = ({ isFullPage = false }: ProductGridProps) => {
         )}
 
         {isBusy && displayedProducts.length === 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-6 items-stretch">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="space-y-2 md:space-y-4 animate-pulse">
-                <div className="aspect-[3/4] w-full rounded-lg bg-muted" />
-                <div className="space-y-1.5 md:space-y-2">
-                  <div className="h-4 md:h-6 w-3/4 rounded bg-muted" />
-                  <div className="h-3 md:h-4 w-1/2 rounded bg-muted" />
-                </div>
-              </div>
-            ))}
-          </div>
+          null
         ) : displayedProducts.length === 0 ? (
           <div className="text-center pt-4 md:pt-8 pb-20">
             <div className="flex justify-center mb-6">

@@ -4,7 +4,7 @@ import { useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
 
 interface ProductHeaderProps {
-  onBack: () => void;
+  onBack?: () => void;
   productName?: string;
 }
 

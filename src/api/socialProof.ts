@@ -12,6 +12,8 @@ export interface SocialProofVideo {
   product_id?: string;
   product_name_en?: string;
   product_name_ar?: string;
+  product_price?: number;
+  product_price_before?: number;
   is_approved: boolean;
   is_featured: boolean;
   created_at: string;
@@ -30,6 +32,8 @@ function mapRow(row: any): SocialProofVideo {
     product_id: row.product_id || undefined,
     product_name_en: row.products?.name_en || undefined,
     product_name_ar: row.products?.name_ar || undefined,
+    product_price: row.products?.base_price || undefined,
+    product_price_before: row.products?.compare_at_price || undefined,
     is_approved: row.is_approved === 1 || row.is_approved === true,
     is_featured: row.is_featured === 1 || row.is_featured === true,
     created_at: row.created_at,
@@ -42,7 +46,7 @@ export const getFeaturedSocialProofs = async (): Promise<SocialProofVideo[]> => 
   try {
     const { data, error } = await supabase
       .from('social_proofs')
-      .select(`*, products (id, name_en, name_ar)`)
+      .select(`*, products (id, name_en, name_ar, base_price, compare_at_price)`)
       .eq('is_approved', 1)
       .eq('is_featured', 1)
       .is('deleted_at', null)
@@ -61,7 +65,7 @@ export const getApprovedSocialProofs = async (): Promise<SocialProofVideo[]> => 
   try {
     const { data, error } = await supabase
       .from('social_proofs')
-      .select(`*, products (id, name_en, name_ar)`)
+      .select(`*, products (id, name_en, name_ar, base_price, compare_at_price)`)
       .eq('is_approved', 1)
       .is('deleted_at', null)
       .order('created_at', { ascending: false });

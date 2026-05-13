@@ -1,10 +1,8 @@
-"use client";
-
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import { Truck, CreditCard, RotateCcw, Headphones } from "lucide-react";
 
-const FeaturesSection = () => {
-  const t = useTranslations("Features");
+const FeaturesSection = async () => {
+  const t = await getTranslations("Features");
 
   const features = [
     {

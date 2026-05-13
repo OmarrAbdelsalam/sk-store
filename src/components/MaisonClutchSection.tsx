@@ -1,71 +1,60 @@
-"use client";
+import { supabase } from "@/lib/supabaseClient";
+import MaisonClutchClient from "@/components/MaisonClutchClient";
 
-import { useTranslations } from "next-intl";
-import { Button } from "@/components/ui/button";
-import { useRouter } from "@/i18n/navigation";
-import { useState, useRef } from "react";
-import { Volume2, VolumeX } from "lucide-react";
+interface SectionData {
+  id: string;
+  title_en: string;
+  title_ar: string;
+  subtitle_en: string;
+  subtitle_ar: string;
+  description_en: string;
+  description_ar: string;
+  button_text_en: string;
+  button_text_ar: string;
+  product_id: string | null;
+  link_url: string | null;
+  video_url: string | null;
+}
 
-const MaisonClutchSection = () => {
-  const t = useTranslations("MaisonClutch");
-  const router = useRouter();
-  const [isMuted, setIsMuted] = useState(false); // Start with sound enabled
-  const videoRef = useRef<HTMLVideoElement>(null);
+async function getSectionData(): Promise<SectionData | null> {
+  try {
+    const { data, error } = await supabase
+      .from("homepage_sections")
+      .select("*")
+      .eq("section_key", "maison_clutch")
+      .eq("is_active", 1)
+      .single();
 
-  const handleShopClick = () => {
-    // Navigate to the specific Maison Clutch product page
-    router.push("/product/fdd32b4e-1cfa-488e-9c5f-f83190d0c473");
-  };
+    if (error || !data) return null;
+    return data as SectionData;
+  } catch {
+    return null;
+  }
+}
 
-  const toggleMute = () => {
-    if (videoRef.current) {
-      videoRef.current.muted = !videoRef.current.muted;
-      setIsMuted(!isMuted);
-    }
-  };
+const MaisonClutchSection = async () => {
+  const section = await getSectionData();
+
+  if (!section) return null;
+
+  // Determine the link: product page or custom URL
+  const href = section.product_id
+    ? `/product/${section.product_id}`
+    : section.link_url || "/products";
 
   return (
-    <section className="py-16 bg-white overflow-hidden">
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-          {/* Text Content */}
-          <div className="order-2 lg:order-1 flex flex-col items-center lg:items-start text-center lg:text-left space-y-8">
-            <h2 className="font-playfair text-3xl md:text-5xl lg:text-6xl text-gray-900 leading-tight">
-              {t("title")}
-            </h2>
-            
-            <div className="space-y-6 max-w-xl">
-              <p className="text-gray-600 text-base md:text-lg leading-relaxed font-light">
-                {t("p1")}
-              </p>
-              <p className="text-gray-600 text-base md:text-lg leading-relaxed font-light">
-                {t("p2")}
-              </p>
-            </div>
-
-            <Button 
-              onClick={handleShopClick}
-              className="px-10 py-6 bg-black text-white hover:bg-gray-800 rounded-none tracking-[0.2em] uppercase text-sm"
-              variant="default"
-            >
-              {t("shopButton")}
-            </Button>
-          </div>
-
-          {/* Video Content */}
-          <div className="order-1 lg:order-2 w-full h-[500px] lg:h-[700px] relative bg-gray-100 rounded-xl overflow-hidden">
-            <video
-              className="absolute inset-0 w-full h-full object-cover"
-              autoPlay
-              muted
-              loop
-              playsInline
-              src="/clutch.mp4"
-            />
-          </div>
-        </div>
-      </div>
-    </section>
+    <MaisonClutchClient
+      titleEn={section.title_en}
+      titleAr={section.title_ar}
+      subtitleEn={section.subtitle_en}
+      subtitleAr={section.subtitle_ar}
+      descriptionEn={section.description_en}
+      descriptionAr={section.description_ar}
+      buttonTextEn={section.button_text_en}
+      buttonTextAr={section.button_text_ar}
+      href={href}
+      videoUrl={section.video_url || "/clutch.mp4"}
+    />
   );
 };
 

@@ -1,69 +1,35 @@
-"use client";
+import { marqueeService } from "@/services/marquee";
 
-import { useEffect, useState } from "react";
-import { marqueeService, MarqueeItem, MarqueeSettings } from "@/services/marquee";
+const MovingTicker = async () => {
+  let items;
+  let settings;
 
-const MovingTicker = () => {
-  const [items, setItems] = useState<MarqueeItem[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const local = localStorage.getItem('ticker_items_cache');
-        if (local) return JSON.parse(local);
-      } catch (e) {}
-    }
-    return [];
-  });
-  const [settings, setSettings] = useState<MarqueeSettings | null>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const local = localStorage.getItem('ticker_settings_cache');
-        if (local) return JSON.parse(local);
-      } catch (e) {}
-    }
+  try {
+    [items, settings] = await Promise.all([
+      marqueeService.getActiveItems('features_ticker'),
+      marqueeService.getSettings('features_ticker'),
+    ]);
+  } catch (error) {
+    console.error("Error loading ticker:", error);
     return null;
-  });
-  const [isLoading, setIsLoading] = useState(!items.length);
+  }
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [itemsData, settingsData] = await Promise.all([
-          marqueeService.getActiveItems('features_ticker'),
-          marqueeService.getSettings('features_ticker')
-        ]);
-        setItems(itemsData);
-        setSettings(settingsData);
-        
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('ticker_items_cache', JSON.stringify(itemsData));
-          localStorage.setItem('ticker_settings_cache', JSON.stringify(settingsData));
-        }
-      } catch (error) {
-        console.error("Error loading ticker:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadData();
-  }, []);
-
-  if (isLoading || !settings?.is_active || items.length === 0) {
+  if (!settings?.is_active || !items || items.length === 0) {
     return null;
   }
 
   return (
-    <div 
+    <div
       className="py-3 overflow-hidden border-y border-white/10 select-none"
-      style={{ 
+      style={{
         backgroundColor: settings.background_color || "#000000",
-        color: settings.text_color || "#ffffff" 
+        color: settings.text_color || "#ffffff",
       }}
     >
-      <div 
+      <div
         className="flex whitespace-nowrap w-max animate-ticker"
-        style={{ 
-            animationDuration: `${settings.scroll_speed || 40}s`
+        style={{
+          animationDuration: `${settings.scroll_speed || 40}s`,
         }}
       >
         {/* Set 1 */}
@@ -77,7 +43,7 @@ const MovingTicker = () => {
             </div>
           ))}
         </div>
-        
+
         {/* Set 2 (Identical for seamless loop) */}
         <div className="flex items-center">
           {items.map((item) => (

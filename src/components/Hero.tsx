@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { heroService, HeroSettings, DEFAULT_HERO } from "@/services/hero";
@@ -40,12 +41,17 @@ export default async function Hero() {
               muted
               loop
               playsInline
+              preload="metadata"
               className="absolute inset-0 w-full h-full object-cover"
             />
           ) : (
-            <div
-              className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-              style={{ backgroundImage: `url('${mobileMedia}')` }}
+            <Image
+              src={mobileMedia}
+              alt="SK Bags - Premium Handmade Bags"
+              fill
+              priority
+              className="object-cover object-center"
+              sizes="100vw"
             />
           )}
           <div className="absolute inset-0 bg-black/20" />
@@ -98,18 +104,18 @@ export default async function Hero() {
 
         {/* Right: Image (40%) */}
         <div className="w-[40%] h-full relative overflow-hidden">
-          <div
-            className="absolute inset-0 bg-cover bg-no-repeat"
-            style={{
-              backgroundImage: `url('${desktopImage}')`,
-              backgroundPosition: "center -26px",
-            }}
+          <Image
+            src={desktopImage}
+            alt="SK Bags Collection"
+            fill
+            priority
+            className="object-cover"
+            style={{ objectPosition: "center -26px" }}
+            sizes="40vw"
           />
           <div className="absolute inset-0 bg-black/5" />
         </div>
       </div>
     </section>
   );
-};
-
-
+}

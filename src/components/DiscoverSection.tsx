@@ -1,53 +1,16 @@
-"use client";
-
 import Image from "next/image";
-import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { moreToDiscoverService, MoreToDiscoverItem } from "@/services/moreToDiscover";
 
-const DiscoverSection = () => {
-  const t = useTranslations("DiscoverSection");
-  const [items, setItems] = useState<MoreToDiscoverItem[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const local = localStorage.getItem('more_to_discover_cache');
-        if (local) return JSON.parse(local);
-      } catch (e) {}
-    }
-    return [];
-  });
-  const [mounted, setMounted] = useState(false);
-  const [loading, setLoading] = useState(true);
+const DiscoverSection = async () => {
+  const t = await getTranslations("DiscoverSection");
 
-  useEffect(() => {
-    setMounted(true);
-    moreToDiscoverService.getActiveItems()
-      .then(data => {
-        setItems(data);
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('more_to_discover_cache', JSON.stringify(data));
-        }
-      })
-      .catch(() => setItems([]))
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (!mounted || (loading && items.length === 0)) {
-    return (
-      <section className="py-16 bg-background overflow-hidden">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-10">
-            <div className="h-8 w-48 bg-muted animate-pulse mx-auto mb-2 rounded" />
-            <div className="w-24 h-[1px] bg-muted mx-auto mt-3" />
-          </div>
-          <div className="grid grid-cols-2 gap-3 md:gap-6">
-            <div className="relative aspect-[3/4] lg:aspect-square lg:max-h-[80vh] bg-muted animate-pulse rounded-xl" />
-            <div className="relative aspect-[3/4] lg:aspect-square lg:max-h-[80vh] bg-muted animate-pulse rounded-xl" />
-          </div>
-        </div>
-      </section>
-    );
+  let items: MoreToDiscoverItem[] = [];
+  try {
+    items = await moreToDiscoverService.getActiveItems();
+  } catch (error) {
+    // Fall through to fallback
   }
 
   // Fallback to static images if no backend data

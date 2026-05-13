@@ -1,65 +1,71 @@
-"use client";
-
-import { useParams, useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { useLocale, useTranslations } from "next-intl";
-import { useProduct } from "@/hooks/useProduct";
-import ProductHeader from "@/components/product/ProductHeader";
-import ProductDetailLoading from "@/components/product/ProductDetailLoading";
-import ProductDetailError from "@/components/product/ProductDetailError";
+import { notFound } from "next/navigation";
+import { fetchProductById } from "@/api/products";
 import ProductDetailContent from "@/components/product/ProductDetailContent";
-import NavigationLoadingHandler from "@/components/NavigationLoadingHandler";
+import ProductHeader from "@/components/product/ProductHeader";
+import type { Metadata } from "next";
+import { generatePageMetadata } from "@/lib/metadata";
 
-export default function ProductDetailPage() {
-  const router = useRouter();
-  const locale = useLocale();
-  const isAr = locale === "ar";
-  const dir = isAr ? "rtl" : "ltr";
-  const t = useTranslations("ProductDetail");
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string; id: string }>;
+}): Promise<Metadata> {
+  const { locale, id } = await params;
+  const product = await fetchProductById(id);
 
-  const params = useParams<{ id: string }>();
-  const id = Array.isArray(params?.id) ? params?.id[0] : params?.id;
-  
-  // Use string ID directly - updated to handle UUIDs
-  const { product, isLoading, error } = useProduct(id);
-
-  // Prefetch cart and checkout pages in background
-  useEffect(() => {
-    if (product) {
-      router.prefetch(`/${locale}/cart`);
-      router.prefetch(`/${locale}/checkout`);
-    }
-  }, [product, locale, router]);
-
-  if (isLoading) {
-    return <ProductDetailLoading dir={dir} onBack={() => router.back()} />;
+  if (!product) {
+    return generatePageMetadata({
+      title: locale === "ar" ? "منتج غير موجود" : "Product Not Found",
+      description: "",
+      path: `/product/${id}`,
+      locale,
+    });
   }
 
-  if (error || !product) {
-    return (
-      <ProductDetailError
-        dir={dir}
-        message={isAr ? "المنتج غير موجود أو حدث خطأ في التحميل." : "Product not found or failed to load."}
-        onBack={() => router.back()}
-      />
-    );
+  const isAr = locale === "ar";
+  const name = isAr ? product.nameAr : product.nameEn;
+  const description = isAr
+    ? product.descriptionAr || product.descriptionEn || ""
+    : product.descriptionEn || product.descriptionAr || "";
+
+  return generatePageMetadata({
+    title: product.seo_title_en && !isAr
+      ? product.seo_title_en
+      : product.seo_title_ar && isAr
+      ? product.seo_title_ar
+      : name,
+    description: product.seo_description_en && !isAr
+      ? product.seo_description_en
+      : product.seo_description_ar && isAr
+      ? product.seo_description_ar
+      : description.slice(0, 160),
+    path: `/product/${id}`,
+    locale,
+  });
+}
+
+export default async function ProductDetailPage({
+  params,
+}: {
+  params: Promise<{ locale: string; id: string }>;
+}) {
+  const { locale, id } = await params;
+  const isAr = locale === "ar";
+  const dir = isAr ? "rtl" : "ltr";
+
+  const product = await fetchProductById(id);
+
+  if (!product) {
+    notFound();
   }
 
   const productName = isAr ? product.nameAr : product.nameEn;
 
   return (
     <div className="min-h-screen" dir={dir}>
-      <NavigationLoadingHandler />
       <div className="container mx-auto px-4 py-4">
-        <ProductHeader onBack={() => router.back()} productName={productName} />
-        
+        <ProductHeader productName={productName} />
         <ProductDetailContent product={product} />
-
-        {/* Hidden prefetch links for cart and checkout */}
-        <div className="hidden">
-          <link rel="prefetch" href={`/${locale}/cart`} />
-          <link rel="prefetch" href={`/${locale}/checkout`} />
-        </div>
       </div>
     </div>
   );

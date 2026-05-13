@@ -1,6 +1,16 @@
 import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import Hero from "@/components/Hero";
+import HeroFallback from "@/components/HeroFallback";
+import NewArrivals from "@/components/NewArrivals";
+import MaisonClutchSection from "@/components/MaisonClutchSection";
+import FeaturesSection from "@/components/FeaturesSection";
+import MovingTicker from "@/components/MovingTicker";
+import DiscoverSection from "@/components/DiscoverSection";
+import { ClothingShowcase } from "@/components/CategoryBanners";
+import ReviewsGallery from "@/components/ReviewsGallery";
+import ProductsCacheSeeder from "@/components/ProductsCacheSeeder";
+import { fetchProducts } from "@/api/products";
 import { generatePageMetadata } from "@/lib/metadata";
 import type { Metadata } from "next";
 
@@ -22,24 +32,44 @@ export async function generateMetadata({
   });
 }
 
-// Lazy loaded components (Code Splitting)
-const NewArrivals = dynamic(() => import("@/components/NewArrivals"));
-const ClothingShowcase = dynamic(() => import("@/components/CategoryBanners").then(mod => mod.ClothingShowcase));
+// Lazy loaded client-only components
 const ReelsShowcase = dynamic(() => import("@/components/ReelsShowcase").then(mod => mod.ReelsShowcase));
 const ProductGrid = dynamic(() => import("@/components/ProductGrid"));
-const DiscoverSection = dynamic(() => import("@/components/DiscoverSection"));
-const MaisonClutchSection = dynamic(() => import("@/components/MaisonClutchSection"));
 const HandbagsSection = dynamic(() => import("@/components/HandbagsSection"));
-const ReviewsGallery = dynamic(() => import("@/components/ReviewsGallery"));
 const BestSellers = dynamic(() => import("@/components/BestSellers"));
-const FeaturesSection = dynamic(() => import("@/components/FeaturesSection"));
-const MovingTicker = dynamic(() => import("@/components/MovingTicker"));
 
+/**
+ * Async component that fetches products and seeds the client cache.
+ * Wrapped in Suspense so it doesn't block Hero/NewArrivals from rendering.
+ */
+async function ProductsLoader({ locale }: { locale: string }) {
+  let allProducts: any[] = [];
+  try {
+    const result = await fetchProducts(1, 100);
+    allProducts = result.items;
+  } catch (error) {
+    // Client components will fetch on their own if this fails
+  }
 
+  if (allProducts.length === 0) return null;
 
-const Index = () => {
+  return <ProductsCacheSeeder products={allProducts} locale={locale} />;
+}
+
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+
   return (
     <div className="min-h-screen">
+      {/* Products cache seeder — doesn't block page render */}
+      <Suspense fallback={null}>
+        <ProductsLoader locale={locale} />
+      </Suspense>
+
       {/* SEO Content - Hidden visually but accessible for SEO */}
       <div className="sr-only">
         <h1>SK Bags - شنط هاند ميد بريميم بتوصيل لكل أنحاء مصر</h1>
@@ -56,58 +86,58 @@ const Index = () => {
           </ul>
         </nav>
       </div>
-      
-      {/* Hero Section */}
-      <Hero />
-      
-      {/* New Arrivals */}
-      <NewArrivals />
 
-      {/* Category Banners */}
-      <ClothingShowcase />
-
-      {/* Reels Showcase */}
-      <ReelsShowcase />
-      
-      <Suspense fallback={
-        <section className="py-16 bg-background">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-10">
-              <div className="h-8 w-48 bg-muted animate-pulse mx-auto mb-2 rounded" />
-              <div className="w-24 h-[1px] bg-muted mx-auto mt-3" />
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-6 items-stretch">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="space-y-2 md:space-y-4 animate-pulse">
-                  <div className="aspect-[3/4] w-full rounded-lg bg-muted" />
-                  <div className="space-y-1.5 md:space-y-2">
-                    <div className="h-4 md:h-6 w-3/4 rounded bg-muted" />
-                    <div className="h-3 md:h-4 w-1/2 rounded bg-muted" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      }>
-        <ProductGrid />
+      {/* Hero Section - Shows instantly with defaults, swaps to real data when ready */}
+      <Suspense fallback={<HeroFallback />}>
+        <Hero />
       </Suspense>
 
-      <DiscoverSection />
-      
-      <MovingTicker />
-      
-      <MaisonClutchSection />
-      
-      <HandbagsSection />
-      
-      <ReviewsGallery />
-      
+      {/* New Arrivals - Server Component */}
+      <Suspense fallback={null}>
+        <NewArrivals />
+      </Suspense>
+
+      {/* Category Banners - Server fetches, Client handles interaction */}
+      <Suspense fallback={null}>
+        <ClothingShowcase />
+      </Suspense>
+
+      {/* Reels Showcase - Client (video/carousel) */}
+      <ReelsShowcase />
+
+      {/* Best Sellers - Client (carousel) */}
       <BestSellers />
-      
-      <FeaturesSection />
+
+      {/* Product Grid - Client (filters/pagination) */}
+      <ProductGrid />
+
+      {/* Discover Section - Server Component */}
+      <Suspense fallback={null}>
+        <DiscoverSection />
+      </Suspense>
+
+      {/* Moving Ticker - Server Component */}
+      <Suspense fallback={null}>
+        <MovingTicker />
+      </Suspense>
+
+      {/* Maison Clutch - Server Component */}
+      <Suspense fallback={null}>
+        <MaisonClutchSection />
+      </Suspense>
+
+      {/* Handbags - Client (carousel) */}
+      <HandbagsSection />
+
+      {/* Reviews - Server fetches, Client handles lightbox */}
+      <Suspense fallback={null}>
+        <ReviewsGallery />
+      </Suspense>
+
+      {/* Features - Server Component */}
+      <Suspense fallback={null}>
+        <FeaturesSection />
+      </Suspense>
     </div>
   );
-};
-
-export default Index;
+}

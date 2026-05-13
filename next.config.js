@@ -1,6 +1,11 @@
 // next.config.js
 const createNextIntlPlugin = require('next-intl/plugin');
 
+// Fix TLS certificate verification issue in development
+if (process.env.NODE_ENV !== 'production') {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+}
+
 const withNextIntl = createNextIntlPlugin({
   defaultLocale: 'en',
   locales: ['en'],

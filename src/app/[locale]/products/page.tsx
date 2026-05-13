@@ -1,7 +1,9 @@
-import ProductGrid from "@/components/ProductGrid";
 import { Suspense } from "react";
+import { fetchProducts } from "@/api/products";
 import { generatePageMetadata } from "@/lib/metadata";
 import type { Metadata } from "next";
+import ServerProductGrid from "@/components/product/ServerProductGrid";
+import ClientProductGrid from "@/components/product/ClientProductGrid";
 
 export async function generateMetadata({
   params,
@@ -35,12 +37,30 @@ const ProductGridSkeleton = () => (
   </div>
 );
 
-export default function ProductsPage() {
+export default async function ProductsPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+
+  // Fetch first 8 products server-side
+  let initialProducts: any[] = [];
+  try {
+    const result = await fetchProducts(1, 8);
+    initialProducts = result.items;
+  } catch (error) {
+    console.error("Failed to fetch initial products:", error);
+  }
+
   return (
     <main className="min-h-screen pt-4 md:pt-6">
+      {/* First 8 products rendered server-side */}
+      <ServerProductGrid products={initialProducts} locale={locale} />
+
+      {/* Remaining products loaded client-side */}
       <Suspense fallback={<ProductGridSkeleton />}>
-        {/* We can pass a prop to ProductGrid to indicate it's the full page if needed */}
-        <ProductGrid isFullPage={true} />
+        <ClientProductGrid initialProducts={initialProducts} />
       </Suspense>
     </main>
   );
