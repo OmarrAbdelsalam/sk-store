@@ -88,12 +88,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
     return [product.image];
   }, [selectedColorId, photos, product.image]);
 
-  const displayImage = React.useMemo(() => {
-    if (isHovered && availableImages.length > 1) {
-      return availableImages[1];
-    }
-    return availableImages[0] || product.image;
-  }, [isHovered, availableImages, product.image]);
+  const primaryImage = React.useMemo(() => availableImages[0] || product.image, [availableImages, product.image]);
+  const secondaryImage = React.useMemo(() => availableImages.length > 1 ? availableImages[1] : null, [availableImages]);
 
   const handleColorClick = React.useCallback((e: React.MouseEvent, colorId: string | number) => {
     e.preventDefault();
@@ -154,17 +150,29 @@ const ProductCard: React.FC<ProductCardProps> = ({
         onMouseLeave={handleMouseLeave}
         onTouchStart={handleTouchStart}
       >
-        {/* Product Image */}
+        {/* Primary Image */}
         <DropboxImage
-          key={displayImage}
-          src={displayImage}
+          src={primaryImage}
           alt={product.name}
           fill
           sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
-          className="object-cover object-center transition-opacity duration-300"
+          className={`object-cover object-center transition-opacity duration-[400ms] ease-in-out ${secondaryImage ? 'group-hover:opacity-0' : ''}`}
           priority={index < 2}
           showLoader={false}
         />
+        
+        {/* Secondary Image (Hover) */}
+        {secondaryImage && (
+          <DropboxImage
+            src={secondaryImage}
+            alt={`${product.name} alternate view`}
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
+            className="object-cover object-center opacity-0 group-hover:opacity-100 transition-opacity duration-[400ms] ease-in-out absolute inset-0"
+            showLoader={false}
+            priority={index < 2} // Also prioritize if primary is prioritized
+          />
+        )}
         
         {/* Wishlist Button */}
 

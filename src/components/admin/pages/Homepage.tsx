@@ -24,6 +24,7 @@ import {
   ArrowRightLeft,
   Smartphone,
   Megaphone,
+  Pencil,
 } from "lucide-react";
 import { PageHeader, Card } from "@/components/admin/common";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 
 // Services
@@ -88,6 +95,12 @@ const HomepagePage = () => {
   const vibesThumbnailRef = useRef<HTMLInputElement>(null);
   const vibesVideoRef = useRef<HTMLInputElement>(null);
   const [vibesVideoUploading, setVibesVideoUploading] = useState(false);
+  const [editingVibe, setEditingVibe] = useState<SocialProofAdmin | null>(null);
+  const [editVibeForm, setEditVibeForm] = useState({ video_url: '', thumbnail_url: '', title_en: '', product_id: '', is_featured: true });
+  const [editVibeModalOpen, setEditVibeModalOpen] = useState(false);
+  const [editVibeSaving, setEditVibeSaving] = useState(false);
+  const editVibesVideoRef = useRef<HTMLInputElement>(null);
+  const editVibesThumbnailRef = useRef<HTMLInputElement>(null);
 
   // ===================== MOBILE HERO STATE =====================
   const [mobileHero, setMobileHero] = useState<MobileHero | null>(null);
@@ -484,6 +497,74 @@ const HomepagePage = () => {
       setVibesItems(vibesItems.map(v => v.id === item.id ? { ...v, is_featured: !v.is_featured } : v));
     } catch (error) {
       toast({ title: "Error", description: "Failed to update", variant: "destructive" });
+    }
+  };
+
+  // ===================== EDIT VIBE HANDLERS =====================
+  const openEditVibeModal = (item: SocialProofAdmin) => {
+    setEditingVibe(item);
+    setEditVibeForm({
+      video_url: item.video_url,
+      thumbnail_url: item.thumbnail_url || '',
+      title_en: item.title_en || '',
+      product_id: item.product_id || '',
+      is_featured: item.is_featured,
+    });
+    setEditVibeModalOpen(true);
+  };
+
+  const handleEditVibeVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setEditVibeSaving(true);
+    try {
+      const res = await uploadFile(file, 'reels');
+      if (res.success && res.data) {
+        setEditVibeForm({ ...editVibeForm, video_url: res.data.url });
+      } else {
+        toast({ title: "Error", description: res.error || "Upload failed", variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "Error", description: "Upload failed", variant: "destructive" });
+    } finally {
+      setEditVibeSaving(false);
+    }
+  };
+
+  const handleEditVibeThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const path = await uploadToStorage(file);
+    if (path) setEditVibeForm({ ...editVibeForm, thumbnail_url: path });
+  };
+
+  const handleSaveEditVibe = async () => {
+    if (!editingVibe || !editVibeForm.video_url) return;
+    setEditVibeSaving(true);
+    try {
+      await socialProofsAdminService.update(editingVibe.id, {
+        video_url: editVibeForm.video_url,
+        thumbnail_url: editVibeForm.thumbnail_url || undefined,
+        title_en: editVibeForm.title_en || undefined,
+        product_id: editVibeForm.product_id || null,
+        is_featured: editVibeForm.is_featured,
+      });
+      setVibesItems(vibesItems.map(v => v.id === editingVibe.id ? {
+        ...v,
+        video_url: editVibeForm.video_url,
+        thumbnail_url: editVibeForm.thumbnail_url || undefined,
+        title_en: editVibeForm.title_en || undefined,
+        product_id: editVibeForm.product_id || undefined,
+        is_featured: editVibeForm.is_featured,
+      } : v));
+      setEditVibeModalOpen(false);
+      setEditingVibe(null);
+      toast({ title: "Updated", description: "Reel updated successfully" });
+    } catch (error) {
+      console.error("Error updating reel:", error);
+      toast({ title: "Error", description: "Failed to update reel", variant: "destructive" });
+    } finally {
+      setEditVibeSaving(false);
     }
   };
 
@@ -1590,6 +1671,12 @@ const HomepagePage = () => {
                   >
                     <Trash2 className="w-3 h-3" />
                   </button>
+                  <button
+                    onClick={() => openEditVibeModal(item)}
+                    className="absolute top-10 right-2 p-1.5 bg-white text-gray-700 rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shadow-sm"
+                  >
+                    <Pencil className="w-3 h-3" />
+                  </button>
                 </div>
               ))}
             </div>
@@ -1603,6 +1690,150 @@ const HomepagePage = () => {
           </Card>
         </motion.div>
       )}
+
+      {/* Edit Reel Modal */}
+      <Dialog open={editVibeModalOpen} onOpenChange={setEditVibeModalOpen}>
+        <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden bg-white border-none shadow-2xl rounded-[24px]" dir="ltr">
+          <DialogHeader className="px-6 pt-5 pb-3 border-b border-gray-100">
+            <DialogTitle className="text-lg font-bold text-gray-900">Edit Reel</DialogTitle>
+          </DialogHeader>
+          <div className="px-6 py-4 space-y-4 max-h-[70vh] overflow-y-auto">
+            {/* Video */}
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">Video</label>
+              <div className="flex gap-2">
+                <Input
+                  value={editVibeForm.video_url}
+                  onChange={(e) => setEditVibeForm({ ...editVibeForm, video_url: e.target.value })}
+                  placeholder="Video URL or upload..."
+                  className="flex-1 rounded-xl border-gray-200"
+                  dir="ltr"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="rounded-xl shrink-0"
+                  onClick={() => editVibesVideoRef.current?.click()}
+                >
+                  <Upload className="w-4 h-4" />
+                </Button>
+                <input
+                  ref={editVibesVideoRef}
+                  type="file"
+                  accept="video/*"
+                  onChange={handleEditVibeVideoUpload}
+                  className="hidden"
+                />
+              </div>
+              {editVibeForm.video_url && (
+                <div className="mt-2 rounded-xl overflow-hidden bg-black aspect-[9/16] max-h-[200px]">
+                  <video src={editVibeForm.video_url} className="w-full h-full object-contain" controls muted />
+                </div>
+              )}
+            </div>
+
+            {/* Thumbnail */}
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">Thumbnail (Optional)</label>
+              <div className="flex gap-2">
+                <Input
+                  value={editVibeForm.thumbnail_url}
+                  onChange={(e) => setEditVibeForm({ ...editVibeForm, thumbnail_url: e.target.value })}
+                  placeholder="Thumbnail URL..."
+                  className="flex-1 rounded-xl border-gray-200"
+                  dir="ltr"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="rounded-xl shrink-0"
+                  onClick={() => editVibesThumbnailRef.current?.click()}
+                >
+                  <ImageIcon className="w-4 h-4" />
+                </Button>
+                <input
+                  ref={editVibesThumbnailRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleEditVibeThumbnailUpload}
+                  className="hidden"
+                />
+              </div>
+              {editVibeForm.thumbnail_url && (
+                <div className="mt-2 rounded-xl overflow-hidden bg-gray-100 h-24 w-16">
+                  <img src={editVibeForm.thumbnail_url} className="w-full h-full object-cover" alt="thumbnail" />
+                </div>
+              )}
+            </div>
+
+            {/* Title */}
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">Title (Optional)</label>
+              <Input
+                value={editVibeForm.title_en}
+                onChange={(e) => setEditVibeForm({ ...editVibeForm, title_en: e.target.value })}
+                placeholder="Reel title..."
+                className="rounded-xl border-gray-200"
+                dir="ltr"
+              />
+            </div>
+
+            {/* Product Link */}
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">Link to Product (Optional)</label>
+              <Select
+                value={editVibeForm.product_id || "none"}
+                onValueChange={(value) => setEditVibeForm({ ...editVibeForm, product_id: value === "none" ? "" : value })}
+              >
+                <SelectTrigger className="w-full rounded-xl border-gray-200">
+                  <SelectValue placeholder="No product link" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No product link</SelectItem>
+                  {products.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{p.name_en}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Featured Toggle */}
+            <div className="flex items-center gap-3">
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="sr-only peer"
+                  checked={editVibeForm.is_featured}
+                  onChange={(e) => setEditVibeForm({ ...editVibeForm, is_featured: e.target.checked })}
+                />
+                <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+              </label>
+              <span className="text-sm font-medium text-gray-700">Show on homepage (Featured)</span>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="px-6 py-4 border-t border-gray-100 flex gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setEditVibeModalOpen(false)}
+              className="flex-1 h-11 rounded-xl"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveEditVibe}
+              disabled={editVibeSaving || !editVibeForm.video_url}
+              className="flex-1 h-11 rounded-xl bg-primary hover:bg-primary/90 text-white shadow-md"
+            >
+              {editVibeSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+              Save Changes
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -34,6 +34,7 @@ export function useProduct(id?: number | string) {
 
 // Prefetch function for ProductCard - loads data into cache
 export async function prefetchProduct(id: number | string) {
+  if (id === undefined || id === null || Number.isNaN(id) || id === "NaN" || id === "") return;
   const stringId = String(id);
   // Skip if already prefetched
   if (prefetchedProducts.has(stringId)) return;

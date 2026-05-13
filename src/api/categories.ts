@@ -7,6 +7,7 @@ export type CategoryOption = {
   arabicName: string;
   englishName: string;
   imageUrl?: string;
+  mobileImageUrl?: string;
   productCount?: number;
 };
 
@@ -30,6 +31,7 @@ export async function fetchCategories(
       arabicName: c.name_ar || "بدون اسم",
       englishName: c.name_en || "No name",
       imageUrl: c.image_url || undefined,
+      mobileImageUrl: c.mobile_image_url || undefined,
       productCount: 0, // Will be calculated separately if needed
     }));
   } catch (error) {
@@ -52,6 +54,7 @@ export async function fetchCategoryById(id: string): Promise<CategoryOption | nu
       arabicName: category.name_ar || "بدون اسم",
       englishName: category.name_en || "No name",
       imageUrl: category.image_url || undefined,
+      mobileImageUrl: category.mobile_image_url || undefined,
     };
   } catch (error) {
     console.error('Error fetching category by ID:', error);
@@ -65,10 +68,15 @@ type CacheEntry = {
   timestamp: number;
 };
 
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache
+const CACHE_DURATION = 60 * 1000; // 60 seconds cache
 let _categoriesCache: { [locale: string]: CacheEntry } = {};
 
 export async function getCategories(locale = "ar"): Promise<CategoryOption[]> {
+  // In development, always fetch fresh data
+  if (process.env.NODE_ENV === 'development') {
+    return fetchCategories(1, 50, locale);
+  }
+
   const now = Date.now();
   const cached = _categoriesCache[locale];
   

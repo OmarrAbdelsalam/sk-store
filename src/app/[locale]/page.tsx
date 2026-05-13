@@ -15,6 +15,9 @@ import { generatePageMetadata } from "@/lib/metadata";
 import { withRetry } from "@/lib/retry";
 import type { Metadata } from "next";
 
+// Revalidate homepage every 60 seconds to pick up admin changes
+export const revalidate = 60;
+
 export async function generateMetadata({
   params,
 }: {

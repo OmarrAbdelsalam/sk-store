@@ -26,6 +26,12 @@ const BestSellers = () => {
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(true);
 
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const scrollPrev = useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi]);
   const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
 
@@ -44,7 +50,10 @@ const BestSellers = () => {
     emblaApi.on("reInit", onSelect);
   }, [emblaApi, onSelect]);
 
-  // Don't render until data is available
+  // Prevent hydration mismatch
+  if (!mounted) return null;
+
+  // Don't render if no data
   if (loading && products.length === 0) {
     return null;
   }

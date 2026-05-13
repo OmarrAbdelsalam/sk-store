@@ -10,14 +10,17 @@ const FALLBACK_COLORS = ["#C94A4A", "#2B8282", "#D48C29", "#4A55A2", "#347952"];
 interface CategoryBannerProps {
   title: string;
   image: string | null;
+  mobileImage?: string | null;
   colorHex?: string;
   onClick?: () => void;
   className?: string;
 }
 
-const CategoryBanner = ({ title, image, colorHex = "#6D5F52", onClick, className = "" }: CategoryBannerProps) => {
+const CategoryBanner = ({ title, image, mobileImage, colorHex = "#6D5F52", onClick, className = "" }: CategoryBannerProps) => {
   const hasImage = Boolean(image && image !== '/hero.webp');
+  const hasMobileImage = Boolean(mobileImage);
   const isExternalUrl = hasImage && image?.startsWith('http');
+  const isMobileExternalUrl = hasMobileImage && mobileImage?.startsWith('http');
 
   return (
     <div
@@ -26,10 +29,11 @@ const CategoryBanner = ({ title, image, colorHex = "#6D5F52", onClick, className
     >
       <div 
         className="absolute inset-0 transition-transform duration-700 group-hover:scale-105"
-        style={!hasImage ? { backgroundColor: colorHex } : undefined}
+        style={!hasImage && !hasMobileImage ? { backgroundColor: colorHex } : undefined}
       >
+        {/* Desktop Image */}
         {hasImage && (
-          <>
+          <div className={`absolute inset-0 ${hasMobileImage ? 'hidden md:block' : ''}`}>
             {isExternalUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -45,18 +49,32 @@ const CategoryBanner = ({ title, image, colorHex = "#6D5F52", onClick, className
                 className="object-cover"
               />
             )}
-          </>
+          </div>
+        )}
+        {/* Mobile Image */}
+        {hasMobileImage && (
+          <div className={`absolute inset-0 ${hasImage ? 'block md:hidden' : ''}`}>
+            {isMobileExternalUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={mobileImage!}
+                alt={title}
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            ) : (
+              <Image
+                src={mobileImage!}
+                alt={title}
+                fill
+                className="object-cover"
+              />
+            )}
+          </div>
         )}
       </div>
       
-      {/* Overlay - lighter if no image */}
-      <div className={`absolute inset-0 transition-colors duration-300 ${hasImage ? 'bg-black/20 group-hover:bg-black/30' : 'bg-black/10 group-hover:bg-black/20'}`} />
-
-      <div className="relative z-10 h-full flex flex-col items-center justify-center text-center p-4">
-        <h3 className="font-playfair text-2xl md:text-3xl lg:text-4xl text-white drop-shadow-md">
-          {title}
-        </h3>
-      </div>
+      {/* Overlay on hover only */}
+      <div className={`absolute inset-0 transition-colors duration-300 ${hasImage || hasMobileImage ? 'bg-black/0 group-hover:bg-black/10' : 'bg-black/10 group-hover:bg-black/20'}`} />
     </div>
   );
 };
@@ -108,6 +126,13 @@ const ClothingShowcaseClient = ({ categories, sectionTitle }: ClothingShowcaseCl
     return null;
   };
 
+  const getMobileImageUrl = (cat: CategoryOption) => {
+    if (!cat.mobileImageUrl) return null;
+    if (cat.mobileImageUrl.startsWith('/')) return cat.mobileImageUrl;
+    if (cat.mobileImageUrl.startsWith('http')) return cat.mobileImageUrl;
+    return null;
+  };
+
   return (
     <section className="py-16">
       <div className="container mx-auto px-4">
@@ -127,6 +152,7 @@ const ClothingShowcaseClient = ({ categories, sectionTitle }: ClothingShowcaseCl
                 <CategoryBanner
                   title={getTitle(displayCategories[0])}
                   image={getImageUrl(displayCategories[0])}
+                  mobileImage={getMobileImageUrl(displayCategories[0])}
                   colorHex={FALLBACK_COLORS[0]}
                   onClick={() => handleCategoryClick(displayCategories[0])}
                 />
@@ -137,6 +163,7 @@ const ClothingShowcaseClient = ({ categories, sectionTitle }: ClothingShowcaseCl
                   <CategoryBanner
                     title={getTitle(displayCategories[1])}
                     image={getImageUrl(displayCategories[1])}
+                    mobileImage={getMobileImageUrl(displayCategories[1])}
                     colorHex={FALLBACK_COLORS[1]}
                     onClick={() => handleCategoryClick(displayCategories[1])}
                     className="h-full"
@@ -146,6 +173,7 @@ const ClothingShowcaseClient = ({ categories, sectionTitle }: ClothingShowcaseCl
                   <CategoryBanner
                     title={getTitle(displayCategories[2])}
                     image={getImageUrl(displayCategories[2])}
+                    mobileImage={getMobileImageUrl(displayCategories[2])}
                     colorHex={FALLBACK_COLORS[2]}
                     onClick={() => handleCategoryClick(displayCategories[2])}
                     className="h-full"
@@ -159,6 +187,7 @@ const ClothingShowcaseClient = ({ categories, sectionTitle }: ClothingShowcaseCl
                 <CategoryBanner
                   title={getTitle(cat)}
                   image={getImageUrl(cat)}
+                  mobileImage={getMobileImageUrl(cat)}
                   colorHex={FALLBACK_COLORS[idx % FALLBACK_COLORS.length]}
                   onClick={() => handleCategoryClick(cat)}
                 />

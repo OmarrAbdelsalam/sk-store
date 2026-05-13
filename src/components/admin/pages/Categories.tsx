@@ -60,7 +60,9 @@ const CategoriesPage = () => {
   const [nameEn, setNameEn] = useState("");
   const [descriptionEn, setDescriptionEn] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [mobileImageFile, setMobileImageFile] = useState<File | null>(null);
   const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
+  const [currentMobileImageUrl, setCurrentMobileImageUrl] = useState<string | null>(null);
 
   // Enabled for strict mode support
   const [enabled, setEnabled] = useState(false);
@@ -78,13 +80,16 @@ const CategoriesPage = () => {
       setNameEn(category.name_en);
       setDescriptionEn(category.description_en || "");
       setCurrentImageUrl(category.image_url);
+      setCurrentMobileImageUrl(category.mobile_image_url);
     } else {
       setEditingCategory(null);
       setNameEn("");
       setDescriptionEn("");
       setCurrentImageUrl(null);
+      setCurrentMobileImageUrl(null);
     }
     setImageFile(null);
+    setMobileImageFile(null);
     setIsModalOpen(true);
   };
 
@@ -99,6 +104,12 @@ const CategoriesPage = () => {
     }
   };
 
+  const handleMobileImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setMobileImageFile(e.target.files[0]);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!nameEn) {
@@ -109,23 +120,36 @@ const CategoriesPage = () => {
     try {
       setIsSubmitting(true);
       let finalImageUrl = currentImageUrl;
+      let finalMobileImageUrl = currentMobileImageUrl;
 
-      // 1. Upload Image to Supabase if new file selected
+      // 1. Upload Desktop Image to Supabase if new file selected
       if (imageFile) {
         const uploadRes = await uploadFile(imageFile, 'categories');
 
         if (!uploadRes.success || !uploadRes.data) {
-          throw new Error(uploadRes.error || "Image upload failed");
+          throw new Error(uploadRes.error || "Desktop image upload failed");
         }
         
         finalImageUrl = uploadRes.data.url;
       }
 
-      // 2. Save to Supabase
+      // 2. Upload Mobile Image to Supabase if new file selected
+      if (mobileImageFile) {
+        const uploadRes = await uploadFile(mobileImageFile, 'categories/mobile');
+
+        if (!uploadRes.success || !uploadRes.data) {
+          throw new Error(uploadRes.error || "Mobile image upload failed");
+        }
+        
+        finalMobileImageUrl = uploadRes.data.url;
+      }
+
+      // 3. Save to Supabase
       const inputData = {
         name_en: nameEn,
         description_en: descriptionEn,
         image_url: finalImageUrl || undefined,
+        mobile_image_url: finalMobileImageUrl || undefined,
       };
 
       if (editingCategory) {
@@ -354,7 +378,7 @@ const CategoriesPage = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="image" className="text-sm font-semibold text-gray-900">Category Image</Label>
+              <Label htmlFor="image" className="text-sm font-semibold text-gray-900">Desktop Image</Label>
               <div className="relative group cursor-pointer">
                 <Input 
                   id="image" 
@@ -366,7 +390,7 @@ const CategoriesPage = () => {
                 
                 <div 
                   onClick={() => document.getElementById('image')?.click()}
-                  className="w-full h-40 rounded-2xl border-2 border-dashed border-gray-200 hover:border-primary hover:bg-gray-50 transition-all flex flex-col items-center justify-center gap-2 overflow-hidden relative group"
+                  className="w-full h-32 rounded-2xl border-2 border-dashed border-gray-200 hover:border-primary hover:bg-gray-50 transition-all flex flex-col items-center justify-center gap-2 overflow-hidden relative group"
                 >
                   {imageFile ? (
                     <img src={URL.createObjectURL(imageFile)} className="w-full h-full object-cover" />
@@ -374,18 +398,58 @@ const CategoriesPage = () => {
                     <img src={currentImageUrl} className="w-full h-full object-cover" />
                   ) : (
                     <>
-                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-1 group-hover:scale-110 transition-transform">
-                        <ImageIcon size={20} />
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-1 group-hover:scale-110 transition-transform">
+                        <ImageIcon size={18} />
                       </div>
-                      <p className="text-sm font-medium text-gray-600">Click to upload image</p>
-                      <p className="text-xs text-gray-400">PNG, JPG up to 5MB</p>
+                      <p className="text-xs font-medium text-gray-600">Click to upload desktop image</p>
+                      <p className="text-[10px] text-gray-400">Recommended: landscape ratio</p>
                     </>
                   )}
                   
                   {(imageFile || currentImageUrl) && (
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <p className="text-white font-medium flex items-center gap-2">
-                        <Pencil size={16} /> Change Image
+                      <p className="text-white font-medium flex items-center gap-2 text-sm">
+                        <Pencil size={14} /> Change
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="mobile-image" className="text-sm font-semibold text-gray-900">Mobile Image</Label>
+              <div className="relative group cursor-pointer">
+                <Input 
+                  id="mobile-image" 
+                  type="file" 
+                  accept="image/*"
+                  onChange={handleMobileImageChange}
+                  className="hidden"
+                />
+                
+                <div 
+                  onClick={() => document.getElementById('mobile-image')?.click()}
+                  className="w-full h-32 rounded-2xl border-2 border-dashed border-gray-200 hover:border-primary hover:bg-gray-50 transition-all flex flex-col items-center justify-center gap-2 overflow-hidden relative group"
+                >
+                  {mobileImageFile ? (
+                    <img src={URL.createObjectURL(mobileImageFile)} className="w-full h-full object-cover" />
+                  ) : currentMobileImageUrl ? (
+                    <img src={currentMobileImageUrl} className="w-full h-full object-cover" />
+                  ) : (
+                    <>
+                      <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 mb-1 group-hover:scale-110 transition-transform">
+                        <ImageIcon size={18} />
+                      </div>
+                      <p className="text-xs font-medium text-gray-600">Click to upload mobile image</p>
+                      <p className="text-[10px] text-gray-400">Recommended: square or portrait ratio</p>
+                    </>
+                  )}
+                  
+                  {(mobileImageFile || currentMobileImageUrl) && (
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <p className="text-white font-medium flex items-center gap-2 text-sm">
+                        <Pencil size={14} /> Change
                       </p>
                     </div>
                   )}

@@ -6,6 +6,7 @@ export interface Category {
   name_en: string;
   name_ar: string;
   image_url: string | null;
+  mobile_image_url: string | null;
   display_order: number;
   is_active: number;
   description_en?: string; // Optional in backend
@@ -15,6 +16,7 @@ export interface Category {
 export type CategoryInput = {
   name_en: string;
   image_url?: string;
+  mobile_image_url?: string;
   description_en?: string;
   is_active?: number;
 };
@@ -47,6 +49,7 @@ export const categoryService = {
         name_en: input.name_en,
         name_ar: input.name_en, // Auto-fill AR with EN for now as requested
         image_url: input.image_url,
+        mobile_image_url: input.mobile_image_url,
         // description_en: input.description_en, // TODO: Uncomment after running SQL migration
         display_order: nextOrder,
         is_active: input.is_active ?? 1,
