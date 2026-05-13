@@ -29,7 +29,7 @@ export default async function Hero() {
   const mobileButtonLink = mobileHero.button_link || DEFAULT_MOBILE_HERO.button_link;
 
   return (
-    <section className="relative h-[calc(100dvh_-_97px)] lg:h-[90vh] w-full overflow-hidden bg-background">
+    <section className="relative h-[calc(100svh-80px)] lg:h-[90vh] w-full overflow-hidden bg-background">
       {/* Mobile/Tablet Layout */}
       <div className="lg:hidden relative h-full w-full">
         {/* Background Media */}

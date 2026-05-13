@@ -58,13 +58,14 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
   const [selectedColorId, setSelectedColorId] = useState<string>("");
   const [selectedSizeId, setSelectedSizeId] = useState<string>("");
   const [selectedVariantId, setSelectedVariantId] = useState<string>("");
+  const [selectedChainId, setSelectedChainId] = useState<string>("");
   const [busy, setBusy] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const allColors = product?.colors ?? [];
   const variants = product?.variants ?? [];
   const photos = product?.photos ?? [];
-  const options: any[] = [];
+  const options = product?.options ?? [];
 
   // Find color and size options from product options
   const colorOption = options.find((o: any) => 
@@ -74,6 +75,12 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
   const sizeOption = options.find((o: any) => 
     o.name_en?.toLowerCase().includes('size') || 
     o.name_ar?.includes('مقاس')
+  );
+
+  // Find chain type option
+  const chainOption = options.find((o: any) => 
+    o.name_en?.toLowerCase().includes('chain') || 
+    o.name_ar?.includes('سلسلة')
   );
 
   // Initialize selections
@@ -109,6 +116,18 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
       }
     }
   }, [product, variants, allColors, selectedColorId, selectedVariantId]);
+
+  // Default chain selection to Silver
+  useEffect(() => {
+    if (chainOption && !selectedChainId) {
+      const silver = chainOption.values.find((v: any) => 
+        v.value_en?.toLowerCase() === 'silver'
+      );
+      if (silver) {
+        setSelectedChainId(silver.id);
+      }
+    }
+  }, [chainOption, selectedChainId]);
 
   // Map colors to UI format
   const uiColors = useMemo(() => {
@@ -351,7 +370,7 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
               thumbSide={isAr ? "right" : "left"}
             />
 
-            {/* Specs - Desktop */}
+            {/* Specs - Desktop (without description, it's in the right column) */}
             <div className="hidden lg:block">
               <ProductSpecifications
                 product={{
@@ -359,7 +378,7 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
                     isAr
                       ? (product?.categories?.[0]?.arabicName || product?.categories?.[0]?.englishName || "")
                       : (product?.categories?.[0]?.englishName || product?.categories?.[0]?.arabicName || ""),
-                  longDescription: isAr ? (product.descriptionAr || product.descriptionEn || "") : (product.descriptionEn || product.descriptionAr || ""),
+                  longDescription: "",
                   materials: (product as any).material?.trim() || (product.material_en?.trim()) || (isAr ? "قطن 100% عالي الجودة، مريح وقابل للتنفس" : "100% high-quality cotton, comfortable and breathable"),
                   care: isAr ? "يُغسل بالماء البارد، لا يُستخدم المُبيض، يُجفف على حرارة منخفضة" : "Wash with cold water, do not bleach, tumble dry low",
                 }}
@@ -369,10 +388,11 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
         </div>
 
         {/* Right column: Info */}
-        <div className={`order-2 lg:order-2 ${isAr ? "lg:col-start-2" : ""}`}>
+        <div className={`order-2 lg:order-2 px-4 lg:px-0 ${isAr ? "lg:col-start-2" : ""}`}>
           <div className="lg:sticky lg:top-24 space-y-6">
             <ProductInfo
               name={isAr ? (product.nameAr || product.nameEn || "") : (product.nameEn || product.nameAr || "")}
+              description={isAr ? (product.descriptionAr || product.descriptionEn || "") : (product.descriptionEn || product.descriptionAr || "")}
               price={Number(product.price ?? 0)}
               beforePrice={product.beforePrice}
               productId={String(product.id)}
@@ -400,6 +420,12 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
               sizeChartUrl={product.sizeChartImageUrl ?? undefined}
               maxQuantity={availableStock}
               quantityInCart={quantityInCart}
+              chainOptions={chainOption ? chainOption.values.map((v: any) => ({
+                id: v.id,
+                name: isAr ? (v.value_ar || v.value_en) : (v.value_en || v.value_ar),
+              })) : []}
+              selectedChainId={selectedChainId}
+              onChainChange={(id) => setSelectedChainId(id)}
             />
 
             {errorMessage && (
@@ -419,7 +445,7 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
       </div>
 
       {/* Specs - Mobile */}
-      <div className="mt-12 lg:hidden">
+      <div className="mt-12 px-4 lg:hidden">
         <ProductSpecifications
           product={{
             category:
@@ -434,6 +460,7 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
       </div>
 
       {/* Reviews section */}
+      <div className="mt-12 px-4 lg:px-0">
       <ProductReviews 
         reviews={[]}
         averageRating={0}
@@ -442,8 +469,10 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
         sessionId={getOrCreateSessionId()}
         canAddReview={false}
       />
+      </div>
 
       {/* Related products */}
+      <div className="mt-12 px-4 lg:px-0">
       <RelatedProducts 
         currentProductId={product?.id || 0}
         relatedProducts={(product?.relatedProducts || []).map(rp => ({
@@ -453,6 +482,7 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
         }))}
         categoryId={product?.categories?.[0]?.id}
       />
+      </div>
     </>
   );
 }

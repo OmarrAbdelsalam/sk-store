@@ -41,6 +41,9 @@ interface ProductInfoProps {
   sizeChartUrl?: string;
   maxQuantity?: number;
   quantityInCart?: number;
+  chainOptions?: Array<{ id: string; name: string }>;
+  selectedChainId?: string;
+  onChainChange?: (id: string) => void;
 }
 
 const ProductInfo = React.memo(function ProductInfo({
@@ -61,6 +64,9 @@ const ProductInfo = React.memo(function ProductInfo({
   sizeChartUrl,
   maxQuantity = 999,
   quantityInCart = 0,
+  chainOptions = [],
+  selectedChainId = "",
+  onChainChange,
 }: ProductInfoProps) {
   const t = useTranslations("ProductInfo"); // استخدم namespace: ProductInfo
   const locale = useLocale();
@@ -109,8 +115,123 @@ const ProductInfo = React.memo(function ProductInfo({
         {productId && <PromotionBadges productId={productId} />}
       </div>
 
-      {/* اختيار اللون (ID) */}
+      {/* الوصف - بين السعر والألوان */}
+      {description && (
+        <div>
+          <p className="text-muted-foreground leading-relaxed text-sm">
+            {(() => {
+              const highlightPhrases = [
+                "Available in all colors by request",
+                "Available in all colors",
+                "available in all colors by request",
+                "available in all colors",
+                "Available in any colors",
+                "available in any colors",
+                "متاح بجميع الألوان",
+                "متاحة بجميع الألوان",
+                "متاح بكل الألوان",
+              ];
+              let found = false;
+              let phrase = "";
+              for (const p of highlightPhrases) {
+                if (description.toLowerCase().includes(p.toLowerCase())) {
+                  phrase = p;
+                  found = true;
+                  break;
+                }
+              }
+              if (!found) return description;
+              const idx = description.toLowerCase().indexOf(phrase.toLowerCase());
+              const before = description.slice(0, idx);
+              const match = description.slice(idx, idx + phrase.length);
+              const after = description.slice(idx + phrase.length);
+              return (
+                <>
+                  {before}
+                  <span className="font-medium text-gray-900 underline underline-offset-2 decoration-gray-300">
+                    {match}
+                  </span>
+                  {after}
+                </>
+              );
+            })()}
+          </p>
+        </div>
+      )}
 
+      {/* اختيار اللون (ID) */}
+      {colorOptions.length > 0 && (
+        <div>
+          <Label className="block text-sm font-medium mb-3">
+            {t("color")}
+            {selectedColorId && (
+              <span className="text-muted-foreground font-normal ms-2">
+                — {colorOptions.find(c => String(c.id) === String(selectedColorId))?.label}
+              </span>
+            )}
+          </Label>
+          <div className="flex flex-wrap gap-3">
+            {colorOptions.map((c) => {
+              const active = String(c.id) === String(selectedColorId);
+              const isLight = c.hexa && ['#fff', '#ffffff', '#fefefe', '#fffff0', '#fafafa', '#f5f5f5'].some(
+                light => c.hexa?.toLowerCase().startsWith(light)
+              );
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => !c.disabled && onColorChangeId(c.id)}
+                  disabled={!!c.disabled}
+                  className={`relative w-7 h-7 rounded-full transition-all duration-200 ${
+                    c.disabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer hover:scale-110"
+                  } ${isLight ? "ring-1 ring-gray-200" : ""}`}
+                  style={{ backgroundColor: c.hexa || "#ccc" }}
+                  aria-pressed={active}
+                  aria-label={c.label}
+                  title={c.label}
+                >
+                  {active && (
+                    <span className="absolute inset-0 rounded-full ring-[1.5px] ring-offset-[3px] ring-gray-900" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+
+      {/* اختيار نوع السلسلة (Chain Type) */}
+      {chainOptions.length > 0 && (
+        <div>
+          <Label className="block text-sm font-medium mb-3">
+            {locale === 'ar' ? 'نوع السلسلة' : 'Chain Type'}
+            {selectedChainId && (
+              <span className="text-muted-foreground font-normal ms-2">
+                — {chainOptions.find(c => c.id === selectedChainId)?.name}
+              </span>
+            )}
+          </Label>
+          <div className="flex flex-wrap gap-2">
+            {chainOptions.map((chain) => {
+              const active = chain.id === selectedChainId;
+              return (
+                <Button
+                  key={chain.id}
+                  type="button"
+                  variant={active ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => onChainChange?.(chain.id)}
+                  className="min-w-[4rem]"
+                  aria-pressed={active}
+                >
+                  {chain.name}
+                </Button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* اختيار المقاس */}
       {hasSizes && (

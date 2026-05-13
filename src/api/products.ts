@@ -57,6 +57,16 @@ export type ProductApi = {
   updated_at?: string;
   is_active?: number;
   chain_type?: 'gold' | 'silver' | 'both' | null;
+  options?: Array<{
+    id: string;
+    name_en: string;
+    name_ar: string;
+    values: Array<{
+      id: string;
+      value_en: string;
+      value_ar: string;
+    }>;
+  }>;
 };
 
 type Paged<T> = {
@@ -129,6 +139,16 @@ function mapRow(row: any): ProductApi {
     updated_at: row.updated_at,
     is_active: row.is_active,
     chain_type: row.chain_type || null,
+    options: (row.product_options || []).map((opt: any) => ({
+      id: opt.id,
+      name_en: opt.name_en,
+      name_ar: opt.name_ar,
+      values: (opt.option_values || []).map((v: any) => ({
+        id: v.id,
+        value_en: v.value_en,
+        value_ar: v.value_ar,
+      })),
+    })),
   };
 }
 
@@ -144,6 +164,9 @@ const PRODUCT_SELECT = `
   related_products!related_products_product_id_fkey (
     related_product_id,
     products:related_product_id (id, name_en, name_ar)
+  ),
+  product_options (id, name_en, name_ar, display_order,
+    option_values (id, value_en, value_ar, display_order)
   )
 `;
 

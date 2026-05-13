@@ -112,6 +112,33 @@ const AddToCartSection = React.memo(({
         </Button>
       </div>
 
+      {/* Mobile WhatsApp - not sticky, in normal flow */}
+      <div className="lg:hidden" dir={dir}>
+        <Button
+          size="lg"
+          className="w-full text-sm py-3 bg-black hover:bg-black/90 text-white"
+          onClick={handleAddToCart}
+          onMouseEnter={handleCartHover}
+          disabled={disabled || buttonState === "loading"}
+        >
+          {getButtonContent()}
+        </Button>
+        <a
+          href="https://wa.me/201234567890"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block mt-3"
+        >
+          <Button
+            variant="outline"
+            size="lg"
+            className="w-full text-sm py-3 bg-[#075E54] hover:bg-[#064d44] text-white border-[#075E54] hover:border-[#064d44]"
+          >
+            {isAr ? "اسألينا على واتساب" : "Ask Us on WhatsApp"}
+          </Button>
+        </a>
+      </div>
+
       {/* Desktop - Regular button */}
       <div className="hidden lg:block" dir={dir}>
         <Button
@@ -123,6 +150,22 @@ const AddToCartSection = React.memo(({
         >
           {getButtonContent()}
         </Button>
+
+        {/* Contact Seller */}
+        <a
+          href="https://wa.me/201234567890"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block mt-3"
+        >
+          <Button
+            variant="outline"
+            size="lg"
+            className="w-full text-lg py-6 bg-[#075E54] hover:bg-[#064d44] text-white border-[#075E54] hover:border-[#064d44] transition-all duration-200"
+          >
+            {isAr ? "اسألينا على واتساب" : "Ask Us on WhatsApp"}
+          </Button>
+        </a>
       </div>
     </>
   );

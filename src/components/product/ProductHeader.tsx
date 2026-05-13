@@ -13,7 +13,7 @@ const ProductHeader = ({ productName }: ProductHeaderProps) => {
   const dir = locale === "ar" ? "rtl" : "ltr";
 
   return (
-    <div dir={dir} className="flex items-center gap-2 text-sm mb-6 text-gray-500 font-medium">
+    <div dir={dir} className="hidden lg:flex items-center gap-2 text-sm mb-6 text-gray-500 font-medium">
       <Link href="/" className="hover:text-black transition-colors">
         {locale === 'ar' ? 'الرئيسية' : 'Home'}
       </Link>

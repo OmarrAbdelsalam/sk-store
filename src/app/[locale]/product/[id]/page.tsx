@@ -63,7 +63,7 @@ export default async function ProductDetailPage({
 
   return (
     <div className="min-h-screen" dir={dir}>
-      <div className="container mx-auto px-4 py-4">
+      <div className="mx-auto px-0 pt-0 pb-4 lg:container lg:px-4 lg:py-4">
         <ProductHeader productName={productName} />
         <ProductDetailContent product={product} />
       </div>

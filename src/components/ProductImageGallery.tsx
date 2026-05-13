@@ -259,7 +259,7 @@ const ProductImageGallery = ({
   if (!currentImages || currentImages.length === 0) {
     return (
       <div
-        className="relative aspect-[3/4] bg-luxury-cream rounded-lg overflow-hidden flex items-center justify-center"
+        className="relative aspect-[4/5] bg-luxury-cream overflow-hidden flex items-center justify-center lg:rounded-lg lg:aspect-[4/3]"
         dir={dir}
       >
         <span className="text-muted-foreground">{t("noImages")}</span>
@@ -294,10 +294,10 @@ const ProductImageGallery = ({
         <div
           ref={imageBoxRef}
           className={clsx(
-            // موبايل: نسبة أقصر (3/3.5 بدلاً من 3/4)
-            "relative aspect-[3/3.5] bg-luxury-cream rounded-lg overflow-hidden cursor-zoom-in group",
-            // ديسكتوب: نسبة 2:3 (عرض:ارتفاع)
-            "lg:aspect-[2/3]"
+            // موبايل: full-width, edge-to-edge, نسبة 4:5 مودرن
+            "relative aspect-[4/5] bg-luxury-cream overflow-hidden cursor-zoom-in group",
+            // ديسكتوب: rounded مع نسبة مناسبة
+            "lg:rounded-lg lg:aspect-[4/3] lg:max-h-[70vh]"
           )}
           onClick={() => setIsLightboxOpen(true)}
         >

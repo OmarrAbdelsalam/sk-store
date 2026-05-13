@@ -8,7 +8,7 @@ import { Link } from "@/i18n/navigation";
  */
 export default function HeroFallback() {
   return (
-    <section className="relative h-[calc(100dvh_-_97px)] lg:h-[90vh] w-full overflow-hidden bg-background">
+    <section className="relative h-[calc(100svh-80px)] lg:h-[90vh] w-full overflow-hidden bg-background">
       {/* Mobile/Tablet Layout */}
       <div className="lg:hidden relative h-full w-full">
         <div className="absolute inset-0">
