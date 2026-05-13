@@ -16,6 +16,20 @@ export interface UploadResponse {
 // Upload file to Supabase Storage
 export const uploadFile = async (file: File, folder = 'uploads'): Promise<UploadResponse> => {
   try {
+    // --- File Size Validation ---
+    const isVideo = file.type.startsWith('video/');
+    const maxSize = isVideo ? 4 * 1024 * 1024 : 500 * 1024;
+    
+    if (file.size > maxSize) {
+      return {
+        success: false,
+        error: isVideo 
+          ? `Video size exceeds 4MB limit. Current size: ${(file.size / (1024 * 1024)).toFixed(2)}MB`
+          : `Image size exceeds 500KB limit. Current size: ${(file.size / 1024).toFixed(0)}KB`
+      };
+    }
+    // -----------------------------
+
     // Generate unique filename
     const fileExt = file.name.split('.').pop();
     const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;

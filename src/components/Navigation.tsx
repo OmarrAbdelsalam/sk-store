@@ -43,8 +43,8 @@ const Navigation = () => {
             {/* Left: Menu Button & Logo */}
             <div className="flex items-center gap-2">
               <MobileMenu />
-              <Link href="/" className="font-luxury text-xl font-bold tracking-widest hover:text-primary transition-colors">
-                SK Bags
+              <Link href="/" className="hover:opacity-80 transition-opacity">
+                <Image src="/SK_Logo.svg" alt="SK Bags" width={80} height={32} className="h-8 w-auto" priority />
               </Link>
             </div>
             
@@ -65,8 +65,8 @@ const Navigation = () => {
         <div className="hidden md:flex items-center justify-between">
           {/* Logo + Separator + Categories */}
           <div className="flex items-center gap-6">
-            <Link href="/" className="font-luxury text-3xl font-bold tracking-widest hover:text-primary transition-colors">
-              SK Bags
+            <Link href="/" className="hover:opacity-80 transition-opacity">
+              <Image src="/SK_Logo.svg" alt="SK Bags" width={120} height={40} className="h-10 w-auto" priority />
             </Link>
             <DesktopMenu />
           </div>

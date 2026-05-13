@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabaseClient";
+import { withRetry, formatError } from "@/lib/retry";
 
 // ======================== OUR VIBES ITEMS ========================
 export interface OurVibesItem {
@@ -40,19 +41,21 @@ export const ourVibesService = {
   // Get all active items with product info
   async getActiveItems(): Promise<OurVibesItem[]> {
     try {
-      const { data, error } = await supabase
-        .from("our_vibes")
-        .select(`
-          *,
-          product:products(id, name_en, name_ar)
-        `)
-        .eq("is_active", true)
-        .order("display_order", { ascending: true });
+      return await withRetry(async () => {
+        const { data, error } = await supabase
+          .from("our_vibes")
+          .select(`
+            *,
+            product:products(id, name_en, name_ar)
+          `)
+          .eq("is_active", true)
+          .order("display_order", { ascending: true });
 
-      if (error) throw error;
-      return data as OurVibesItem[];
+        if (error) throw error;
+        return data as OurVibesItem[];
+      }, { label: "ourVibes.getActiveItems" });
     } catch (error) {
-      console.error("Error fetching our vibes items:", error);
+      console.error("Error fetching our vibes items:", formatError(error));
       return [];
     }
   },
@@ -60,18 +63,20 @@ export const ourVibesService = {
   // Get all items (for admin)
   async getAllItems(): Promise<OurVibesItem[]> {
     try {
-      const { data, error } = await supabase
-        .from("our_vibes")
-        .select(`
-          *,
-          product:products(id, name_en, name_ar)
-        `)
-        .order("display_order", { ascending: true });
+      return await withRetry(async () => {
+        const { data, error } = await supabase
+          .from("our_vibes")
+          .select(`
+            *,
+            product:products(id, name_en, name_ar)
+          `)
+          .order("display_order", { ascending: true });
 
-      if (error) throw error;
-      return data as OurVibesItem[];
+        if (error) throw error;
+        return data as OurVibesItem[];
+      }, { label: "ourVibes.getAllItems" });
     } catch (error) {
-      console.error("Error fetching our vibes items:", error);
+      console.error("Error fetching our vibes items:", formatError(error));
       return [];
     }
   },
@@ -163,7 +168,7 @@ export const ourVibesService = {
 
       return data as OurVibesSettings;
     } catch (error) {
-      console.error("Error fetching settings:", error);
+      console.error("Error fetching settings:", formatError(error));
       return {
         id: 'default',
         ...DEFAULT_SETTINGS,

@@ -134,7 +134,7 @@ const NewArrivalsCarousel = ({ products, viewAllText }: NewArrivalsCarouselProps
               className={cn(
                 "w-2 h-2 rounded-full transition-all duration-300",
                 index === selectedIndex
-                  ? "bg-black w-4"
+                  ? "bg-[#C2A878] w-4"
                   : "bg-gray-300 hover:bg-gray-400"
               )}
               onClick={() => emblaApi?.scrollTo(index)}
@@ -156,3 +156,5 @@ const NewArrivalsCarousel = ({ products, viewAllText }: NewArrivalsCarouselProps
 };
 
 export default NewArrivalsCarousel;
+
+

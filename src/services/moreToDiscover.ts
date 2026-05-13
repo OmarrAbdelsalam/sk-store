@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabaseClient";
+import { withRetry, formatError } from "@/lib/retry";
 
 // ======================== MORE TO DISCOVER ITEMS ========================
 export interface MoreToDiscoverItem {
@@ -33,16 +34,18 @@ export const moreToDiscoverService = {
   // Get all active items
   async getActiveItems(): Promise<MoreToDiscoverItem[]> {
     try {
-      const { data, error } = await supabase
-        .from("more_to_discover")
-        .select("*")
-        .eq("is_active", true)
-        .order("display_order", { ascending: true });
+      return await withRetry(async () => {
+        const { data, error } = await supabase
+          .from("more_to_discover")
+          .select("*")
+          .eq("is_active", true)
+          .order("display_order", { ascending: true });
 
-      if (error) throw error;
-      return data as MoreToDiscoverItem[];
+        if (error) throw error;
+        return data as MoreToDiscoverItem[];
+      }, { label: "moreToDiscover.getActiveItems" });
     } catch (error) {
-      console.error("Error fetching more to discover items:", error);
+      console.error("Error fetching more to discover items:", formatError(error));
       return [];
     }
   },
@@ -50,15 +53,17 @@ export const moreToDiscoverService = {
   // Get all items (for admin)
   async getAllItems(): Promise<MoreToDiscoverItem[]> {
     try {
-      const { data, error } = await supabase
-        .from("more_to_discover")
-        .select("*")
-        .order("display_order", { ascending: true });
+      return await withRetry(async () => {
+        const { data, error } = await supabase
+          .from("more_to_discover")
+          .select("*")
+          .order("display_order", { ascending: true });
 
-      if (error) throw error;
-      return data as MoreToDiscoverItem[];
+        if (error) throw error;
+        return data as MoreToDiscoverItem[];
+      }, { label: "moreToDiscover.getAllItems" });
     } catch (error) {
-      console.error("Error fetching more to discover items:", error);
+      console.error("Error fetching more to discover items:", formatError(error));
       return [];
     }
   },
@@ -138,7 +143,7 @@ export const moreToDiscoverService = {
 
       return data as MoreToDiscoverSettings;
     } catch (error) {
-      console.error("Error fetching settings:", error);
+      console.error("Error fetching settings:", formatError(error));
       return {
         id: 'default',
         ...DEFAULT_SETTINGS,

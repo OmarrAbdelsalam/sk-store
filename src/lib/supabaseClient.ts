@@ -8,4 +8,19 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables')
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Custom fetch with keepalive to prevent ECONNRESET/TLS disconnects
+// during concurrent server-side requests (Next.js SSR fires many at once)
+const stableFetch: typeof fetch = (input, init) => {
+  return fetch(input, {
+    ...init,
+    keepalive: true,
+    // 15s timeout to prevent hanging connections; respect existing signal
+    signal: init?.signal ?? AbortSignal.timeout(15000),
+  })
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  global: {
+    fetch: stableFetch,
+  },
+})

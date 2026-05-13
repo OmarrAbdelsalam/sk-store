@@ -38,6 +38,7 @@ function mapPhotosForGallery(photos: ProductApi['photos']) {
     id: p.id,
     imageUrl: getImageUrl(p.imageUrl),
     colorId: p.colorId ?? "",
+    optionValueId: p.optionValueId ?? "",
     isMain: p.isMain,
   }));
 }
@@ -192,16 +193,24 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
     }
   }, [matchingVariant]);
 
-  // Get main image based on selected color
+  // Get main image based on selected color and chain type
   const mainImageUrl = useMemo(() => {
-    const sameColor = photos.filter((ph) => ph.colorId === selectedColorId);
-    const main =
-      sameColor.find((p) => p.isMain) ||
-      sameColor[0] ||
-      photos.find((p) => p.isMain) ||
-      photos[0];
+    // Try to find image matching both color and chain type
+    let candidates = photos;
+    
+    if (selectedColorId) {
+      const colorFiltered = photos.filter((ph) => ph.colorId === selectedColorId);
+      if (colorFiltered.length > 0) candidates = colorFiltered;
+    }
+    
+    if (selectedChainId && candidates.length > 0) {
+      const chainFiltered = candidates.filter((ph) => ph.optionValueId === selectedChainId);
+      if (chainFiltered.length > 0) candidates = chainFiltered;
+    }
+    
+    const main = candidates.find((p) => p.isMain) || candidates[0] || photos.find((p) => p.isMain) || photos[0];
     return main ? getImageUrl(main.imageUrl) : "/placeholder.png";
-  }, [photos, selectedColorId]);
+  }, [photos, selectedColorId, selectedChainId]);
 
   const [cartItems, setCartItems] = useState<any[]>([]);
 
@@ -367,6 +376,7 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
             <ProductImageGallery
               photos={galleryPhotos}
               selectedColorId={selectedColorId}
+              selectedOptionValueId={selectedChainId}
               thumbSide={isAr ? "right" : "left"}
             />
 

@@ -1,4 +1,5 @@
 import { marqueeService } from "@/services/marquee";
+import { formatError } from "@/lib/retry";
 
 const MovingTicker = async () => {
   let items;
@@ -10,7 +11,7 @@ const MovingTicker = async () => {
       marqueeService.getSettings('features_ticker'),
     ]);
   } catch (error) {
-    console.error("Error loading ticker:", error);
+    console.error("Error loading ticker:", formatError(error));
     return null;
   }
 

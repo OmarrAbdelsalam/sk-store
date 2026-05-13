@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabaseClient";
+import { withRetry, formatError } from "@/lib/retry";
 
 export interface HeroSettings {
   id: string;
@@ -28,24 +29,26 @@ export const heroService = {
   // Get active hero settings
   async getActive(): Promise<HeroSettings> {
     try {
-      const { data, error } = await supabase
-        .from("hero_settings")
-        .select("*")
-        .eq("is_active", true)
-        .limit(1)
-        .single();
+      return await withRetry(async () => {
+        const { data, error } = await supabase
+          .from("hero_settings")
+          .select("*")
+          .eq("is_active", true)
+          .limit(1)
+          .single();
 
-      if (error || !data) {
-        // Return defaults if no data exists
-        return {
-          id: 'default',
-          ...DEFAULT_HERO,
-        };
-      }
-      
-      return data as HeroSettings;
+        if (error || !data) {
+          // Return defaults if no data exists
+          return {
+            id: 'default',
+            ...DEFAULT_HERO,
+          };
+        }
+        
+        return data as HeroSettings;
+      }, { label: "hero.getActive" });
     } catch (error) {
-      console.error("Error fetching hero settings:", error);
+      console.error("Error fetching hero settings:", formatError(error));
       return {
         id: 'default',
         ...DEFAULT_HERO,

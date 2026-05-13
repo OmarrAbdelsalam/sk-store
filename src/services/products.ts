@@ -1,14 +1,14 @@
 
 import { supabase } from "@/lib/supabaseClient";
 
-// File size limit for product images (1MB)
-export const PRODUCT_IMAGE_MAX_SIZE = 1 * 1024 * 1024;
+// File size limit for product images (500KB)
+export const PRODUCT_IMAGE_MAX_SIZE = 500 * 1024;
 
 // Badge types
 export type ProductBadge = 'new_arrival' | 'best_seller' | 'sold_out' | 'last_piece' | 'sale' | null;
 
 export const BADGE_OPTIONS = [
-  { value: '', label: 'No Badge' },
+  { value: 'none', label: 'No Badge' },
   { value: 'new_arrival', label: 'New Arrival' },
   { value: 'best_seller', label: 'Best Seller' },
   { value: 'sold_out', label: 'Sold Out' },
@@ -51,7 +51,7 @@ export type ProductInput = {
   badge?: ProductBadge;
   
   color_ids: string[];
-  images: { file_path: string; color_id: string | null; is_main: number }[];
+  images: { file_path: string; color_id: string | null; chain_option_value_id?: string | null; is_main: number }[];
   related_product_ids: string[];
 };
 
@@ -60,7 +60,7 @@ export const validateProductImageSize = (file: File): { valid: boolean; error?: 
   if (file.size > PRODUCT_IMAGE_MAX_SIZE) {
     return {
       valid: false,
-      error: `Image size exceeds 1MB limit. Current size: ${(file.size / (1024 * 1024)).toFixed(2)}MB`,
+      error: `Image size exceeds 500KB limit. Current size: ${(file.size / 1024).toFixed(0)}KB`,
     };
   }
   return { valid: true };
@@ -98,18 +98,26 @@ export const productService = {
       .select(`
         *,
         product_colors (color_id),
-        product_images (id, file_path, is_main, color_id),
-        related_products!related_products_product_id_fkey (related_product_id)
+        product_images (id, file_path, is_main, color_id, chain_option_value_id),
+        related_products!related_products_product_id_fkey (related_product_id),
+        product_options (id, name_en, name_ar, option_values (id, value_en, value_ar))
       `)
       .eq("id", id)
       .single();
 
     if (error) throw error;
 
+    // Extract chain options (Gold/Silver) from product_options
+    const chainOpt = (data.product_options || []).find((o: any) => 
+      o.name_en?.toLowerCase().includes('chain')
+    );
+
     return {
       ...data,
       related_ids: data.related_products.map((rp: any) => rp.related_product_id),
-      color_ids: data.product_colors.map((pc: any) => pc.color_id)
+      color_ids: data.product_colors.map((pc: any) => pc.color_id),
+      chain_options: chainOpt?.option_values || [],
+      images: data.product_images,
     };
   },
 
@@ -153,6 +161,7 @@ export const productService = {
         product_id: productId,
         file_path: img.file_path,
         color_id: img.color_id,
+        chain_option_value_id: img.chain_option_value_id || null,
         is_main: img.is_main
       }));
       const { error: imgError } = await supabase.from("product_images").insert(imageInserts);
@@ -204,14 +213,13 @@ export const productService = {
     }
 
     // 3. Sync Images (Delete all and re-insert)
-    // NOTE: In a real app, you might want to preserve IDs or handle diffs to avoid breaking references, 
-    // but for this simple version, replacing is acceptable if we don't have review references to specific image IDs.
     await supabase.from("product_images").delete().eq("product_id", id);
     if (input.images.length > 0) {
       const imageInserts = input.images.map(img => ({
         product_id: id,
         file_path: img.file_path,
         color_id: img.color_id,
+        chain_option_value_id: img.chain_option_value_id || null,
         is_main: img.is_main
       }));
       await supabase.from("product_images").insert(imageInserts);

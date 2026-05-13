@@ -27,20 +27,7 @@ export default function ProductSpecifications({ product }: ProductSpecifications
 
   return (
     <div className="mt-4" dir={dir}>
-      <Accordion type="single" collapsible defaultValue="description" className="w-full">
-        {/* Description - Default Open */}
-        {product.longDescription && (
-          <AccordionItem value="description">
-            <AccordionTrigger className="text-lg font-semibold">
-              {isAr ? "الوصف" : "Description"}
-            </AccordionTrigger>
-            <AccordionContent>
-              <p className="text-muted-foreground leading-relaxed">
-                {product.longDescription}
-              </p>
-            </AccordionContent>
-          </AccordionItem>
-        )}
+      <Accordion type="single" collapsible defaultValue="materials-care" className="w-full">
 
         {/* Materials & Care */}
         <AccordionItem value="materials-care">

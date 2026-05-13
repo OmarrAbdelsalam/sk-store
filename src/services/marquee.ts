@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabaseClient";
+import { withRetry, formatError } from "@/lib/retry";
 
 export interface MarqueeItem {
   id: string;
@@ -35,27 +36,31 @@ export const marqueeService = {
   
   // Get all active marquee items by type
   async getActiveItems(type: string = 'top_banner') {
-    const { data, error } = await supabase
-      .from("marquee_items")
-      .select("*")
-      .eq("is_active", true)
-      .eq("type", type)
-      .order("display_order", { ascending: true });
+    return await withRetry(async () => {
+      const { data, error } = await supabase
+        .from("marquee_items")
+        .select("*")
+        .eq("is_active", true)
+        .eq("type", type)
+        .order("display_order", { ascending: true });
 
-    if (error) throw error;
-    return data as MarqueeItem[];
+      if (error) throw error;
+      return data as MarqueeItem[];
+    }, { label: `marquee.getActiveItems(${type})` });
   },
 
   // Get all marquee items (for admin) by type
   async getAllItems(type: string = 'top_banner') {
-    const { data, error } = await supabase
-      .from("marquee_items")
-      .select("*")
-      .eq("type", type)
-      .order("display_order", { ascending: true });
+    return await withRetry(async () => {
+      const { data, error } = await supabase
+        .from("marquee_items")
+        .select("*")
+        .eq("type", type)
+        .order("display_order", { ascending: true });
 
-    if (error) throw error;
-    return data as MarqueeItem[];
+      if (error) throw error;
+      return data as MarqueeItem[];
+    }, { label: `marquee.getAllItems(${type})` });
   },
 
   // Create new marquee item
@@ -125,15 +130,17 @@ export const marqueeService = {
 
   // Get marquee settings by type
   async getSettings(type: string = 'top_banner') {
-    const { data, error } = await supabase
-      .from("marquee_settings")
-      .select("*")
-      .eq("type", type)
-      .limit(1)
-      .single();
+    return await withRetry(async () => {
+      const { data, error } = await supabase
+        .from("marquee_settings")
+        .select("*")
+        .eq("type", type)
+        .limit(1)
+        .single();
 
-    if (error && error.code !== "PGRST116") throw error;
-    return data as MarqueeSettings | null;
+      if (error && error.code !== "PGRST116") throw error;
+      return data as MarqueeSettings | null;
+    }, { label: `marquee.getSettings(${type})` });
   },
 
   // Update marquee settings

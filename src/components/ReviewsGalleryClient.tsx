@@ -19,17 +19,17 @@ const ReviewsGalleryClient = ({ items, title, subtitle, shareYours, tagUs }: Rev
   if (items.length === 0) return null;
 
   return (
-    <section className="py-16 bg-[#F9F9F9]">
+    <section className="py-16 bg-[#FAF8F5]">
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-10">
-          <h2 className="font-playfair text-3xl md:text-4xl text-gray-900 mb-2">
+          <h2 className="font-playfair text-3xl md:text-4xl text-[#2D2A26] mb-2">
             {title}
           </h2>
           <p className="text-gray-600 text-base md:text-lg max-w-2xl mx-auto">
             {subtitle}
           </p>
-          <div className="w-24 h-[1px] bg-black mx-auto mt-4"></div>
+          <div className="w-24 h-[2px] bg-[#C2A878] rounded-full mx-auto mt-4"></div>
         </div>
 
         {/* Gallery Grid */}
@@ -163,3 +163,4 @@ const ReviewsGalleryClient = ({ items, title, subtitle, shareYours, tagUs }: Rev
 };
 
 export default ReviewsGalleryClient;
+

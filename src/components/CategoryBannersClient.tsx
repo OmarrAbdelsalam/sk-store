@@ -5,39 +5,52 @@ import { useRouter } from "@/i18n/navigation";
 import Image from "next/image";
 import type { CategoryOption } from "@/api/categories";
 
+const FALLBACK_COLORS = ["#C94A4A", "#2B8282", "#D48C29", "#4A55A2", "#347952"];
+
 interface CategoryBannerProps {
   title: string;
-  image: string;
+  image: string | null;
+  colorHex?: string;
   onClick?: () => void;
   className?: string;
 }
 
-const CategoryBanner = ({ title, image, onClick, className = "" }: CategoryBannerProps) => {
-  const isExternalUrl = image?.startsWith('http');
+const CategoryBanner = ({ title, image, colorHex = "#6D5F52", onClick, className = "" }: CategoryBannerProps) => {
+  const hasImage = Boolean(image && image !== '/hero.webp');
+  const isExternalUrl = hasImage && image?.startsWith('http');
 
   return (
     <div
       className={`relative group overflow-hidden ${className} h-full w-full rounded-xl cursor-pointer`}
       onClick={onClick}
     >
-      <div className="absolute inset-0 bg-gray-200">
-        {isExternalUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={image}
-            alt={title}
-            className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-          />
-        ) : (
-          <Image
-            src={image || '/hero.webp'}
-            alt={title}
-            fill
-            className="object-cover transition-transform duration-700 group-hover:scale-105"
-          />
+      <div 
+        className="absolute inset-0 transition-transform duration-700 group-hover:scale-105"
+        style={!hasImage ? { backgroundColor: colorHex } : undefined}
+      >
+        {hasImage && (
+          <>
+            {isExternalUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={image!}
+                alt={title}
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            ) : (
+              <Image
+                src={image!}
+                alt={title}
+                fill
+                className="object-cover"
+              />
+            )}
+          </>
         )}
-        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors duration-300" />
       </div>
+      
+      {/* Overlay - lighter if no image */}
+      <div className={`absolute inset-0 transition-colors duration-300 ${hasImage ? 'bg-black/20 group-hover:bg-black/30' : 'bg-black/10 group-hover:bg-black/20'}`} />
 
       <div className="relative z-10 h-full flex flex-col items-center justify-center text-center p-4">
         <h3 className="font-playfair text-2xl md:text-3xl lg:text-4xl text-white drop-shadow-md">
@@ -89,10 +102,10 @@ const ClothingShowcaseClient = ({ categories, sectionTitle }: ClothingShowcaseCl
 
   const getTitle = (cat: CategoryOption) => locale === 'ar' ? cat.arabicName : cat.englishName;
   const getImageUrl = (cat: CategoryOption) => {
-    if (!cat.imageUrl) return "/hero.webp";
+    if (!cat.imageUrl) return null;
     if (cat.imageUrl.startsWith('/')) return cat.imageUrl;
     if (cat.imageUrl.startsWith('http')) return cat.imageUrl;
-    return "/hero.webp";
+    return null;
   };
 
   return (
@@ -100,10 +113,10 @@ const ClothingShowcaseClient = ({ categories, sectionTitle }: ClothingShowcaseCl
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-10">
-          <h2 className="font-playfair text-3xl md:text-4xl text-gray-900 mb-2">
+          <h2 className="font-playfair text-3xl md:text-4xl text-[#2D2A26] mb-2">
             {sectionTitle}
           </h2>
-          <div className="w-24 h-[1px] bg-black mx-auto mt-3"></div>
+          <div className="w-24 h-[2px] bg-[#C2A878] rounded-full mx-auto mt-3"></div>
         </div>
 
         <div className="flex flex-row gap-3 h-[300px] md:h-[400px]">
@@ -114,6 +127,7 @@ const ClothingShowcaseClient = ({ categories, sectionTitle }: ClothingShowcaseCl
                 <CategoryBanner
                   title={getTitle(displayCategories[0])}
                   image={getImageUrl(displayCategories[0])}
+                  colorHex={FALLBACK_COLORS[0]}
                   onClick={() => handleCategoryClick(displayCategories[0])}
                 />
               </div>
@@ -123,6 +137,7 @@ const ClothingShowcaseClient = ({ categories, sectionTitle }: ClothingShowcaseCl
                   <CategoryBanner
                     title={getTitle(displayCategories[1])}
                     image={getImageUrl(displayCategories[1])}
+                    colorHex={FALLBACK_COLORS[1]}
                     onClick={() => handleCategoryClick(displayCategories[1])}
                     className="h-full"
                   />
@@ -131,6 +146,7 @@ const ClothingShowcaseClient = ({ categories, sectionTitle }: ClothingShowcaseCl
                   <CategoryBanner
                     title={getTitle(displayCategories[2])}
                     image={getImageUrl(displayCategories[2])}
+                    colorHex={FALLBACK_COLORS[2]}
                     onClick={() => handleCategoryClick(displayCategories[2])}
                     className="h-full"
                   />
@@ -138,11 +154,12 @@ const ClothingShowcaseClient = ({ categories, sectionTitle }: ClothingShowcaseCl
               </div>
             </>
           ) : (
-            displayCategories.map((cat) => (
+            displayCategories.map((cat, idx) => (
               <div key={cat.key} className="flex-1">
                 <CategoryBanner
                   title={getTitle(cat)}
                   image={getImageUrl(cat)}
+                  colorHex={FALLBACK_COLORS[idx % FALLBACK_COLORS.length]}
                   onClick={() => handleCategoryClick(cat)}
                 />
               </div>
@@ -155,3 +172,4 @@ const ClothingShowcaseClient = ({ categories, sectionTitle }: ClothingShowcaseCl
 };
 
 export default ClothingShowcaseClient;
+

@@ -35,15 +35,16 @@ const FeaturesSection = async () => {
           {features.map((feature, index) => (
             <div key={index} className="flex flex-col items-center text-center group">
               <div className="mb-6 relative">
-                <div className="absolute inset-0 bg-white rounded-full scale-110 group-hover:scale-125 transition-transform duration-300 shadow-sm" />
-                <div className="relative w-16 h-16 flex items-center justify-center text-gray-900">
+                {/* Soft Gold Background Circle */}
+                <div className="absolute inset-0 bg-[#C2A878]/15 rounded-full scale-110 group-hover:scale-125 transition-transform duration-300" />
+                <div className="relative w-16 h-16 flex items-center justify-center text-[#2D2A26]">
                   <feature.icon strokeWidth={1.5} className="w-8 h-8 group-hover:scale-110 transition-transform duration-300" />
                 </div>
               </div>
-              <h3 className="font-medium text-lg text-gray-900 mb-2 tracking-wide">
+              <h3 className="font-medium text-lg text-[#2D2A26] mb-2 tracking-wide">
                 {feature.title}
               </h3>
-              <p className="text-gray-600 text-sm leading-relaxed max-w-xs">
+              <p className="text-[#5C564D] text-sm leading-relaxed max-w-xs">
                 {feature.description}
               </p>
             </div>

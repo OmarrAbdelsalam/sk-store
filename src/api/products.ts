@@ -31,6 +31,7 @@ export type ProductApi = {
     id: string;
     imageUrl: string;
     colorId: string | null;
+    optionValueId: string | null;
     isMain: boolean;
   }>;
   variants: Array<{
@@ -113,6 +114,7 @@ function mapRow(row: any): ProductApi {
       id: img.id,
       imageUrl: img.file_path,
       colorId: img.color_id || null,
+      optionValueId: img.option_value_id || null,
       isMain: img.is_main === 1,
     })),
     variants: (row.product_variants || []).map((v: any) => ({
@@ -159,7 +161,7 @@ const PRODUCT_SELECT = `
     color_id,
     colors (id, name_en, name_ar, hex_code)
   ),
-  product_images (id, file_path, is_main, color_id, display_order),
+  product_images (id, file_path, is_main, color_id, option_value_id, display_order),
   product_variants (id, sku, quantity, price_override),
   related_products!related_products_product_id_fkey (
     related_product_id,

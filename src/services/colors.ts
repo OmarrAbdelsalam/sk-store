@@ -1,11 +1,4 @@
-// استخدام مكتبة الألوان الشاملة بدلاً من قاعدة البيانات
-import { 
-  getAllColors, 
-  searchColors, 
-  getColorById as getColorFromLibrary,
-  getColorByHex,
-  type ColorData 
-} from "@/lib/colors-library";
+import { supabase } from "@/lib/supabaseClient";
 
 export type Color = {
   id: string;
@@ -17,62 +10,90 @@ export type Color = {
 
 export type ColorInput = {
   name_en: string;
+  name_ar: string;
   hex_code: string;
 };
 
-// تحويل ColorData من المكتبة إلى Color
-function convertToColor(colorData: ColorData): Color {
-  return {
-    id: colorData.id,
-    name_en: colorData.nameEn,
-    name_ar: colorData.nameAr,
-    hex_code: colorData.hex,
-  };
-}
-
 export const colorService = {
-  /**
-   * الحصول على جميع الألوان من المكتبة
-   */
-  async getAll() {
-    const colors = getAllColors();
-    return colors.map(convertToColor);
+  async getAll(): Promise<Color[]> {
+    const { data, error } = await supabase
+      .from("colors")
+      .select("*")
+      .is("deleted_at", null)
+      .order("display_order", { ascending: true });
+
+    if (error) throw error;
+
+    return (data || []).map((c: any) => ({
+      id: c.id,
+      name_en: c.name_en,
+      name_ar: c.name_ar,
+      hex_code: c.hex_code,
+      created_at: c.created_at,
+    }));
   },
 
-  /**
-   * البحث عن الألوان (عربي أو إنجليزي)
-   */
-  async search(query: string) {
-    const results = searchColors(query);
-    return results.map(convertToColor);
+  async getById(id: string): Promise<Color | null> {
+    const { data, error } = await supabase
+      .from("colors")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error) return null;
+
+    return data ? {
+      id: data.id,
+      name_en: data.name_en,
+      name_ar: data.name_ar,
+      hex_code: data.hex_code,
+      created_at: data.created_at,
+    } : null;
   },
 
-  /**
-   * الحصول على لون بواسطة المعرف
-   */
-  async getById(id: string) {
-    const color = getColorFromLibrary(id);
-    return color ? convertToColor(color) : null;
+  async create(input: ColorInput): Promise<Color> {
+    const { data, error } = await supabase
+      .from("colors")
+      .insert({
+        name_en: input.name_en,
+        name_ar: input.name_ar || input.name_en,
+        hex_code: input.hex_code,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return {
+      id: data.id,
+      name_en: data.name_en,
+      name_ar: data.name_ar,
+      hex_code: data.hex_code,
+    };
   },
 
-  /**
-   * الحصول على لون بواسطة الكود السداسي
-   */
-  async getByHex(hex: string) {
-    const color = getColorByHex(hex);
-    return color ? convertToColor(color) : null;
+  async update(id: string, input: Partial<ColorInput>): Promise<Color | null> {
+    const { data, error } = await supabase
+      .from("colors")
+      .update(input)
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data ? {
+      id: data.id,
+      name_en: data.name_en,
+      name_ar: data.name_ar,
+      hex_code: data.hex_code,
+    } : null;
   },
 
-  // ملاحظة: العمليات التالية غير مدعومة مع المكتبة الثابتة
-  async create(input: ColorInput) {
-    throw new Error('Create operation is not supported with static colors library');
-  },
+  async delete(id: string): Promise<void> {
+    const { error } = await supabase
+      .from("colors")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", id);
 
-  async update(id: string, input: Partial<ColorInput>) {
-    throw new Error('Update operation is not supported with static colors library');
+    if (error) throw error;
   },
-
-  async delete(id: string) {
-    throw new Error('Delete operation is not supported with static colors library');
-  }
 };

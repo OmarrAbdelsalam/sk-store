@@ -82,9 +82,10 @@ const ProductsPage = () => {
   const [comparePrice, setComparePrice] = useState("");
   
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
-  const [productImages, setProductImages] = useState<{ file_path: string; color_id: string | null; is_main: number }[]>([]);
+  const [productImages, setProductImages] = useState<{ file_path: string; color_id: string | null; chain_option_value_id: string | null; is_main: number }[]>([]);
   const [selectedRelated, setSelectedRelated] = useState<string[]>([]);
   const [badge, setBadge] = useState<string>("");
+  const [chainOptions, setChainOptions] = useState<{ id: string; value_en: string; value_ar: string }[]>([]);
 
   // Image Upload State
   const [isUploading, setIsUploading] = useState(false);
@@ -148,10 +149,12 @@ const ProductsPage = () => {
         setProductImages(fullProduct.images?.map((img: any) => ({
           file_path: img.file_path,
           color_id: img.color_id,
+          chain_option_value_id: img.chain_option_value_id || null,
           is_main: img.is_main
         })) || []);
 
         setSelectedRelated(fullProduct.related_ids || []);
+        setChainOptions(fullProduct.chain_options || []);
       } catch (error) {
         toast.error("Failed to load product details");
         setIsModalOpen(false);
@@ -177,7 +180,7 @@ const ProductsPage = () => {
     try {
       setIsUploading(true);
       const files = Array.from(e.target.files);
-      const newImages: { file_path: string; color_id: string | null; is_main: number }[] = [];
+      const newImages: { file_path: string; color_id: string | null; chain_option_value_id: string | null; is_main: number }[] = [];
 
       for (const file of files) {
         // Validate file size (max 1MB)
@@ -196,8 +199,9 @@ const ProductsPage = () => {
         // Store public URL
         newImages.push({
             file_path: uploadRes.data.url,
-            color_id: null, // Default: no color linked
-            is_main: productImages.length === 0 && newImages.length === 0 ? 1 : 0 // First image is main by default
+            color_id: null,
+            chain_option_value_id: null,
+            is_main: productImages.length === 0 && newImages.length === 0 ? 1 : 0
         });
       }
 
@@ -688,9 +692,8 @@ const ProductsPage = () => {
                     <Select value={badge || "none"} onValueChange={setBadge}>
                       <SelectTrigger className="rounded-xl h-11"><SelectValue placeholder="None" /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">None</SelectItem>
                         {BADGE_OPTIONS.map(option => (
-                          <SelectItem key={option.value || 'none'} value={option.value || 'none'}>{option.label}</SelectItem>
+                          <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -738,6 +741,18 @@ const ProductsPage = () => {
                     </span>
                   )}
                 </div>
+                {/* Selected colors summary */}
+                {selectedColors.length > 0 && (
+                  <div className="flex flex-wrap gap-2 pb-2 border-b border-gray-100 mb-1">
+                    {colors.filter(c => selectedColors.includes(c.id)).map(c => (
+                      <span key={c.id} className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-indigo-50 border border-indigo-200 text-xs font-medium text-indigo-800">
+                        <span className="w-3.5 h-3.5 rounded-full shrink-0 border border-indigo-200" style={{ backgroundColor: c.hex_code }} />
+                        {c.name_en}
+                        <button type="button" onClick={() => setSelectedColors(prev => prev.filter(id => id !== c.id))} className="ml-0.5 text-indigo-400 hover:text-indigo-700">×</button>
+                      </span>
+                    ))}
+                  </div>
+                )}
                 <div className="grid grid-cols-2 gap-2.5 max-h-[50vh] overflow-y-auto">
                   {colors
                     .filter(c => c.name_en.toLowerCase().includes(colorSearch.toLowerCase()))
@@ -824,6 +839,27 @@ const ProductsPage = () => {
                             ))}
                           </SelectContent>
                         </Select>
+                        {chainOptions.length > 0 && (
+                          <Select 
+                            value={img.chain_option_value_id || "none"} 
+                            onValueChange={(val) => {
+                              const updated = [...productImages];
+                              updated[idx] = { ...updated[idx], chain_option_value_id: val === "none" ? null : val };
+                              setProductImages(updated);
+                            }}
+                            dir="ltr"
+                          >
+                            <SelectTrigger className="h-8 text-xs rounded-lg">
+                              <SelectValue placeholder="Chain" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">No Chain</SelectItem>
+                              {chainOptions.map(opt => (
+                                <SelectItem key={opt.id} value={opt.id}>{opt.value_en}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
                         <div className="flex items-center gap-3">
                           <label className="flex items-center gap-1.5 text-xs cursor-pointer">
                             <input type="radio" name="mainImage" checked={img.is_main === 1} onChange={() => handleSetMainImage(idx)} className="accent-primary" />

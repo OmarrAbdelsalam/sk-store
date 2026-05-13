@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { fetchProducts, type ProductApi } from "@/api/products";
 import NewArrivalsCarousel from "@/components/NewArrivalsCarousel";
+import { withRetry, formatError } from "@/lib/retry";
 
 interface NewArrivalsProps {
   products?: ProductApi[];
@@ -14,10 +15,10 @@ const NewArrivals = async ({ products: initialProducts }: NewArrivalsProps = {})
 
   if (products.length === 0) {
     try {
-      const result = await fetchProducts(1, 4);
+      const result = await withRetry(() => fetchProducts(1, 4), { label: "NewArrivals.fetchProducts" });
       products = result.items;
     } catch (error: any) {
-      console.error("Failed to fetch new arrivals:", error?.message || error?.code || error?.details || JSON.stringify(error));
+      console.error("Failed to fetch new arrivals:", formatError(error));
     }
   }
 
@@ -28,10 +29,10 @@ const NewArrivals = async ({ products: initialProducts }: NewArrivalsProps = {})
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-10">
-          <h2 className="font-playfair text-3xl md:text-4xl text-gray-900 mb-2">
+          <h2 className="font-playfair text-3xl md:text-4xl text-[#2D2A26] mb-2">
             {t("title")}
           </h2>
-          <div className="w-24 h-[1px] bg-black mx-auto mt-3"></div>
+          <div className="w-24 h-[2px] bg-[#C2A878] rounded-full mx-auto mt-3"></div>
         </div>
 
         {/* Client-side carousel with server-fetched data */}
@@ -42,3 +43,7 @@ const NewArrivals = async ({ products: initialProducts }: NewArrivalsProps = {})
 };
 
 export default NewArrivals;
+
+
+
+

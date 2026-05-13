@@ -305,7 +305,7 @@ const ProductGrid = ({ isFullPage = false }: ProductGridProps) => {
   
   const displayedProducts = useMemo(() => {
     if (!isExpanded) {
-      return filteredProducts.slice(0, 6);
+      return filteredProducts.slice(0, 8); // 8 for desktop, CSS hides last 2 on mobile
     }
     const indexOfLastProduct = currentPage * productsPerPage;
     const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
@@ -414,10 +414,10 @@ const ProductGrid = ({ isFullPage = false }: ProductGridProps) => {
           </>
         ) : (
           <div className="text-center mb-10">
-            <h2 className="font-playfair text-3xl md:text-4xl text-gray-900 mb-2">
+            <h2 className="font-playfair text-3xl md:text-4xl text-[#2D2A26] mb-2">
               {displayTitle}
             </h2>
-            <div className="w-24 h-[1px] bg-black mx-auto mt-3"></div>
+            <div className="w-24 h-[2px] bg-[#C2A878] mx-auto mt-3 rounded-full"></div>
           </div>
         )}
 
@@ -445,11 +445,15 @@ const ProductGrid = ({ isFullPage = false }: ProductGridProps) => {
           <>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-6 items-stretch">
               {displayedProducts.map((product, index) => (
-                <ProductCard
-                  key={String(product.id)}
-                  product={product}
-                  index={index}
-                />
+                <div 
+                  key={String(product.id)} 
+                  className={!isExpanded && index >= 6 ? "hidden md:block" : ""}
+                >
+                  <ProductCard
+                    product={product}
+                    index={index}
+                  />
+                </div>
               ))}
             </div>
 
@@ -480,3 +484,4 @@ const ProductGrid = ({ isFullPage = false }: ProductGridProps) => {
 };
 
 export default ProductGrid;
+

@@ -58,6 +58,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
   }, [router, locale, product.id]);
 
   const availableImages = React.useMemo(() => {
+    let targetPhotos = photos;
+    
     if (selectedColorId !== null) {
       const colorPhotos = photos.filter((p: any) => {
         // Handle both old and new field names
@@ -65,15 +67,19 @@ const ProductCard: React.FC<ProductCardProps> = ({
         return String(cId) === String(selectedColorId);
       });
       if (colorPhotos.length > 0) {
-        return colorPhotos.map((p: any) => {
-            const path = p.file_path ?? p.imageUrl;
-            // Return path as-is - DropboxImage will handle it
-            return path;
-        });
+        targetPhotos = colorPhotos;
       }
     }
-    if (photos.length > 0) {
-      return photos.map((p: any) => {
+    
+    if (targetPhotos.length > 0) {
+      // Sort so that the main image comes first
+      const sortedPhotos = [...targetPhotos].sort((a: any, b: any) => {
+        const aIsMain = a.isMain || a.is_main ? 1 : 0;
+        const bIsMain = b.isMain || b.is_main ? 1 : 0;
+        return bIsMain - aIsMain; // higher score (main) comes first
+      });
+
+      return sortedPhotos.map((p: any) => {
         const path = p.file_path ?? p.imageUrl;
         // Return path as-is - DropboxImage will handle it
         return path;

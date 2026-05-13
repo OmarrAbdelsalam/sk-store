@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabaseClient";
+import { withRetry, formatError } from "@/lib/retry";
 
 // ======================== CUSTOMER LOVE ITEMS ========================
 export interface CustomerLoveItem {
@@ -42,16 +43,18 @@ export const customerLoveService = {
   // Get all active items
   async getActiveItems(): Promise<CustomerLoveItem[]> {
     try {
-      const { data, error } = await supabase
-        .from("customer_love")
-        .select("*")
-        .eq("is_active", true)
-        .order("display_order", { ascending: true });
+      return await withRetry(async () => {
+        const { data, error } = await supabase
+          .from("customer_love")
+          .select("*")
+          .eq("is_active", true)
+          .order("display_order", { ascending: true });
 
-      if (error) throw error;
-      return data as CustomerLoveItem[];
+        if (error) throw error;
+        return data as CustomerLoveItem[];
+      });
     } catch (error) {
-      console.error("Error fetching customer love items:", error);
+      console.error("Error fetching customer love items:", formatError(error));
       return [];
     }
   },
@@ -59,15 +62,17 @@ export const customerLoveService = {
   // Get all items (for admin)
   async getAllItems(): Promise<CustomerLoveItem[]> {
     try {
-      const { data, error } = await supabase
-        .from("customer_love")
-        .select("*")
-        .order("display_order", { ascending: true });
+      return await withRetry(async () => {
+        const { data, error } = await supabase
+          .from("customer_love")
+          .select("*")
+          .order("display_order", { ascending: true });
 
-      if (error) throw error;
-      return data as CustomerLoveItem[];
+        if (error) throw error;
+        return data as CustomerLoveItem[];
+      });
     } catch (error) {
-      console.error("Error fetching customer love items:", error);
+      console.error("Error fetching customer love items:", formatError(error));
       return [];
     }
   },
@@ -153,7 +158,7 @@ export const customerLoveService = {
 
       return data as CustomerLoveSettings;
     } catch (error) {
-      console.error("Error fetching customer love settings:", error);
+      console.error("Error fetching customer love settings:", formatError(error));
       return {
         id: 'default',
         ...DEFAULT_CUSTOMER_LOVE_SETTINGS,

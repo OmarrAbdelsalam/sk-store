@@ -12,6 +12,7 @@ import ReviewsGallery from "@/components/ReviewsGallery";
 import ProductsCacheSeeder from "@/components/ProductsCacheSeeder";
 import { fetchProducts } from "@/api/products";
 import { generatePageMetadata } from "@/lib/metadata";
+import { withRetry } from "@/lib/retry";
 import type { Metadata } from "next";
 
 export async function generateMetadata({
@@ -45,7 +46,7 @@ const BestSellers = dynamic(() => import("@/components/BestSellers"));
 async function ProductsLoader({ locale }: { locale: string }) {
   let allProducts: any[] = [];
   try {
-    const result = await fetchProducts(1, 100);
+    const result = await withRetry(() => fetchProducts(1, 100), { label: "ProductsLoader" });
     allProducts = result.items;
   } catch (error) {
     // Client components will fetch on their own if this fails
@@ -105,9 +106,6 @@ export default async function Page({
       {/* Reels Showcase - Client (video/carousel) */}
       <ReelsShowcase />
 
-      {/* Best Sellers - Client (carousel) */}
-      <BestSellers />
-
       {/* Product Grid - Client (filters/pagination) */}
       <ProductGrid />
 
@@ -132,6 +130,11 @@ export default async function Page({
       {/* Reviews - Server fetches, Client handles lightbox */}
       <Suspense fallback={null}>
         <ReviewsGallery />
+      </Suspense>
+
+      {/* Best Sellers - Client (carousel) */}
+      <Suspense fallback={null}>
+        <BestSellers />
       </Suspense>
 
       {/* Features - Server Component */}
