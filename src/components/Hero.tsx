@@ -29,7 +29,7 @@ export default async function Hero() {
   const mobileButtonLink = mobileHero.button_link || DEFAULT_MOBILE_HERO.button_link;
 
   return (
-    <section className="relative h-[calc(100svh-80px)] lg:h-[90vh] w-full overflow-hidden bg-background">
+    <section className="relative h-[calc(100svh-56px)] lg:h-[calc(100vh-64px)] w-full overflow-hidden bg-background">
       {/* Mobile/Tablet Layout */}
       <div className="lg:hidden relative h-full w-full">
         {/* Background Media */}
@@ -42,6 +42,8 @@ export default async function Hero() {
               loop
               playsInline
               preload="metadata"
+              // @ts-expect-error fetchPriority not yet in React types
+              fetchPriority="high"
               className="absolute inset-0 w-full h-full object-cover"
             />
           ) : (
@@ -59,14 +61,12 @@ export default async function Hero() {
 
         {/* Content Overlay */}
         <div
-          className="relative z-10 container mx-auto px-4 h-full flex items-end justify-center pb-12 text-center"
+          className="relative z-10 container mx-auto px-5 h-full flex items-end justify-center pb-16 text-center"
           style={{ color: mobileHero.text_color || "#ffffff" }}
         >
           <Link href={mobileButtonLink}>
             <Button
-              variant="link"
-              className="drop-shadow-md text-sm md:text-base tracking-[0.2em] font-medium uppercase hover:opacity-80 transition-colors underline-offset-4 decoration-1 hover:underline"
-              style={{ color: mobileHero.text_color || "#ffffff" }}
+              className="min-h-[48px] px-8 py-3 bg-white/95 text-gray-900 hover:bg-white text-sm tracking-[0.2em] font-medium uppercase transition-all duration-300 shadow-lg rounded-none backdrop-blur-sm"
             >
               {mobileButtonText}
             </Button>
@@ -94,7 +94,7 @@ export default async function Hero() {
             </p>
             <div className="pt-6">
               <Link href={buttonLink}>
-                <Button className="px-12 py-7 bg-black text-white hover:bg-gray-800 rounded-none tracking-[0.2em] uppercase text-sm transition-all duration-300 shadow-xl hover:shadow-2xl hover:-translate-y-1">
+                <Button className="px-12 py-7 min-h-[54px] bg-black text-white hover:bg-gray-800 rounded-none tracking-[0.2em] uppercase text-sm transition-all duration-300 shadow-xl hover:shadow-2xl hover:-translate-y-1">
                   {buttonText}
                 </Button>
               </Link>

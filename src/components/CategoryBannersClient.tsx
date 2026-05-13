@@ -24,7 +24,7 @@ const CategoryBanner = ({ title, image, mobileImage, colorHex = "#6D5F52", onCli
 
   return (
     <div
-      className={`relative group overflow-hidden ${className} h-full w-full rounded-xl cursor-pointer`}
+      className={`relative group overflow-hidden ${className} h-full w-full rounded cursor-pointer`}
       onClick={onClick}
     >
       <div 
@@ -134,8 +134,8 @@ const ClothingShowcaseClient = ({ categories, sectionTitle }: ClothingShowcaseCl
   };
 
   return (
-    <section className="py-16">
-      <div className="container mx-auto px-4">
+    <section>
+      <div className="container mx-auto px-5">
         {/* Header */}
         <div className="text-center mb-10">
           <h2 className="font-playfair text-3xl md:text-4xl text-[#2D2A26] mb-2">

@@ -22,8 +22,8 @@ const DiscoverSection = async () => {
   const displayItems = items.length >= 2 ? items.slice(0, 2) : fallbackItems;
 
   return (
-    <section className="py-16 bg-background overflow-hidden">
-      <div className="container mx-auto px-4">
+    <section className="bg-background overflow-hidden">
+      <div className="container mx-auto px-5">
         <div className="text-center mb-10">
           <h2 className="font-playfair text-3xl md:text-4xl text-[#2D2A26] mb-2">
             {t("title")}
@@ -31,18 +31,18 @@ const DiscoverSection = async () => {
           <div className="w-24 h-[2px] bg-[#C2A878] mx-auto mt-3 rounded-full"></div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 md:gap-6">
+        <div className="grid grid-cols-2 gap-3 md:gap-4">
           {displayItems.map((item) => (
             <Link key={item.id} href={item.link || "/products"}>
-              <div className="relative aspect-[3/4] lg:aspect-square lg:max-h-[80vh] overflow-hidden group cursor-pointer shadow-md md:shadow-lg rounded-xl">
+              <div className="relative aspect-[4/5] lg:aspect-square lg:max-h-[80vh] overflow-hidden group cursor-pointer shadow-md md:shadow-lg rounded">
                 <Image
                   src={item.image_url}
                   alt={item.title || "Discover"}
                   fill
-                  className="object-cover transition-transform duration-700 group-hover:scale-110"
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
                   sizes="(max-width: 768px) 50vw, 50vw"
                 />
-                <div className="absolute inset-0 bg-black/5 group-hover:bg-black/20 transition-colors duration-500" />
+                <div className="absolute inset-0 bg-black/5 group-hover:bg-black/15 transition-colors duration-500" />
                 {item.title && (
                   <div className="absolute bottom-4 left-0 right-0 text-center">
                     <span className="text-white font-playfair text-lg drop-shadow-md">{item.title}</span>

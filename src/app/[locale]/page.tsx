@@ -96,54 +96,57 @@ export default async function Page({
         <Hero />
       </Suspense>
 
-      {/* New Arrivals - Server Component */}
-      <Suspense fallback={null}>
-        <NewArrivals />
-      </Suspense>
+      {/* Sections with consistent spacing (48px mobile / 64px desktop) */}
+      <div className="space-y-12 md:space-y-16 pt-12 md:pt-16 pb-12 md:pb-16">
+        {/* New Arrivals - Server Component */}
+        <Suspense fallback={null}>
+          <NewArrivals />
+        </Suspense>
 
-      {/* Category Banners - Server fetches, Client handles interaction */}
-      <Suspense fallback={null}>
-        <ClothingShowcase />
-      </Suspense>
+        {/* Category Banners - Server fetches, Client handles interaction */}
+        <Suspense fallback={null}>
+          <ClothingShowcase />
+        </Suspense>
 
-      {/* Reels Showcase - Client (video/carousel) */}
-      <ReelsShowcase />
+        {/* Reels Showcase - Client (video/carousel) */}
+        <ReelsShowcase />
 
-      {/* Product Grid - Client (filters/pagination) */}
-      <ProductGrid />
+        {/* Product Grid - Client (filters/pagination) */}
+        <ProductGrid />
 
-      {/* Discover Section - Server Component */}
-      <Suspense fallback={null}>
-        <DiscoverSection />
-      </Suspense>
+        {/* Discover Section - Server Component */}
+        <Suspense fallback={null}>
+          <DiscoverSection />
+        </Suspense>
 
-      {/* Moving Ticker - Server Component */}
-      <Suspense fallback={null}>
-        <MovingTicker />
-      </Suspense>
+        {/* Moving Ticker - Server Component */}
+        <Suspense fallback={null}>
+          <MovingTicker />
+        </Suspense>
 
-      {/* Maison Clutch - Server Component */}
-      <Suspense fallback={null}>
-        <MaisonClutchSection />
-      </Suspense>
+        {/* Maison Clutch - Server Component */}
+        <Suspense fallback={null}>
+          <MaisonClutchSection />
+        </Suspense>
 
-      {/* Handbags - Client (carousel) */}
-      <HandbagsSection />
+        {/* Handbags - Client (carousel) */}
+        <HandbagsSection />
 
-      {/* Reviews - Server fetches, Client handles lightbox */}
-      <Suspense fallback={null}>
-        <ReviewsGallery />
-      </Suspense>
+        {/* Reviews - Server fetches, Client handles lightbox */}
+        <Suspense fallback={null}>
+          <ReviewsGallery />
+        </Suspense>
 
-      {/* Best Sellers - Client (carousel) */}
-      <Suspense fallback={null}>
-        <BestSellers />
-      </Suspense>
+        {/* Best Sellers - Client (carousel) */}
+        <Suspense fallback={null}>
+          <BestSellers />
+        </Suspense>
 
-      {/* Features - Server Component */}
-      <Suspense fallback={null}>
-        <FeaturesSection />
-      </Suspense>
+        {/* Features - Server Component */}
+        <Suspense fallback={null}>
+          <FeaturesSection />
+        </Suspense>
+      </div>
     </div>
   );
 }

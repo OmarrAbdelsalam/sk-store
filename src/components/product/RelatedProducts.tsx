@@ -99,9 +99,9 @@ export default function RelatedProducts({
         <div className="flex gap-4 overflow-hidden lg:hidden">
           {[1, 2].map((i) => (
             <div key={i} className="animate-pulse min-w-[60%]">
-              <div className="bg-gray-200 aspect-[3/4] rounded-lg mb-3"></div>
-              <div className="bg-gray-200 h-4 rounded mb-2"></div>
-              <div className="bg-gray-200 h-4 rounded w-2/3"></div>
+              <div className="bg-gray-100 aspect-[4/5] rounded mb-3"></div>
+              <div className="bg-gray-100 h-4 rounded mb-2"></div>
+              <div className="bg-gray-100 h-4 rounded w-2/3"></div>
             </div>
           ))}
         </div>
@@ -109,9 +109,9 @@ export default function RelatedProducts({
         <div className="hidden lg:grid grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="animate-pulse">
-              <div className="bg-gray-200 aspect-[3/4] rounded-lg mb-3"></div>
-              <div className="bg-gray-200 h-4 rounded mb-2"></div>
-              <div className="bg-gray-200 h-4 rounded w-2/3"></div>
+              <div className="bg-gray-100 aspect-[4/5] rounded mb-3"></div>
+              <div className="bg-gray-100 h-4 rounded mb-2"></div>
+              <div className="bg-gray-100 h-4 rounded w-2/3"></div>
             </div>
           ))}
         </div>

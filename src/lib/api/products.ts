@@ -41,7 +41,7 @@ export const mapApiProductToUI = (apiProduct: ProductApi, locale: 'ar' | 'en') =
                    '/placeholder-product.jpg';
 
   return {
-    id: parseInt(apiProduct.id),
+    id: apiProduct.id,
     name,
     nameAr: apiProduct.nameAr,
     nameEn: apiProduct.nameEn,

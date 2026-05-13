@@ -145,7 +145,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       style={{ animationDelay: `${Math.min(index, 4) * 0.05}s` }}
     >
       <div 
-        className="relative aspect-[3/4] bg-[#f5f5f5] mb-4 overflow-hidden rounded-xl"
+        className="relative aspect-[4/5] bg-[#f5f5f5] mb-3 overflow-hidden rounded"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         onTouchStart={handleTouchStart}
@@ -178,7 +178,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
         {/* New Badge - positioned at bottom left/right of image */}
         {showNewBadge && (
-          <div className={`absolute bottom-4 ${locale === 'ar' ? 'right-4' : 'left-4'} bg-black text-white text-xs font-bold px-3 py-1 tracking-[0.2em] uppercase z-10 rounded-none shadow-lg`}>
+          <div className={`absolute bottom-4 ${locale === 'ar' ? 'right-4' : 'left-4'} bg-black text-white text-xs font-bold px-3 py-1 tracking-[0.2em] uppercase z-10 shadow-lg`}>
             {locale === 'ar' ? 'جديد' : 'New'}
           </div>
         )}

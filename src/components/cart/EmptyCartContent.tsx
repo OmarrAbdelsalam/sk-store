@@ -10,8 +10,8 @@ export default function EmptyCartContent() {
     <div className="text-center py-12" dir={dir} aria-live="polite">
       {/* أيقونة بسيطة */}
       <div className="relative inline-block mb-8">
-        <div className="p-8 bg-gray-100 dark:bg-gray-800 rounded-2xl">
-          <ShoppingBag className="h-20 w-20 text-gray-400 dark:text-gray-500" strokeWidth={1.5} />
+        <div className="p-8 bg-gray-100 dark:bg-gray-800 rounded-lg">
+          <ShoppingBag className="h-20 w-20 text-gray-500 dark:text-gray-500" strokeWidth={1.5} />
         </div>
       </div>
       

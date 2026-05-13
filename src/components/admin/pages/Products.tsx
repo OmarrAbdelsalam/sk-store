@@ -85,6 +85,7 @@ const ProductsPage = () => {
   const [productImages, setProductImages] = useState<{ file_path: string; color_id: string | null; chain_option_value_id: string | null; is_main: number }[]>([]);
   const [selectedRelated, setSelectedRelated] = useState<string[]>([]);
   const [badge, setBadge] = useState<string>("");
+  const [mainImageSecond, setMainImageSecond] = useState(false);
   const [chainOptions, setChainOptions] = useState<{ id: string; value_en: string; value_ar: string }[]>([]);
 
   // Image Upload State
@@ -125,6 +126,7 @@ const ProductsPage = () => {
     setProductImages([]);
     setSelectedRelated([]);
     setBadge("");
+    setMainImageSecond(false);
     setFormStep(0);
     setColorSearch('');
 
@@ -143,6 +145,7 @@ const ProductsPage = () => {
         setPrice(fullProduct.base_price ? fullProduct.base_price.toString() : "");
         setComparePrice(fullProduct.compare_at_price ? fullProduct.compare_at_price.toString() : "");
         setBadge(fullProduct.badge || "");
+        setMainImageSecond(!!fullProduct.main_image_second);
         
         setSelectedColors(fullProduct.color_ids || []);
         
@@ -254,6 +257,7 @@ const ProductsPage = () => {
         base_price: parseFloat(price),
         compare_at_price: comparePrice ? parseFloat(comparePrice) : undefined,
         badge: badge ? badge as ProductBadge : null,
+        main_image_second: mainImageSecond ? 1 : 0,
         color_ids: selectedColors,
         images: productImages,
         related_product_ids: selectedRelated
@@ -795,6 +799,21 @@ const ProductsPage = () => {
             {formStep === 2 && (
               <div className="space-y-4">
                 <p className="text-sm text-gray-500">Upload product photos and assign colors</p>
+
+                {/* Main Image Position Toggle */}
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">Main image position</p>
+                    <p className="text-xs text-gray-400">Show main image as 2nd photo in gallery</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setMainImageSecond(!mainImageSecond)}
+                    className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${mainImageSecond ? 'bg-primary' : 'bg-gray-300'}`}
+                  >
+                    <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${mainImageSecond ? 'translate-x-5' : 'translate-x-0'}`} />
+                  </button>
+                </div>
 
                 {/* Upload Box */}
                 <div className="relative group cursor-pointer w-full h-32 rounded-2xl border-2 border-dashed border-gray-300 hover:border-primary hover:bg-gray-50 transition-all flex flex-col items-center justify-center gap-2 overflow-hidden">

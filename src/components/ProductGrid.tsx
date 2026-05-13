@@ -345,8 +345,8 @@ const ProductGrid = ({ isFullPage = false }: ProductGridProps) => {
 
   /* Render */
   return (
-    <section id="products" className={`${isFullPage ? 'pt-2 pb-8' : 'py-16'} bg-background`}>
-      <div className="container mx-auto px-4">
+    <section id="products" className={`${isFullPage ? 'pt-2 pb-8' : ''} bg-background`}>
+      <div className="container mx-auto px-5">
         {isFullPage ? (
           <>
             {/* Breadcrumb - Desktop/Tablet only */}
@@ -443,7 +443,7 @@ const ProductGrid = ({ isFullPage = false }: ProductGridProps) => {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-6 items-stretch">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-4 items-stretch">
               {displayedProducts.map((product, index) => (
                 <div 
                   key={String(product.id)} 
@@ -462,7 +462,7 @@ const ProductGrid = ({ isFullPage = false }: ProductGridProps) => {
               <div className="text-center mt-12">
                 <Button 
                   onClick={() => router.push(`/${locale}/products`)}
-                  className="px-10 py-6 bg-black text-white hover:bg-gray-800 rounded-none tracking-[0.2em] uppercase text-sm transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1"
+                  className="px-8 py-3 bg-black text-white hover:bg-gray-800 rounded-none tracking-[0.2em] uppercase text-xs transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1"
                 >
                   {t("ProductGrid.viewAll") || "View All"}
                 </Button>

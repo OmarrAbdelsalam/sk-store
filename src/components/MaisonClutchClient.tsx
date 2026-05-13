@@ -75,8 +75,8 @@ const MaisonClutchClient = ({
   };
 
   return (
-    <section ref={sectionRef} className="py-16 bg-white overflow-hidden">
-      <div className="container mx-auto px-4">
+    <section ref={sectionRef} className="bg-[#F0EBE3] py-12 md:py-16 overflow-hidden">
+      <div className="container mx-auto px-5">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           {/* Text Content */}
           <div className="order-2 lg:order-1 flex flex-col items-center lg:items-start text-center lg:text-left space-y-8">
@@ -95,7 +95,7 @@ const MaisonClutchClient = ({
 
             <Button
               onClick={handleShopClick}
-              className="px-10 py-6 bg-black text-white hover:bg-gray-800 rounded-none tracking-[0.2em] uppercase text-sm"
+              className="px-8 py-3 bg-black text-white hover:bg-gray-800 rounded-none tracking-[0.2em] uppercase text-xs"
               variant="default"
             >
               {buttonText}
@@ -103,7 +103,7 @@ const MaisonClutchClient = ({
           </div>
 
           {/* Video Content */}
-          <div className="order-1 lg:order-2 w-full h-[500px] lg:h-[700px] relative bg-gray-100 rounded-xl overflow-hidden">
+          <div className="order-1 lg:order-2 w-full h-[500px] lg:h-[700px] relative bg-gray-100 rounded overflow-hidden">
             {isVisible && (
               <video
                 ref={videoRef}

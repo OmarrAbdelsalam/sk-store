@@ -152,7 +152,7 @@ export default function CartUpsell() {
               onClick={() => router.push(`/${locale}/product/${product.id}`)}
             >
               {/* Image */}
-              <div className="relative aspect-[3/4] bg-[#f5f5f5] mb-3 overflow-hidden">
+              <div className="relative aspect-[4/5] bg-[#f5f5f5] mb-3 overflow-hidden">
                 <DropboxImage
                   src={product.image}
                   alt={product.name}

@@ -8,7 +8,6 @@ const OrderSummaryActions = memo(({ onCheckoutClick }: { onCheckoutClick?: () =>
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations("OrderSummary");
-  const tCart = useTranslations("Cart");
   const [isValidating, setIsValidating] = useState(false);
 
   const validateStockAndCheckout = async () => {
@@ -24,7 +23,7 @@ const OrderSummaryActions = memo(({ onCheckoutClick }: { onCheckoutClick?: () =>
   };
 
   return (
-    <div className="space-y-3">
+    <div>
       <button
         className="w-full h-12 bg-foreground text-background text-xs font-medium tracking-widest uppercase
           transition-all duration-300 hover:bg-foreground/90 active:scale-[0.99]
@@ -37,7 +36,6 @@ const OrderSummaryActions = memo(({ onCheckoutClick }: { onCheckoutClick?: () =>
         {isValidating ? (
           <>
             <Loader2 className="w-4 h-4 animate-spin" />
-            {tCart("validating")}
           </>
         ) : (
           <>
@@ -45,17 +43,6 @@ const OrderSummaryActions = memo(({ onCheckoutClick }: { onCheckoutClick?: () =>
             <ArrowRight className="w-4 h-4" />
           </>
         )}
-      </button>
-      <button
-        className="w-full h-11 border border-foreground text-foreground text-xs font-medium tracking-widest uppercase
-          transition-all duration-200 hover:bg-foreground hover:text-background"
-        onClick={() => {
-          if (onCheckoutClick) onCheckoutClick();
-          router.push(`/${locale}/products`);
-        }}
-        aria-label={t("continueShopping")}
-      >
-        {t("continueShopping")}
       </button>
     </div>
   );

@@ -37,7 +37,7 @@ const MovingTicker = async () => {
         <div className="flex items-center">
           {items.map((item) => (
             <div key={`set1-${item.id}`} className="flex items-center">
-              <span className="text-xs md:text-sm font-medium tracking-[0.25em] uppercase px-14">
+              <span className="text-sm font-medium tracking-[0.25em] uppercase px-14">
                 {item.text}
               </span>
               <span className="opacity-30 text-base px-2">✦</span>
@@ -49,7 +49,7 @@ const MovingTicker = async () => {
         <div className="flex items-center">
           {items.map((item) => (
             <div key={`set2-${item.id}`} className="flex items-center">
-              <span className="text-xs md:text-sm font-medium tracking-[0.25em] uppercase px-14">
+              <span className="text-sm font-medium tracking-[0.25em] uppercase px-14">
                 {item.text}
               </span>
               <span className="opacity-30 text-base px-2">✦</span>

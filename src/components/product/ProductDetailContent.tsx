@@ -378,6 +378,7 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
               selectedColorId={selectedColorId}
               selectedOptionValueId={selectedChainId}
               thumbSide={isAr ? "right" : "left"}
+              mainImageSecond={!!product?.main_image_second}
             />
 
             {/* Specs - Desktop (without description, it's in the right column) */}
@@ -482,7 +483,7 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
       </div>
 
       {/* Related products */}
-      <div className="mt-12 px-4 lg:px-0">
+      <div className="mt-12 ps-4 lg:px-0">
       <RelatedProducts 
         currentProductId={product?.id || 0}
         relatedProducts={(product?.relatedProducts || []).map(rp => ({

@@ -13,7 +13,7 @@ export default function ProductDetailLoading({ dir, onBack }: ProductDetailLoadi
         <div className="animate-pulse space-y-4">
           <div className="h-8 w-1/3 bg-muted rounded" />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            <div className="aspect-[3/4] bg-muted rounded" />
+            <div className="aspect-[4/5] bg-muted rounded" />
             <div className="space-y-4">
               <div className="h-6 w-1/2 bg-muted rounded" />
               <div className="h-6 w-1/3 bg-muted rounded" />

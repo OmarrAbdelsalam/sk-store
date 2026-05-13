@@ -113,8 +113,8 @@ export const ReelsShowcase = () => {
   if (videos.length === 0) return null;
 
   return (
-    <section className="py-16 bg-[#F9F9F9]">
-      <div className="container mx-auto px-4">
+    <section className="bg-[#F0EBE3] py-12 md:py-16">
+      <div className="container mx-auto px-5">
         {/* Header */}
         <div className="text-center mb-10">
           <h2 className="font-playfair text-3xl md:text-4xl text-[#2D2A26] mb-2">
@@ -128,18 +128,18 @@ export const ReelsShowcase = () => {
             {videos.map((video) => (
               <div
                 key={video.id}
-                className="flex-[0_0_60%] md:flex-[0_0_40%] lg:flex-[0_0_30%] pl-4 min-w-0"
+                className="flex-[0_0_75%] md:flex-[0_0_40%] lg:flex-[0_0_30%] pl-4 min-w-0"
                 onClick={() => setSelectedReel(video)}
               >
-                <div className="relative aspect-[2/3] bg-gray-200 rounded-xl overflow-hidden group cursor-pointer shadow-sm">
+                <div className="relative aspect-[9/16] bg-gray-200 rounded-xl overflow-hidden group cursor-pointer shadow-sm">
                   {getThumbnail(video) ? (
                     <Image
                       src={getThumbnail(video)!}
                       alt={getTitle(video) || "فيديو"}
                       fill
-                      className="object-cover transition-opacity duration-300 opacity-80 group-hover:opacity-100"
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
                       loading="lazy"
-                      sizes="(max-width: 768px) 60vw, (max-width: 1024px) 40vw, 30vw"
+                      sizes="(max-width: 768px) 75vw, (max-width: 1024px) 40vw, 30vw"
                     />
                   ) : (
                     <div className="absolute inset-0 bg-gradient-to-br from-blue-100 to-purple-100 transition-opacity duration-300 opacity-80 group-hover:opacity-100" />
@@ -180,11 +180,12 @@ export const ReelsShowcase = () => {
 
             {/* Modal Content */}
             <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="relative w-[85vw] aspect-[9/16] max-h-[90vh] md:w-[50vw] md:h-[80vh] md:max-w-[450px] md:aspect-auto bg-black rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl flex flex-col items-center justify-center"
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="relative bg-black rounded-2xl overflow-hidden shadow-2xl flex flex-col items-center justify-center"
+              style={{ width: "min(80vw, calc(90vh * 9 / 16))", aspectRatio: "9/16", maxHeight: "90vh" }}
             >
               {/* Close Button */}
               <button

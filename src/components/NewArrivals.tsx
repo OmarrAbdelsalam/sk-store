@@ -25,8 +25,8 @@ const NewArrivals = async ({ products: initialProducts }: NewArrivalsProps = {})
   if (!products || products.length === 0) return null;
 
   return (
-    <section className="py-16 bg-white">
-      <div className="container mx-auto px-4">
+    <section className="bg-white">
+      <div className="container mx-auto px-5">
         {/* Header */}
         <div className="text-center mb-10">
           <h2 className="font-playfair text-3xl md:text-4xl text-[#2D2A26] mb-2">

@@ -157,6 +157,7 @@ CREATE TABLE IF NOT EXISTS products (
   size_chart_url TEXT,
   category_id UUID REFERENCES categories(id),
   is_active INTEGER DEFAULT 1,
+  main_image_second INTEGER DEFAULT 0,
   seo_title_en TEXT,
   seo_title_ar TEXT,
   seo_description_en TEXT,

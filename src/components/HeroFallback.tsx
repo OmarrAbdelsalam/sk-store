@@ -8,7 +8,7 @@ import { Link } from "@/i18n/navigation";
  */
 export default function HeroFallback() {
   return (
-    <section className="relative h-[calc(100svh-80px)] lg:h-[90vh] w-full overflow-hidden bg-background">
+    <section className="relative h-[calc(100svh-56px)] lg:h-[calc(100vh-64px)] w-full overflow-hidden bg-background">
       {/* Mobile/Tablet Layout */}
       <div className="lg:hidden relative h-full w-full">
         <div className="absolute inset-0">
@@ -23,11 +23,10 @@ export default function HeroFallback() {
           <div className="absolute inset-0 bg-black/20" />
         </div>
 
-        <div className="relative z-10 container mx-auto px-4 h-full flex items-end justify-center pb-12 text-center">
+        <div className="relative z-10 container mx-auto px-5 h-full flex items-end justify-center pb-16 text-center">
           <Link href="/products">
             <Button
-              variant="link"
-              className="drop-shadow-md text-sm md:text-base tracking-[0.2em] font-medium uppercase hover:opacity-80 transition-colors underline-offset-4 decoration-1 hover:underline text-white"
+              className="min-h-[48px] px-8 py-3 bg-white/95 text-gray-900 hover:bg-white text-sm tracking-[0.2em] font-medium uppercase transition-all duration-300 shadow-lg rounded-none backdrop-blur-sm"
             >
               SHOP BAGS
             </Button>
@@ -53,7 +52,7 @@ export default function HeroFallback() {
             </p>
             <div className="pt-6">
               <Link href="/products">
-                <Button className="px-12 py-7 bg-black text-white hover:bg-gray-800 rounded-none tracking-[0.2em] uppercase text-sm transition-all duration-300 shadow-xl hover:shadow-2xl hover:-translate-y-1">
+                <Button className="px-12 py-7 min-h-[54px] bg-black text-white hover:bg-gray-800 rounded-none tracking-[0.2em] uppercase text-sm transition-all duration-300 shadow-xl hover:shadow-2xl hover:-translate-y-1">
                   SHOP NOW
                 </Button>
               </Link>
@@ -77,5 +76,3 @@ export default function HeroFallback() {
     </section>
   );
 }
-
-

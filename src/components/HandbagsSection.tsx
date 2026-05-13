@@ -64,8 +64,8 @@ const HandbagsSection = () => {
   const displayProducts = handbagProducts.slice(0, 8);
 
   return (
-    <section className="py-16 bg-background">
-      <div className="container mx-auto px-4">
+    <section className="bg-background">
+      <div className="container mx-auto px-5">
         {/* Header */}
         <div className="text-center mb-10">
           <h2 className="font-playfair text-3xl md:text-4xl text-[#2D2A26] mb-2">
@@ -75,7 +75,7 @@ const HandbagsSection = () => {
         </div>
 
         {/* Carousel */}
-        <div className="relative group">
+        <div className="relative">
           <div className="overflow-hidden" ref={emblaRef}>
             <div className="flex -ml-4">
               {displayProducts.map((product, index) => (
@@ -135,7 +135,7 @@ const HandbagsSection = () => {
         <div className="text-center mt-12">
           <Link href="/products">
             <Button 
-              className="px-10 py-6 bg-black text-white hover:bg-gray-800 rounded-none tracking-[0.2em] uppercase text-sm transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1"
+              className="px-8 py-3 bg-black text-white hover:bg-gray-800 rounded-none tracking-[0.2em] uppercase text-xs transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1"
             >
               {t('viewAll')}
             </Button>

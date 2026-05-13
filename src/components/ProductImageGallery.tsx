@@ -23,6 +23,7 @@ interface ProductImageGalleryProps {
   selectedColorId: string | number;
   selectedOptionValueId?: string | number;
   thumbSide?: "left" | "right";
+  mainImageSecond?: boolean;
 }
 
 const FALLBACK = "/placeholder.png";
@@ -101,6 +102,7 @@ const ProductImageGallery = ({
   selectedColorId,
   selectedOptionValueId,
   thumbSide,
+  mainImageSecond = false,
 }: ProductImageGalleryProps) => {
   const t = useTranslations("Gallery");
   const locale = useLocale();
@@ -140,14 +142,21 @@ const ProductImageGallery = ({
     const primaryIds = new Set(primaryPhotos.map(p => p.id));
     const otherPhotos = photos.filter(p => !primaryIds.has(p.id));
     
-    // ترتيب: main أولاً
+    // ترتيب: main تبقى تاني صورة لو mainImageSecond مفعّل
     const primaryMains = primaryPhotos.filter((p) => p.isMain);
     const primaryOthers = primaryPhotos.filter((p) => !p.isMain);
     const otherMains = otherPhotos.filter((p) => p.isMain);
     const otherOthers = otherPhotos.filter((p) => !p.isMain);
     
+    if (mainImageSecond && primaryOthers.length > 0) {
+      // Main image as second: first non-main, then main, then rest
+      const [firstOther, ...restOthers] = primaryOthers;
+      return [firstOther, ...primaryMains, ...restOthers, ...otherMains, ...otherOthers];
+    }
+    
+    // Default: main first
     return [...primaryMains, ...primaryOthers, ...otherMains, ...otherOthers];
-  }, [photos, selectedColorId, selectedOptionValueId]);
+  }, [photos, selectedColorId, selectedOptionValueId, mainImageSecond]);
 
   // Reset index عند تغيير اللون أو الصور أو الـ option value
   useEffect(() => {
@@ -434,7 +443,10 @@ const ProductImageGallery = ({
                 variant="ghost"
                 size="sm"
                 className={clsx(
-                  "absolute top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white/90 rounded-full p-2",
+                  "absolute top-1/2 -translate-y-1/2 rounded-full p-2",
+                  currentImages[currentImageIndex]?.isMain
+                    ? "bg-black/60 hover:bg-black/80"
+                    : "bg-white/80 hover:bg-white/90",
                   dir === "rtl" ? "right-2" : "left-2"
                 )}
                 onClick={(e) => {
@@ -444,16 +456,19 @@ const ProductImageGallery = ({
                 aria-label={dir === "rtl" ? t("next") : t("prev")}
               >
                 {dir === "rtl" ? (
-                  <ChevronRight className="h-4 w-4" />
+                  <ChevronRight className={clsx("h-4 w-4", currentImages[currentImageIndex]?.isMain ? "text-white" : "text-black")} />
                 ) : (
-                  <ChevronLeft className="h-4 w-4" />
+                  <ChevronLeft className={clsx("h-4 w-4", currentImages[currentImageIndex]?.isMain ? "text-white" : "text-black")} />
                 )}
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
                 className={clsx(
-                  "absolute top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white/90 rounded-full p-2",
+                  "absolute top-1/2 -translate-y-1/2 rounded-full p-2",
+                  currentImages[currentImageIndex]?.isMain
+                    ? "bg-black/60 hover:bg-black/80"
+                    : "bg-white/80 hover:bg-white/90",
                   dir === "rtl" ? "left-2" : "right-2"
                 )}
                 onClick={(e) => {
@@ -463,9 +478,9 @@ const ProductImageGallery = ({
                 aria-label={dir === "rtl" ? t("prev") : t("next")}
               >
                 {dir === "rtl" ? (
-                  <ChevronLeft className="h-4 w-4" />
+                  <ChevronLeft className={clsx("h-4 w-4", currentImages[currentImageIndex]?.isMain ? "text-white" : "text-black")} />
                 ) : (
-                  <ChevronRight className="h-4 w-4" />
+                  <ChevronRight className={clsx("h-4 w-4", currentImages[currentImageIndex]?.isMain ? "text-white" : "text-black")} />
                 )}
               </Button>
             </>
@@ -480,8 +495,8 @@ const ProductImageGallery = ({
                   className={clsx(
                     "rounded-full transition-all duration-300",
                     idx === currentImageIndex
-                      ? "w-6 h-2 bg-white"
-                      : "w-2 h-2 bg-white/50"
+                      ? currentImages[currentImageIndex]?.isMain ? "w-6 h-2 bg-black" : "w-6 h-2 bg-white"
+                      : currentImages[currentImageIndex]?.isMain ? "w-2 h-2 bg-black/30" : "w-2 h-2 bg-white/50"
                   )}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -493,32 +508,6 @@ const ProductImageGallery = ({
             </div>
           )}
         </div>
-
-        {/* Mobile thumbnail strip below image */}
-        {currentImages.length > 1 && (
-          <div className="flex gap-2 px-4 mt-3 overflow-x-auto scrollbar-hide pb-1" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
-            {currentImages.map((img, idx) => (
-              <button
-                key={img.id}
-                className={clsx(
-                  "relative w-14 h-14 rounded-md overflow-hidden shrink-0 transition-all duration-200 border-2",
-                  idx === currentImageIndex
-                    ? "border-black opacity-100"
-                    : "border-transparent opacity-50 hover:opacity-80"
-                )}
-                onClick={() => selectImage(idx)}
-              >
-                <SafeImage
-                  src={img.imageUrl || FALLBACK}
-                  alt={t("imageAlt", { index: idx + 1 })}
-                  className="object-cover"
-                  fill
-                  sizes="56px"
-                />
-              </button>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* ======== Lightbox Dialog ======== */}

@@ -27,7 +27,7 @@ const Footer = () => {
 
   return (
     <footer className="bg-primary text-primary-foreground py-16">
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-5">
         {/* Newsletter Section */}
         <div className="text-center mb-16">
           <h3 className="font-luxury text-3xl font-bold tracking-widest text-white">

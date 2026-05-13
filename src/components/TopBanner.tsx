@@ -26,7 +26,7 @@ export default async function TopBanner() {
 
   return (
     <div 
-      className="relative overflow-hidden"
+      className="relative overflow-hidden max-h-[40px]"
       style={{ 
         backgroundColor: settings.background_color || "#000000",
         color: settings.text_color || "#ffffff" 

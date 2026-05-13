@@ -19,8 +19,8 @@ const ReviewsGalleryClient = ({ items, title, subtitle, shareYours, tagUs }: Rev
   if (items.length === 0) return null;
 
   return (
-    <section className="py-16 bg-[#FAF8F5]">
-      <div className="container mx-auto px-4">
+    <section className="bg-[#F0EBE3] py-12 md:py-16">
+      <div className="container mx-auto px-5">
         {/* Header */}
         <div className="text-center mb-10">
           <h2 className="font-playfair text-3xl md:text-4xl text-[#2D2A26] mb-2">
@@ -41,7 +41,7 @@ const ReviewsGalleryClient = ({ items, title, subtitle, shareYours, tagUs }: Rev
             return (
               <div
                 key={item.id}
-                className={`group relative aspect-square lg:aspect-[4/3] overflow-hidden bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer ${index >= 6 ? 'hidden lg:block' : ''}`}
+                className={`group relative aspect-square lg:aspect-[4/3] overflow-hidden bg-white rounded shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer ${index >= 6 ? 'hidden lg:block' : ''}`}
                 onClick={() => setSelectedIndex(index)}
                 {...(mobileRev ? { 'data-mobile-rev': '' } : {})}
                 {...(desktopRev ? { 'data-desktop-rev': '' } : {})}
@@ -71,7 +71,7 @@ const ReviewsGalleryClient = ({ items, title, subtitle, shareYours, tagUs }: Rev
                     </p>
                   )}
                   {item.customer_name && (
-                    <p className="text-xs text-gray-300 mt-1">- {item.customer_name}</p>
+                    <p className="text-xs text-gray-400 mt-1">- {item.customer_name}</p>
                   )}
                 </div>
               </div>
@@ -117,7 +117,7 @@ const ReviewsGalleryClient = ({ items, title, subtitle, shareYours, tagUs }: Rev
                 <p className="text-lg mb-1">{items[selectedIndex].review_text}</p>
               )}
               {items[selectedIndex].customer_name && (
-                <p className="text-gray-400">- {items[selectedIndex].customer_name}</p>
+                <p className="text-gray-500">- {items[selectedIndex].customer_name}</p>
               )}
             </div>
 

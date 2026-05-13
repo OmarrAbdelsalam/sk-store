@@ -17,7 +17,7 @@ export default function CommonLayout({ children, topBanner }: { children: React.
     <>
       {topBanner}
       <Navigation />
-      <main id="main-content" className="pb-16 md:pb-24">
+      <main id="main-content" className="pb-20 md:pb-16">
         {children}
       </main>
       <Footer />

@@ -74,13 +74,38 @@ export default function CartPageClient() {
   }
 
   return (
-    <div dir={dir} className="animate-fade-in">
-      {/* Page Title & Free Shipping Banner */}
-      <div className="mb-6 sm:mb-10 flex flex-col gap-6">
+    <div dir={dir} className="animate-fade-in pb-20 lg:pb-0">
+      {/* Page Title & Free Shipping Progress */}
+      <div className="mb-6 sm:mb-10 flex flex-col gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-light tracking-wider uppercase">{t("title")}</h1>
           <div className="h-px w-12 bg-foreground mt-3" />
         </div>
+
+        {/* Free Shipping Progress Bar */}
+        {freeShippingThreshold && !freeShippingApplied && (() => {
+          const subtotal = getSubtotal();
+          const progress = Math.min((subtotal / freeShippingThreshold) * 100, 100);
+          const remaining = Math.max(freeShippingThreshold - subtotal, 0);
+          return (
+            <div className="w-full border border-border/60 px-4 py-3 space-y-2">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+                <span>
+                  {isAr
+                    ? `أضف ${remaining} جنيه للشحن المجاني`
+                    : `Add ${remaining} EGP more for free shipping`}
+                </span>
+              </div>
+              <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Prominent Free Shipping Success Banner */}
         {freeShippingApplied && (
@@ -127,8 +152,8 @@ export default function CartPageClient() {
           </div>
         </div>
 
-        {/* Order Summary */}
-        <div className="lg:col-span-5">
+        {/* Order Summary - Desktop only */}
+        <div className="hidden lg:block lg:col-span-5">
           <Suspense fallback={<Skeleton className="h-72 w-full" />}>
             <OrderSummary
               totalItemsFallback={getTotalItems()}
@@ -146,6 +171,26 @@ export default function CartPageClient() {
       <Suspense fallback={null}>
         <CartUpsell />
       </Suspense>
+
+      {/* Mobile Sticky Bottom Bar - Total + Checkout */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border px-4 py-3 lg:hidden shadow-[0_-4px_12px_rgba(0,0,0,0.08)]" dir={dir}>
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs font-medium tracking-wider uppercase text-muted-foreground">
+            {isAr ? 'الإجمالي' : 'Total'}
+          </span>
+          <span className="text-lg font-semibold tracking-wider">
+            {Math.max(0, getTotalPrice() - bogoDiscount).toLocaleString()} <span className="text-xs uppercase">EGP</span>
+          </span>
+        </div>
+        <button
+          className="w-full h-12 bg-foreground text-background text-xs font-medium tracking-widest uppercase
+            transition-all duration-300 hover:bg-foreground/90 active:scale-[0.99]
+            inline-flex items-center justify-center gap-2"
+          onClick={() => router.push(`/${locale}/checkout`)}
+        >
+          {isAr ? 'إتمام الشراء' : 'PROCEED TO CHECKOUT'}
+        </button>
+      </div>
     </div>
   );
 }

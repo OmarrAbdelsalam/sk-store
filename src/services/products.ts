@@ -28,6 +28,7 @@ export type Product = {
   material_ar: string;
   category_id: string;
   badge?: ProductBadge;
+  main_image_second?: number;
   is_active: number;
   created_at?: string;
   
@@ -49,6 +50,7 @@ export type ProductInput = {
   material_en: string;
   category_id: string;
   badge?: ProductBadge;
+  main_image_second?: number;
   
   color_ids: string[];
   images: { file_path: string; color_id: string | null; chain_option_value_id?: string | null; is_main: number }[];
@@ -136,6 +138,7 @@ export const productService = {
         material_ar: input.material_en, // Auto-fill
         category_id: input.category_id,
         badge: input.badge || null,
+        main_image_second: input.main_image_second || 0,
         is_active: 1
       })
       .select()
@@ -196,6 +199,7 @@ export const productService = {
         material_ar: input.material_en,
         category_id: input.category_id,
         badge: input.badge || null,
+        main_image_second: input.main_image_second || 0,
         updated_at: new Date().toISOString()
       })
       .eq("id", id);

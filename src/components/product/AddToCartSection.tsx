@@ -82,7 +82,7 @@ const AddToCartSection = React.memo(({
   };
 
   const getButtonClasses = () => {
-    const base = "w-full text-lg py-6 transition-all duration-300";
+    const base = "w-full text-sm py-3 transition-all duration-300";
     switch (buttonState) {
       case "loading":
         return `${base} bg-gray-700 text-white cursor-wait`;
@@ -98,7 +98,7 @@ const AddToCartSection = React.memo(({
       
       {/* Mobile button - fixed at bottom always */}
       <div 
-        className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border p-4 lg:hidden shadow-lg"
+        className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border p-3 lg:hidden shadow-lg"
         dir={dir}
       >
         <Button
@@ -112,27 +112,18 @@ const AddToCartSection = React.memo(({
         </Button>
       </div>
 
-      {/* Mobile WhatsApp - not sticky, in normal flow */}
+      {/* Mobile WhatsApp - not sticky, in normal flow (Add to Cart is only in the sticky bar) */}
       <div className="lg:hidden" dir={dir}>
-        <Button
-          size="lg"
-          className="w-full text-sm py-3 bg-black hover:bg-black/90 text-white"
-          onClick={handleAddToCart}
-          onMouseEnter={handleCartHover}
-          disabled={disabled || buttonState === "loading"}
-        >
-          {getButtonContent()}
-        </Button>
         <a
           href="https://wa.me/201234567890"
           target="_blank"
           rel="noopener noreferrer"
-          className="block mt-3"
+          className="block"
         >
           <Button
             variant="outline"
             size="lg"
-            className="w-full text-sm py-3 bg-[#075E54] hover:bg-[#064d44] text-white border-[#075E54] hover:border-[#064d44]"
+            className="w-full text-sm py-3 bg-[#075E54] hover:bg-[#064d44] text-white hover:text-white border-[#075E54] hover:border-[#064d44]"
           >
             {isAr ? "اسألينا على واتساب" : "Ask Us on WhatsApp"}
           </Button>
@@ -161,7 +152,7 @@ const AddToCartSection = React.memo(({
           <Button
             variant="outline"
             size="lg"
-            className="w-full text-lg py-6 bg-[#075E54] hover:bg-[#064d44] text-white border-[#075E54] hover:border-[#064d44] transition-all duration-200"
+            className="w-full text-sm py-3 bg-[#075E54] hover:bg-[#064d44] text-white hover:text-white border-[#075E54] hover:border-[#064d44] transition-all duration-200"
           >
             {isAr ? "اسألينا على واتساب" : "Ask Us on WhatsApp"}
           </Button>

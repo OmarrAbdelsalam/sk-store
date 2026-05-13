@@ -68,6 +68,7 @@ export type ProductApi = {
       value_ar: string;
     }>;
   }>;
+  main_image_second?: number;
 };
 
 type Paged<T> = {

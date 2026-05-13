@@ -13,12 +13,33 @@ export default {
 	theme: {
 		container: {
 			center: true,
-			padding: '2rem',
+			padding: {
+				DEFAULT: '1.25rem',
+				sm: '1.25rem',
+				md: '2rem',
+				lg: '2rem',
+				xl: '2rem',
+				'2xl': '2rem',
+			},
 			screens: {
 				'2xl': '1400px'
 			}
 		},
 		extend: {
+			spacing: {
+				'section': '48px',
+				'section-lg': '64px',
+				'section-xl': '80px',
+				'screen-pad': '20px',
+				'screen-pad-sm': '16px',
+				'touch': '48px',
+				'cta': '54px',
+			},
+			minHeight: {
+				'touch': '48px',
+				'cta': '54px',
+				'input': '48px',
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
@@ -80,7 +101,9 @@ export default {
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
-				sm: 'calc(var(--radius) - 4px)'
+				sm: 'calc(var(--radius) - 4px)',
+				card: '4px',
+				luxury: '0px',
 			},
 			keyframes: {
 				'accordion-down': {

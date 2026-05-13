@@ -36,9 +36,9 @@ const Navigation = () => {
   return (
     <header className="w-full bg-background border-b border-border sticky top-0 z-50">
       {/* Main Navigation */}
-      <div className="container mx-auto px-4 py-3 md:py-4">
+      <div className="container mx-auto px-5 h-14 md:h-16 flex items-center">
         {/* Mobile Layout - يظهر فقط على الموبايل */}
-        <div className="md:hidden">
+        <div className="md:hidden w-full">
           <div className="flex items-center justify-between">
             {/* Left: Menu Button & Logo */}
             <div className="flex items-center gap-2">
@@ -53,8 +53,6 @@ const Navigation = () => {
               <SearchAndFilters />
               
 
-              
-
 
               <CartButton isMobile={true} />
             </div>
@@ -62,7 +60,7 @@ const Navigation = () => {
         </div>
 
         {/* Desktop Layout - يظهر فقط على الكمبيوتر */}
-        <div className="hidden md:flex items-center justify-between">
+        <div className="hidden md:flex items-center justify-between w-full">
           {/* Logo + Separator + Categories */}
           <div className="flex items-center gap-6">
             <Link href="/" className="hover:opacity-80 transition-opacity">
