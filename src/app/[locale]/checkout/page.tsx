@@ -1,8 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
-import { ArrowLeft, ArrowRight, CreditCard } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
 import CheckoutOrderSummary from "@/components/checkout/CheckoutOrderSummary";
 import CheckoutForm from "@/components/checkout/CheckoutForm";
@@ -12,7 +11,6 @@ import { getOrCreateSessionId } from "@/lib/session";
 import { useLocale, useTranslations } from "next-intl";
 import { getShippingPrice, type CheckoutFormData } from "@/lib/checkout-utils";
 import { API_ROUTES } from "@/lib/api-routes";
-// clearCartAPI not needed - server clears cart automatically after order
 
 export default function Checkout() {
   const router = useRouter();
@@ -21,7 +19,7 @@ export default function Checkout() {
   const dir = locale === "ar" ? "rtl" : "ltr";
   const isAr = locale === "ar";
 
-  const { items, getTotalPrice, clearCart, bogoDiscount, freeShippingApplied, appliedPromotions, discountCode, discountAmount } = useCart();
+  const { items, getTotalPrice, clearCart, bogoDiscount, freeShippingApplied, appliedPromotions } = useCart();
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderCompleted, setOrderCompleted] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
@@ -41,7 +39,6 @@ export default function Checkout() {
   useEffect(() => {
     setMounted(true);
     
-    // Load saved governorate from localStorage and calculate shipping
     if (typeof window !== 'undefined') {
       try {
         const saved = localStorage.getItem('checkout_form_data');
@@ -57,13 +54,12 @@ export default function Checkout() {
         console.error('Error loading saved governorate:', error);
       }
     }
-  }, []);
+  }, [freeShippingApplied]);
 
   // Update shipping price when governorate changes
   useEffect(() => {
     if (selectedGovernorate) {
       const price = freeShippingApplied ? 0 : getShippingPrice(selectedGovernorate, "");
-      console.log('Governorate selected:', selectedGovernorate, 'Price:', price, 'Free shipping:', freeShippingApplied);
       setShippingPrice(price);
     } else {
       setShippingPrice(0);
@@ -88,17 +84,14 @@ export default function Checkout() {
     try {
       const sessionId = getOrCreateSessionId();
       
-      // Check if cart has items
       if (items.length === 0) {
         throw new Error(isAr ? "السلة فارغة" : "Cart is empty");
       }
       
-      console.log('Cart items before order:', items);
-      
-      // Calculate totals
       const subtotal = getTotalPrice();
       const discountAmt = discount?.amount || 0;
-      const total = subtotal + shipping - discountAmt;
+      const bogoAmt = bogoDiscount || 0;
+      const total = subtotal + shipping - discountAmt - bogoAmt;
       
       const payload = {
         sessionId,
@@ -109,7 +102,6 @@ export default function Checkout() {
         detailedAddress: formData.detailedAddress,
         notes: formData.notes,
         paymentMethod: formData.paymentMethod,
-        // Include cart details
         items: items.map(item => ({
           productId: item.productId,
           name: item.name,
@@ -131,12 +123,10 @@ export default function Checkout() {
         total,
       };
 
-      console.log('Sending order payload:', payload);
-
-      // Save order summary to localStorage BEFORE API call so it's available on success page
+      // Save order summary to localStorage BEFORE API call
       try {
         localStorage.setItem('last_order_data', JSON.stringify({
-          orderNumber: null, // will be updated after API response
+          orderNumber: null,
           sessionId,
           customerName: formData.name,
           government: formData.governorate,
@@ -174,16 +164,13 @@ export default function Checkout() {
       });
 
       const response = await res.json();
-      console.log('Order API response:', response);
       
-      // Check if the API returned an error
       if (!res.ok || !response.succeeded) {
         const errorMsg = response.message || `Order API failed with status ${res.status}`;
         throw new Error(errorMsg);
       }
 
       try { 
-        // Update order number after successful API response
         const saved = localStorage.getItem('last_order_data');
         if (saved) {
           const data = JSON.parse(saved);
@@ -192,11 +179,8 @@ export default function Checkout() {
         }
       } catch {}
       
-      // Mark order as completed before clearing cart to prevent EmptyCart flash
       setOrderCompleted(true);
       setOrderError(null);
-      
-      // Server automatically clears cart after order, just clear local state
       clearCart();
       const orderNum = response.data?.orderNumber || response.data?.order_number;
       router.push(`/${locale}/order-success${orderNum ? `?order=${orderNum}` : ''}`);
@@ -224,7 +208,7 @@ export default function Checkout() {
     );
   }
 
-  // Show loading while order is being processed or completed (navigating to success page)
+  // Show loading while order is being processed or completed
   if (orderCompleted || isProcessing) {
     return (
       <div className="min-h-screen flex items-center justify-center" dir={dir}>
@@ -245,8 +229,8 @@ export default function Checkout() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
         {/* Back Button */}
         <button 
-          onClick={() => router.push("/cart")} 
-          className="hidden sm:inline-flex items-center gap-2 text-sm tracking-wider uppercase text-muted-foreground hover:text-foreground transition-colors mb-8 sm:mb-12"
+          onClick={() => router.push(`/${locale}/cart`)} 
+          className="hidden sm:inline-flex items-center gap-2 text-sm tracking-wider uppercase text-muted-foreground hover:text-foreground transition-colors mb-6"
           aria-label={t("backToCart")}
         >
           {isAr ? (
@@ -258,13 +242,14 @@ export default function Checkout() {
         </button>
 
         {/* Page Title */}
-        <div className="mb-8 sm:mb-12">
+        <div className="mb-8 sm:mb-10">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-light tracking-wider uppercase">{t("checkoutTitle")}</h1>
           <div className="h-px w-16 bg-foreground mt-4" />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12">
-          <div className="order-first lg:order-last lg:col-span-5 lg:sticky lg:top-8 lg:h-fit">
+          {/* Order Summary - shows last on mobile, first on desktop (right side) */}
+          <div className="order-last lg:order-last lg:col-span-5 lg:sticky lg:top-24 lg:h-fit">
             <CheckoutOrderSummary 
               items={items} 
               totalPrice={getTotalPrice()} 
@@ -274,19 +259,21 @@ export default function Checkout() {
               disabled={isProcessing}
               phoneNumber={phoneNumber}
               freeShippingApplied={freeShippingApplied}
+              bogoDiscount={bogoDiscount}
             />
           </div>
 
-          <div className="lg:col-span-7 space-y-6 sm:space-y-8">
+          {/* Form - shows first on mobile */}
+          <div className="order-first lg:order-first lg:col-span-7 bg-[#F0EBE3] p-5 sm:p-8 border border-[#d4c9bc] rounded-sm">
             {orderError && (
-              <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+              <div className="p-4 bg-red-50 border border-red-300 text-red-700 text-sm rounded-sm mb-6">
                 {orderError}
               </div>
             )}
             <CheckoutForm
               onSubmit={handleSubmit}
               isProcessing={isProcessing}
-              totalAmount={nf.format(getTotalPrice() + shippingPrice - (discount?.amount || 0))}
+              totalAmount={nf.format(getTotalPrice() + shippingPrice - (discount?.amount || 0) - (bogoDiscount || 0))}
               onGovernorateChange={setSelectedGovernorate}
               onPhoneChange={setPhoneNumber}
             />

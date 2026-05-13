@@ -1,6 +1,6 @@
 "use client";
 
-import { Banknote, Package, ShoppingBag, Truck, Tag, Receipt } from "lucide-react";
+import { CreditCard } from "lucide-react";
 import { memo } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import PromoCodeInput from "./PromoCodeInput";
@@ -36,6 +36,7 @@ interface CheckoutOrderSummaryProps {
   disabled?: boolean;
   phoneNumber?: string;
   freeShippingApplied?: boolean;
+  bogoDiscount?: number;
 }
 
 const CheckoutOrderSummary = memo(({ 
@@ -47,6 +48,7 @@ const CheckoutOrderSummary = memo(({
   disabled = false,
   phoneNumber,
   freeShippingApplied = false,
+  bogoDiscount = 0,
 }: CheckoutOrderSummaryProps) => {
   const t = useTranslations("CheckoutSummary");
   const tPromo = useTranslations("PromoCode");
@@ -56,12 +58,12 @@ const CheckoutOrderSummary = memo(({
 
   // استخدم finalTotal من API إذا كان متوفر، وإلا احسبه يدوياً
   const finalTotal = discount?.finalTotal 
-    ? discount.finalTotal + shippingPrice 
-    : totalPrice + shippingPrice - (discount?.amount || 0);
+    ? discount.finalTotal + shippingPrice - bogoDiscount
+    : totalPrice + shippingPrice - (discount?.amount || 0) - bogoDiscount;
 
   return (
-    <div className="sticky top-8" dir={dir}>
-      <div className="border border-border">
+    <div className="sticky top-24" dir={dir}>
+      <div className="border border-border bg-white">
         {/* Header */}
         <div className="px-5 sm:px-6 py-4 border-b border-border flex items-center justify-between">
           <h2 className="text-xs sm:text-sm font-medium tracking-widest uppercase">{t("title")}</h2>
@@ -142,6 +144,18 @@ const CheckoutOrderSummary = memo(({
               </div>
             )}
 
+            {/* BOGO Discount */}
+            {bogoDiscount > 0 && (
+              <div className="flex items-center justify-between py-2">
+                <span className="text-xs tracking-wider uppercase text-emerald-700">
+                  {isAr ? "خصم اشتري 1 واحصل على 1" : "BOGO Discount"}
+                </span>
+                <span className="text-sm font-medium text-emerald-700">
+                  -{bogoDiscount.toFixed(2)} {t("currency")}
+                </span>
+              </div>
+            )}
+
             {/* Total */}
             <div className="border-t border-foreground pt-4 mt-2">
               <div className="flex items-center justify-between">
@@ -157,8 +171,8 @@ const CheckoutOrderSummary = memo(({
 
             {/* Payment method note */}
             <div className="flex items-center gap-2 text-xs text-muted-foreground tracking-wider uppercase pt-2">
-              <Banknote className="h-3.5 w-3.5" />
-              <span>{t("paymentMethod")}</span>
+              <CreditCard className="h-3.5 w-3.5" />
+              <span>{isAr ? "الدفع أونلاين" : "Online Payment"}</span>
             </div>
           </div>
         </div>

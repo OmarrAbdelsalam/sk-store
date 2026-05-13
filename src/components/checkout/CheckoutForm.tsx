@@ -9,10 +9,14 @@ import { egyptGovernoratesAr, egyptGovernoratesEn, type CheckoutFormData, emptyF
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { 
-  ShoppingBag, 
   Loader2, 
   Check,
   ChevronsUpDown,
+  CreditCard,
+  Wallet,
+  User,
+  Phone,
+  MapPin,
 } from "lucide-react";
 import {
   Command,
@@ -27,8 +31,9 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import PaymentModal from "./PaymentModal";
 
-type PaymentMethod = "cash" | "visa";
+type PaymentMethod = "visa" | "wallet";
 
 type Props = {
   onSubmit: (data: CheckoutFormData & { paymentMethod: PaymentMethod }) => Promise<void>;
@@ -60,7 +65,6 @@ const CheckoutForm = memo(({ onSubmit, isProcessing, totalAmount, onGovernorateC
         const saved = localStorage.getItem('checkout_form_data');
         if (saved) {
           const parsed = JSON.parse(saved);
-          // Merge with emptyFormData to ensure all fields exist
           return { ...emptyFormData, ...parsed };
         }
       } catch {}
@@ -68,9 +72,10 @@ const CheckoutForm = memo(({ onSubmit, isProcessing, totalAmount, onGovernorateC
     return emptyFormData;
   });
 
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("visa");
   const [governorateOpen, setGovernorateOpen] = useState(false);
   const [phoneError, setPhoneError] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const handleInputChange = useCallback((field: string, value: string) => {
     setFormData((prev) => {
@@ -96,32 +101,38 @@ const CheckoutForm = memo(({ onSubmit, isProcessing, totalAmount, onGovernorateC
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    // Open payment modal instead of directly submitting
+    setShowPaymentModal(true);
+  };
+
+  const handlePaymentSuccess = async () => {
+    setShowPaymentModal(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
     await onSubmit({ ...formData, paymentMethod });
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
-      {/* Shipping Details Section */}
-      <div className="border border-border">
-        {/* Section Header */}
-        <div className="px-5 sm:px-6 py-4 border-b border-border">
-          <h3 className="text-xs sm:text-sm font-medium tracking-widest uppercase">
-            {isAr ? "بيانات الشحن" : "Shipping Details"}
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Personal Info */}
+      <div>
+        <div className="flex items-center gap-2 mb-4">
+          <User className="w-4 h-4 text-muted-foreground" />
+          <h3 className="text-xs font-medium tracking-widest uppercase text-muted-foreground">
+            {isAr ? "البيانات الشخصية" : "Personal Info"}
           </h3>
         </div>
 
-        <div className="p-5 sm:p-6 space-y-5">
+        <div className="space-y-4">
           {/* Name */}
           <div>
-            <Label htmlFor="name" className="text-xs font-medium tracking-wider uppercase text-muted-foreground mb-2.5 block">
-              {isAr ? "الاسم" : "Full Name"}
+            <Label htmlFor="name" className="text-xs font-medium tracking-wider uppercase text-foreground/70 mb-2 block">
+              {isAr ? "الاسم" : "Full Name"} <span className="text-red-500">*</span>
             </Label>
             <Input
               id="name"
               value={formData.name || ""}
               onChange={(e) => handleInputChange("name", e.target.value)}
-              className="h-12 rounded-none border-border bg-transparent focus-visible:ring-1 focus-visible:ring-foreground text-sm"
+              className="h-11 rounded-sm border border-[#c8bdb0] bg-white focus-visible:ring-1 focus-visible:ring-foreground focus-visible:border-foreground text-sm shadow-sm"
               placeholder={isAr ? "أدخل اسمك الكامل" : "Enter your full name"}
               required
             />
@@ -129,198 +140,212 @@ const CheckoutForm = memo(({ onSubmit, isProcessing, totalAmount, onGovernorateC
 
           {/* Phone */}
           <div>
-            <Label htmlFor="phone" className="text-xs font-medium tracking-wider uppercase text-muted-foreground mb-2.5 block">
-              {isAr ? "رقم الموبايل" : "Phone Number"}
+            <Label htmlFor="phone" className="text-xs font-medium tracking-wider uppercase text-foreground/70 mb-2 block">
+              {isAr ? "رقم الموبايل" : "Phone Number"} <span className="text-red-500">*</span>
             </Label>
-            <Input
-              id="phone"
-              type="tel"
-              inputMode="tel"
-              value={formData.phone || ""}
-              onChange={(e) => handlePhoneChange(e.target.value)}
-              className={cn(
-                "h-12 rounded-none border-border bg-transparent focus-visible:ring-1 focus-visible:ring-foreground text-sm",
-                phoneError && "border-red-500 focus-visible:ring-red-500"
-              )}
-              placeholder={isAr ? "أدخل رقم الموبايل" : "Enter phone number"}
-              required
-            />
+            <div className="relative">
+              <Input
+                id="phone"
+                type="tel"
+                inputMode="tel"
+                value={formData.phone || ""}
+                onChange={(e) => handlePhoneChange(e.target.value)}
+                className={cn(
+                  "h-11 rounded-sm border border-[#c8bdb0] bg-white focus-visible:ring-1 focus-visible:ring-foreground focus-visible:border-foreground text-sm shadow-sm",
+                  phoneError && "border-red-500 focus-visible:ring-red-500"
+                )}
+                placeholder={isAr ? "01xxxxxxxxx" : "01xxxxxxxxx"}
+                required
+              />
+              <Phone className="absolute top-1/2 -translate-y-1/2 end-3 w-4 h-4 text-muted-foreground/50 pointer-events-none" />
+            </div>
             {phoneError && (
-              <p className="text-xs text-red-500 mt-2">
+              <p className="text-xs text-red-500 mt-1.5">
                 {isAr ? "أرقام فقط" : "Numbers only"}
               </p>
             )}
           </div>
+        </div>
+      </div>
 
-          {/* Governorate */}
-          <div>
-            <Label htmlFor="governorate" className="text-xs font-medium tracking-wider uppercase text-muted-foreground mb-2.5 block">
-              {isAr ? "المحافظة" : "Governorate"}
-            </Label>
-            <Popover open={governorateOpen} onOpenChange={setGovernorateOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={governorateOpen}
-                  className="w-full justify-between bg-transparent h-12 rounded-none border-border text-sm font-normal"
-                >
-                  {formData.governorate || (isAr ? "اختر المحافظة" : "Select governorate")}
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-full p-0 rounded-none" align="start">
-                <Command>
-                  <CommandInput placeholder={isAr ? "ابحث عن المحافظة" : "Search governorate"} />
-                  <CommandEmpty>{isAr ? "لم يتم العثور على نتائج" : "No results found"}</CommandEmpty>
-                  <CommandGroup className="max-h-[300px] overflow-y-auto">
-                    {governoratesList.map((gov) => (
-                      <CommandItem
-                        key={gov}
-                        value={gov}
-                        onSelect={(currentValue) => {
-                          handleInputChange("governorate", currentValue === formData.governorate ? "" : currentValue);
-                          setGovernorateOpen(false);
-                        }}
-                      >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            formData.governorate === gov ? "opacity-100" : "opacity-0"
-                          )}
-                        />
-                        {gov}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </Command>
-              </PopoverContent>
-            </Popover>
-          </div>
+      {/* Divider */}
+      <div className="h-px bg-[#d4c9bc]" />
 
-          {/* City */}
-          <div>
-            <Label htmlFor="city" className="text-xs font-medium tracking-wider uppercase text-muted-foreground mb-2.5 block">
-              {isAr ? "المدينة" : "City"}
-            </Label>
-            <Input
-              id="city"
-              placeholder={isAr ? "أدخل اسم المدينة" : "Enter city name"}
-              value={formData.city || ""}
-              onChange={(e) => handleInputChange("city", e.target.value)}
-              className="h-12 rounded-none border-border bg-transparent focus-visible:ring-1 focus-visible:ring-foreground text-sm"
-              required
-            />
+      {/* Address Info */}
+      <div>
+        <div className="flex items-center gap-2 mb-4">
+          <MapPin className="w-4 h-4 text-muted-foreground" />
+          <h3 className="text-xs font-medium tracking-widest uppercase text-muted-foreground">
+            {isAr ? "عنوان التوصيل" : "Delivery Address"}
+          </h3>
+        </div>
+
+        <div className="space-y-4">
+          {/* Governorate & City - side by side on larger screens */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Governorate */}
+            <div>
+              <Label htmlFor="governorate" className="text-xs font-medium tracking-wider uppercase text-foreground/70 mb-2 block">
+                {isAr ? "المحافظة" : "Governorate"} <span className="text-red-500">*</span>
+              </Label>
+              <Popover open={governorateOpen} onOpenChange={setGovernorateOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={governorateOpen}
+                    className="w-full justify-between bg-white h-11 rounded-sm border border-[#c8bdb0] text-sm font-normal shadow-sm hover:bg-white hover:border-foreground/40"
+                  >
+                    {formData.governorate || (isAr ? "اختر المحافظة" : "Select governorate")}
+                    <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0 rounded-sm" align="start">
+                  <Command>
+                    <CommandInput placeholder={isAr ? "ابحث عن المحافظة" : "Search governorate"} />
+                    <CommandEmpty>{isAr ? "لم يتم العثور على نتائج" : "No results found"}</CommandEmpty>
+                    <CommandGroup className="max-h-[300px] overflow-y-auto">
+                      {governoratesList.map((gov) => (
+                        <CommandItem
+                          key={gov}
+                          value={gov}
+                          onSelect={(currentValue) => {
+                            handleInputChange("governorate", currentValue === formData.governorate ? "" : currentValue);
+                            setGovernorateOpen(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              formData.governorate === gov ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {gov}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* City */}
+            <div>
+              <Label htmlFor="city" className="text-xs font-medium tracking-wider uppercase text-foreground/70 mb-2 block">
+                {isAr ? "المدينة" : "City"} <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="city"
+                placeholder={isAr ? "أدخل اسم المدينة" : "Enter city name"}
+                value={formData.city || ""}
+                onChange={(e) => handleInputChange("city", e.target.value)}
+                className="h-11 rounded-sm border border-[#c8bdb0] bg-white focus-visible:ring-1 focus-visible:ring-foreground focus-visible:border-foreground text-sm shadow-sm"
+                required
+              />
+            </div>
           </div>
 
           {/* Detailed Address */}
           <div>
-            <Label htmlFor="detailedAddress" className="text-xs font-medium tracking-wider uppercase text-muted-foreground mb-2.5 block">
-              {isAr ? "العنوان بالتفصيل" : "Detailed Address"}
+            <Label htmlFor="detailedAddress" className="text-xs font-medium tracking-wider uppercase text-foreground/70 mb-2 block">
+              {isAr ? "العنوان بالتفصيل" : "Detailed Address"} <span className="text-red-500">*</span>
             </Label>
             <Textarea
               id="detailedAddress"
               placeholder={isAr ? "الشارع، رقم المبنى، الشقة، أي علامة مميزة..." : "Street, building number, apartment, landmarks..."}
               value={formData.detailedAddress || ""}
               onChange={(e) => handleInputChange("detailedAddress", e.target.value)}
-              className="min-h-[80px] rounded-none border-border bg-transparent focus-visible:ring-1 focus-visible:ring-foreground text-sm resize-none"
+              className="min-h-[80px] rounded-sm border border-[#c8bdb0] bg-white focus-visible:ring-1 focus-visible:ring-foreground focus-visible:border-foreground text-sm resize-none shadow-sm"
               required
             />
           </div>
 
+          {/* Notes */}
+          <div>
+            <Label htmlFor="notes" className="text-xs font-medium tracking-wider uppercase text-foreground/70 mb-2 block">
+              {isAr ? "ملاحظات (اختياري)" : "Notes (optional)"}
+            </Label>
+            <Textarea
+              id="notes"
+              placeholder={isAr ? "أي تعليمات خاصة للتوصيل..." : "Any special delivery instructions..."}
+              value={formData.notes || ""}
+              onChange={(e) => handleInputChange("notes", e.target.value)}
+              className="min-h-[60px] rounded-sm border border-[#c8bdb0] bg-white focus-visible:ring-1 focus-visible:ring-foreground focus-visible:border-foreground text-sm resize-none shadow-sm"
+            />
+          </div>
         </div>
       </div>
 
-      {/* Payment Method Section */}
-      <div className="border border-border">
-        <div className="px-5 sm:px-6 py-4 border-b border-border">
-          <h3 className="text-xs sm:text-sm font-medium tracking-widest uppercase">
+      {/* Divider */}
+      <div className="h-px bg-[#d4c9bc]" />
+
+      {/* Payment Method */}
+      <div>
+        <div className="flex items-center gap-2 mb-4">
+          <CreditCard className="w-4 h-4 text-muted-foreground" />
+          <h3 className="text-xs font-medium tracking-widest uppercase text-muted-foreground">
             {isAr ? "طريقة الدفع" : "Payment Method"}
           </h3>
         </div>
 
-        <div className="p-5 sm:p-6">
-          <div className="grid grid-cols-2 gap-4">
-            {/* Cash */}
-            <button
-              type="button"
-              onClick={() => setPaymentMethod("cash")}
-              className={cn(
-                "flex flex-col items-center gap-3 p-5 border transition-all duration-200",
-                paymentMethod === "cash"
-                  ? "border-green-600 bg-green-50 dark:bg-green-950/30"
-                  : "border-border hover:border-foreground/40"
-              )}
-            >
-              <span className={cn(
-                "text-xs font-medium tracking-widest uppercase",
-                paymentMethod === "cash" ? "text-green-700 dark:text-green-400" : "text-muted-foreground"
-              )}>
-                {isAr ? "الدفع عند الاستلام" : "Cash on Delivery"}
-              </span>
-              {paymentMethod === "cash" && (
-                <div className="h-px w-6 bg-green-600" />
-              )}
-            </button>
+        <div className="grid grid-cols-2 gap-3">
+          {/* Visa / Credit Card */}
+          <button
+            type="button"
+            onClick={() => setPaymentMethod("visa")}
+            className={cn(
+              "flex flex-col items-center gap-2.5 p-4 border rounded-sm transition-all duration-200",
+              paymentMethod === "visa"
+                ? "border-green-600 bg-white shadow-sm ring-1 ring-green-600/20"
+                : "border-[#c8bdb0] bg-white/60 hover:border-foreground/40 hover:bg-white"
+            )}
+          >
+            <CreditCard className={cn(
+              "w-5 h-5",
+              paymentMethod === "visa" ? "text-green-700" : "text-muted-foreground"
+            )} />
+            <span className={cn(
+              "text-[11px] font-medium tracking-widest uppercase",
+              paymentMethod === "visa" ? "text-green-700" : "text-muted-foreground"
+            )}>
+              {isAr ? "بطاقة ائتمان" : "Credit Card"}
+            </span>
+          </button>
 
-            {/* Visa */}
-            <button
-              type="button"
-              onClick={() => setPaymentMethod("visa")}
-              className={cn(
-                "flex flex-col items-center gap-3 p-5 border transition-all duration-200",
-                paymentMethod === "visa"
-                  ? "border-green-600 bg-green-50 dark:bg-green-950/30"
-                  : "border-border hover:border-foreground/40"
-              )}
-            >
-              <span className={cn(
-                "text-xs font-medium tracking-widest uppercase",
-                paymentMethod === "visa" ? "text-green-700 dark:text-green-400" : "text-muted-foreground"
-              )}>
-                {isAr ? "بطاقة ائتمان" : "Credit Card"}
-              </span>
-              {paymentMethod === "visa" && (
-                <div className="h-px w-6 bg-green-600" />
-              )}
-            </button>
-          </div>
-
-          {paymentMethod === "visa" && (
-            <div className="mt-4 p-4 border border-border bg-muted/30">
-              <p className="text-xs text-muted-foreground text-center tracking-wider uppercase">
-                {isAr 
-                  ? "الدفع بالبطاقة سيكون متاح قريباً" 
-                  : "Card payment coming soon"}
-              </p>
-            </div>
-          )}
+          {/* Wallet */}
+          <button
+            type="button"
+            onClick={() => setPaymentMethod("wallet")}
+            className={cn(
+              "flex flex-col items-center gap-2.5 p-4 border rounded-sm transition-all duration-200",
+              paymentMethod === "wallet"
+                ? "border-green-600 bg-white shadow-sm ring-1 ring-green-600/20"
+                : "border-[#c8bdb0] bg-white/60 hover:border-foreground/40 hover:bg-white"
+            )}
+          >
+            <Wallet className={cn(
+              "w-5 h-5",
+              paymentMethod === "wallet" ? "text-green-700" : "text-muted-foreground"
+            )} />
+            <span className={cn(
+              "text-[11px] font-medium tracking-widest uppercase",
+              paymentMethod === "wallet" ? "text-green-700" : "text-muted-foreground"
+            )}>
+              {isAr ? "محفظة إلكترونية" : "E-Wallet"}
+            </span>
+          </button>
         </div>
-      </div>
-
-      {/* Notes */}
-      <div>
-        <Label htmlFor="notes" className="text-xs font-medium tracking-wider uppercase text-muted-foreground mb-2.5 block">
-          {isAr ? "ملاحظات (اختياري)" : "Notes (optional)"}
-        </Label>
-        <Textarea
-          id="notes"
-          placeholder={isAr ? "أي تعليمات خاصة للتوصيل..." : "Any special delivery instructions..."}
-          value={formData.notes || ""}
-          onChange={(e) => handleInputChange("notes", e.target.value)}
-          className="min-h-[60px] rounded-none border-border bg-transparent focus-visible:ring-1 focus-visible:ring-foreground text-sm resize-none"
-        />
       </div>
 
       {/* Submit Button */}
       <button
         type="submit"
         className={cn(
-          "w-full h-14 bg-foreground text-background text-sm font-medium tracking-widest uppercase transition-all duration-300",
+          "w-full h-14 bg-foreground text-background text-sm font-medium tracking-widest uppercase transition-all duration-300 rounded-sm",
           "hover:bg-foreground/90 active:scale-[0.99]",
-          (isProcessing || paymentMethod === "visa") && "opacity-50 cursor-not-allowed"
+          isProcessing && "opacity-50 cursor-not-allowed"
         )}
-        disabled={isProcessing || paymentMethod === "visa"}
+        disabled={isProcessing}
         onMouseEnter={() => router.prefetch(`/${locale}/order-success`)}
       >
         {isProcessing ? (
@@ -334,6 +359,15 @@ const CheckoutForm = memo(({ onSubmit, isProcessing, totalAmount, onGovernorateC
           </span>
         )}
       </button>
+
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        onSuccess={handlePaymentSuccess}
+        paymentMethod={paymentMethod}
+        totalAmount={totalAmount}
+      />
     </form>
   );
 });

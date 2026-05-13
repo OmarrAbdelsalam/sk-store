@@ -1,7 +1,7 @@
 "use client";
 import { memo, useMemo } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Gift, Truck, TrendingUp } from "lucide-react";
+import { Gift, Truck } from "lucide-react";
 import OrderSummaryActions from "./OrderSummaryActions";
 
 type OrderSummaryProps = {
@@ -47,14 +47,6 @@ const OrderSummary = memo(
       [totalPriceFallback, effectiveShipping, discount?.amount, bogoDiscount]
     );
 
-    // Free shipping progress
-    const freeShippingProgress = freeShippingThreshold
-      ? Math.min((effectiveSubtotal / freeShippingThreshold) * 100, 100)
-      : 0;
-    const remainingForFreeShipping = freeShippingThreshold
-      ? Math.max(freeShippingThreshold - effectiveSubtotal, 0)
-      : 0;
-
     return (
       <div dir={dir} className="lg:sticky lg:top-8">
         <div className="border border-border">
@@ -78,25 +70,7 @@ const OrderSummary = memo(
               </div>
             )}
 
-            {/* Free Shipping Progress */}
-            {!freeShippingApplied && freeShippingThreshold ? (
-              <div className="px-4 py-3 border border-border/60 space-y-2">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <TrendingUp className="w-3.5 h-3.5 shrink-0" />
-                  <span>
-                    {isAr
-                      ? `أضف ${remainingForFreeShipping} جنيه للشحن المجاني`
-                      : `Add ${remainingForFreeShipping} EGP more for free shipping`}
-                  </span>
-                </div>
-                <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-emerald-500 rounded-full transition-all duration-500"
-                    style={{ width: `${freeShippingProgress}%` }}
-                  />
-                </div>
-              </div>
-            ) : null}
+
 
             {/* BOGO Discount Line */}
             {bogoDiscount > 0 && (
