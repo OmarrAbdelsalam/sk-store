@@ -61,19 +61,20 @@ const ColorsPage = () => {
     }
   };
 
-  const handleSearch = async () => {
+  const handleSearch = () => {
     if (!searchQuery.trim()) {
       setFilteredColors(colors);
       return;
     }
 
-    try {
-      const results = await colorService.search(searchQuery);
-      setFilteredColors(results);
-    } catch (error) {
-      console.error("Error searching colors:", error);
-      setFilteredColors(colors);
-    }
+    const query = searchQuery.toLowerCase();
+    const results = colors.filter(
+      (color) =>
+        color.name_en.toLowerCase().includes(query) ||
+        color.name_ar?.toLowerCase().includes(query) ||
+        color.hex_code.toLowerCase().includes(query)
+    );
+    setFilteredColors(results);
   };
 
   const handleOpenModal = (color?: Color) => {
