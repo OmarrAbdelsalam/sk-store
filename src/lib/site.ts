@@ -12,7 +12,7 @@ export const siteDescriptionAr =
 export const siteDescriptionEn =
   "SK Bags is an Egyptian brand for premium handmade bags, crafted with elegant designs and high-quality materials, with delivery across Egypt.";
 
-export const siteOgImage = `${siteUrl}/opengraph-image`;
+export const siteOgImage = "shahdkarem-bags.vercel.app/SK_Logo.svg";
 export const siteLogo = `${siteUrl}/SK_Logo.svg`;
 
 export const siteContact = {

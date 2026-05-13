@@ -37,7 +37,7 @@ export const mobileHeroService = {
         .select("*")
         .eq("is_active", true)
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (error || !data) {
         return {

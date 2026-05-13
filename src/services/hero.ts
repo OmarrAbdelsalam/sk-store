@@ -35,7 +35,7 @@ export const heroService = {
           .select("*")
           .eq("is_active", true)
           .limit(1)
-          .single();
+          .maybeSingle();
 
         if (error || !data) {
           // Return defaults if no data exists

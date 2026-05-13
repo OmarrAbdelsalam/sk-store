@@ -147,7 +147,7 @@ export const customerLoveService = {
         .from("customer_love_settings")
         .select("*")
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (error || !data) {
         return {

@@ -132,7 +132,7 @@ export const moreToDiscoverService = {
         .from("more_to_discover_settings")
         .select("*")
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (error || !data) {
         return {
