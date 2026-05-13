@@ -1,6 +1,6 @@
 {
   "TopBanner": {
-    "freeShipping": "FREE SHIPPING ON ORDERS OVER 900 EGP",
+    "freeShipping": "FREE SHIPPING ON QUALIFYING ORDERS",
     "newCollection": "NEW COLLECTION | PREMIUM MEDICAL SCRUBS",
     "shopNow": "SHOP NOW | FAST DELIVERY ACROSS EGYPT",
     "previousMessage": "Previous message",
@@ -347,7 +347,7 @@
   "Features": {
     "sectionTitle": "Why Choose Us",
     "freeShippingTitle": "FREE SHIPPING",
-    "freeShippingDesc": "Free shipping on all orders over 900 EGP",
+    "freeShippingDesc": "Free shipping on qualifying orders",
     "paymentTitle": "Flexible Payment",
     "paymentDesc": "Pay with Multiple Payment Methods",
     "returnsTitle": "Returns",
@@ -356,7 +356,7 @@
     "supportDesc": "24/7 available"
   },
   "Ticker": {
-    "freeShipping": "Free Shipping over 900 EGP",
+    "freeShipping": "Free Shipping on Qualifying Orders",
     "shippingEgypt": "Shipping Across All Egypt",
     "handmade": "100% Handmade Products",
     "premiumQuality": "Premium Quality Materials"

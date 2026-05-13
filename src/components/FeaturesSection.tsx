@@ -28,7 +28,7 @@ const FeaturesSection = async () => {
   ];
 
   return (
-    <section className="bg-background">
+    <section className="bg-white py-8ا">
       <div className="container mx-auto px-5">
         {/* Features Grid */}
         <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">

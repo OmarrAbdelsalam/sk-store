@@ -134,7 +134,7 @@ const ClothingShowcaseClient = ({ categories, sectionTitle }: ClothingShowcaseCl
   };
 
   return (
-    <section>
+    <section className="bg-white">
       <div className="container mx-auto px-5">
         {/* Header */}
         <div className="text-center mb-10">
@@ -144,7 +144,7 @@ const ClothingShowcaseClient = ({ categories, sectionTitle }: ClothingShowcaseCl
           <div className="w-24 h-[2px] bg-[#C2A878] rounded-full mx-auto mt-3"></div>
         </div>
 
-        <div className="flex flex-row gap-3 h-[300px] md:h-[400px]">
+        <div className="flex flex-row gap-3 h-[300px] md:h-[550px]">
           {displayCategories.length >= 3 ? (
             <>
               {/* Big one (Left column) */}

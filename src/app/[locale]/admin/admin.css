@@ -9,10 +9,10 @@
   --text-secondary: #64748b;
   --text-muted: #94a3b8;
   
-  /* Changed to Indigo for SK Bags */
-  --accent-primary: #4f46e5;
-  --accent-secondary: #6366f1;
-  --accent-glow: rgba(79, 70, 229, 0.08);
+  /* Changed to Beige for SK Bags */
+  --accent-primary: #C2A878;
+  --accent-secondary: #D4B88D;
+  --accent-glow: rgba(194, 168, 120, 0.08);
   
   --success: #059669;
   --success-bg: #ecfdf5;
@@ -33,16 +33,16 @@
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
-  --shadow-glow: 0 0 20px -5px rgba(79, 70, 229, 0.2);
+  --shadow-glow: 0 0 20px -5px rgba(194, 168, 120, 0.2);
   
   --transition-fast: 0.15s ease-in-out;
   --transition-normal: 0.3s ease-in-out;
   --transition-slow: 0.5s ease-in-out;
   
-  /* Shadcn UI Variables Override for Admin (Indigo Theme) */
-  --primary: 243.4 75.4% 58.6%;
+  /* Shadcn UI Variables Override for Admin (Beige Theme) */
+  --primary: 39 39% 62%;
   --primary-foreground: 0 0% 100%;
-  --ring: 243.4 75.4% 58.6%;
+  --ring: 39 39% 62%;
   
   font-family: var(--font-jakarta), system-ui, -apple-system, sans-serif;
   background-color: var(--bg-primary);
@@ -103,7 +103,7 @@
   align-items: center;
   gap: 0.5rem;
   transition: all var(--transition-fast);
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+  box-shadow: 0 4px 12px rgba(194, 168, 120, 0.25);
   font-size: 0.95rem;
   border: none;
   cursor: pointer;
@@ -111,7 +111,7 @@
 
 .action-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35);
+  box-shadow: 0 6px 16px rgba(194, 168, 120, 0.35);
 }
 
 .action-btn.secondary {
@@ -150,8 +150,8 @@
 .stat-card.highlight {
   transform: translateY(-4px);
   background: linear-gradient(135deg, var(--accent-secondary), var(--accent-primary));
-  border-color: rgba(79, 70, 229, 0.5);
-  box-shadow: 0 12px 24px rgba(79, 70, 229, 0.25);
+  border-color: rgba(194, 168, 120, 0.5);
+  box-shadow: 0 12px 24px rgba(194, 168, 120, 0.25);
 }
 
 .stat-card::after {
@@ -506,7 +506,7 @@
   overflow: hidden;
   background: var(--bg-primary);
   /* Subtly dynamic background for light theme */
-  background-image: radial-gradient(circle at 15% 50%, rgba(79, 70, 229, 0.04), transparent 35%),
+  background-image: radial-gradient(circle at 15% 50%, rgba(194, 168, 120, 0.04), transparent 35%),
                     radial-gradient(circle at 85% 30%, rgba(5, 150, 105, 0.04), transparent 35%);
 }
 
@@ -537,7 +537,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+  box-shadow: 0 4px 12px rgba(194, 168, 120, 0.3);
   position: relative;
   overflow: hidden;
   color: #fff;

@@ -25,6 +25,8 @@ import {
   Smartphone,
   Megaphone,
   Pencil,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
 import { PageHeader, Card } from "@/components/admin/common";
 import { Button } from "@/components/ui/button";
@@ -497,6 +499,24 @@ const HomepagePage = () => {
       setVibesItems(vibesItems.map(v => v.id === item.id ? { ...v, is_featured: !v.is_featured } : v));
     } catch (error) {
       toast({ title: "Error", description: "Failed to update", variant: "destructive" });
+    }
+  };
+
+  const handleMoveReel = async (index: number, direction: 'up' | 'down') => {
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= vibesItems.length) return;
+
+    const newItems = [...vibesItems];
+    const [moved] = newItems.splice(index, 1);
+    newItems.splice(newIndex, 0, moved);
+    setVibesItems(newItems);
+
+    try {
+      await socialProofsAdminService.reorder(newItems.map(item => item.id));
+    } catch (error) {
+      // Revert on error
+      setVibesItems(vibesItems);
+      toast({ title: "Error", description: "Failed to reorder", variant: "destructive" });
     }
   };
 
@@ -1636,7 +1656,7 @@ const HomepagePage = () => {
             </h3>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {vibesItems.map((item) => (
+              {vibesItems.map((item, index) => (
                 <div key={item.id} className="relative group bg-gray-100 rounded-lg overflow-hidden">
                   <div className="aspect-[9/16] bg-gray-200 relative">
                     {item.thumbnail_url ? (
@@ -1655,6 +1675,10 @@ const HomepagePage = () => {
                     >
                       {item.is_featured ? "Featured" : "Hidden"}
                     </div>
+                    {/* Order number */}
+                    <div className="absolute bottom-2 left-2 bg-black/60 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                      #{index + 1}
+                    </div>
                   </div>
                   <div className="p-2">
                     <p className="text-xs font-medium truncate">{item.title_en || item.video_url}</p>
@@ -1664,6 +1688,23 @@ const HomepagePage = () => {
                         {item.product.name_en}
                       </p>
                     )}
+                  </div>
+                  {/* Reorder buttons */}
+                  <div className="absolute bottom-12 right-2 flex flex-col gap-1">
+                    <button
+                      onClick={() => handleMoveReel(index, 'up')}
+                      disabled={index === 0}
+                      className="p-1.5 bg-white text-gray-700 rounded-full shadow-sm disabled:opacity-30 hover:bg-gray-100 transition-colors"
+                    >
+                      <ChevronUp className="w-3 h-3" />
+                    </button>
+                    <button
+                      onClick={() => handleMoveReel(index, 'down')}
+                      disabled={index === vibesItems.length - 1}
+                      className="p-1.5 bg-white text-gray-700 rounded-full shadow-sm disabled:opacity-30 hover:bg-gray-100 transition-colors"
+                    >
+                      <ChevronDown className="w-3 h-3" />
+                    </button>
                   </div>
                   <button
                     onClick={() => handleDeleteVibe(item.id)}

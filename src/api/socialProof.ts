@@ -50,7 +50,7 @@ export const getFeaturedSocialProofs = async (): Promise<SocialProofVideo[]> => 
       .eq('is_approved', 1)
       .eq('is_featured', 1)
       .is('deleted_at', null)
-      .order('created_at', { ascending: false });
+      .order('display_order', { ascending: true });
 
     if (error) throw error;
     return (data || []).map(mapRow);

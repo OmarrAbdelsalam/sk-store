@@ -15,6 +15,8 @@ import {
 import { clearAuth } from "@/services/admin/auth";
 import { useRouter } from "@/i18n/navigation";
 
+import Image from "next/image";
+
 interface AppSidebarProps {
   isOpen: boolean;
   onClose: () => void;
@@ -47,7 +49,14 @@ export function AppSidebar({ isOpen, onClose }: AppSidebarProps) {
       {/* Mobile close button - hidden */}
 
       <div className="sidebar-logo">
-        <div className="sidebar-logo-icon">SK</div>
+        <div className="relative w-10 h-10 shrink-0">
+          <Image
+            src="/SK_Logo.svg"
+            alt="SK Bags Logo"
+            fill
+            className="object-contain"
+          />
+        </div>
         <span className="sidebar-logo-text">SK Bags</span>
       </div>
       

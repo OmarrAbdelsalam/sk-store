@@ -152,6 +152,7 @@ function mapRow(row: any): ProductApi {
         value_ar: v.value_ar,
       })),
     })),
+    main_image_second: row.main_image_second || 0,
   };
 }
 

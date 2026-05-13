@@ -34,7 +34,7 @@ const Navigation = () => {
   const locale = useLocale();
 
   return (
-    <header className="w-full bg-background border-b border-border sticky top-0 z-50">
+    <header className="w-full bg-white border-b border-border sticky top-0 z-50">
       {/* Main Navigation */}
       <div className="container mx-auto px-5 h-14 md:h-16 flex items-center">
         {/* Mobile Layout - يظهر فقط على الموبايل */}

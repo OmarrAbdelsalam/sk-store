@@ -12,7 +12,7 @@ import { getFeaturedSocialProofs, type SocialProofVideo } from "@/api/socialProo
 export const ReelsShowcase = () => {
   const t = useTranslations("ReelsShowcase");
   const [emblaRef] = useEmblaCarousel({
-    align: "start",
+    align: "center",
     loop: false,
     dragFree: true,
     skipSnaps: false
@@ -128,7 +128,7 @@ export const ReelsShowcase = () => {
             {videos.map((video) => (
               <div
                 key={video.id}
-                className="flex-[0_0_75%] md:flex-[0_0_40%] lg:flex-[0_0_30%] pl-4 min-w-0"
+                className="flex-[0_0_75%] md:flex-[0_0_40%] lg:flex-[0_0_24%] pl-4 min-w-0"
                 onClick={() => setSelectedReel(video)}
               >
                 <div className="relative aspect-[9/16] bg-gray-200 rounded-xl overflow-hidden group cursor-pointer shadow-sm">

@@ -8,6 +8,7 @@ export interface SocialProofAdmin {
   title_ar?: string;
   is_approved: boolean;
   is_featured: boolean;
+  display_order: number;
   product_id?: string;
   product?: { id: string; name_en: string; name_ar: string };
   created_at: string;
@@ -23,6 +24,7 @@ function mapRow(row: any): SocialProofAdmin {
     title_ar: row.title_ar || undefined,
     is_approved: row.is_approved === 1 || row.is_approved === true,
     is_featured: row.is_featured === 1 || row.is_featured === true,
+    display_order: row.display_order ?? 0,
     product_id: row.product_id || undefined,
     product: row.products
       ? { id: row.products.id, name_en: row.products.name_en, name_ar: row.products.name_ar }
@@ -38,7 +40,7 @@ export const socialProofsAdminService = {
       .from("social_proofs")
       .select("*, products(id, name_en, name_ar)")
       .is("deleted_at", null)
-      .order("created_at", { ascending: false });
+      .order("display_order", { ascending: true });
     if (error) throw error;
     return (data || []).map(mapRow);
   },
@@ -94,5 +96,16 @@ export const socialProofsAdminService = {
       .update({ deleted_at: new Date().toISOString() })
       .eq("id", id);
     if (error) throw error;
+  },
+
+  async reorder(orderedIds: string[]): Promise<void> {
+    // Update display_order for each item based on its position in the array
+    const updates = orderedIds.map((id, index) =>
+      supabase
+        .from("social_proofs")
+        .update({ display_order: index + 1 })
+        .eq("id", id)
+    );
+    await Promise.all(updates);
   },
 };

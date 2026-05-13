@@ -65,7 +65,7 @@ const BestSellers = () => {
   const bestSellers = products.slice(0, 8);
 
   return (
-    <section className="bg-background">
+    <section className="bg-white">
       <div className="container mx-auto px-5">
         {/* Header */}
         <div className="text-center mb-10">

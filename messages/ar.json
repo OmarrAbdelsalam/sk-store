@@ -1,6 +1,6 @@
 {
   "TopBanner": {
-    "freeShipping": "شحن مجاني للطلبات فوق 900 جنيه",
+    "freeShipping": "شحن مجاني لكل الطلبات",
     "newCollection": "مجموعة جديدة | شنط هاند ميد بريميم",
     "shopNow": "تسوق الآن | توصيل سريع في جميع أنحاء مصر",
     "previousMessage": "الرسالة السابقة",
@@ -351,7 +351,7 @@
   "Features": {
     "sectionTitle": "لماذا تختارنا",
     "freeShippingTitle": "شحن مجاني",
-    "freeShippingDesc": "شحن مجاني للطلبات فوق 900 جنيه",
+    "freeShippingDesc": "شحن مجاني للطلبات المؤهلة",
     "paymentTitle": "دفع مرن",
     "paymentDesc": "الدفع بطرق متعددة",
     "returnsTitle": "الاسترجاع",
@@ -360,7 +360,7 @@
     "supportDesc": "متاح 24/7"
   },
   "Ticker": {
-    "freeShipping": "شحن مجاني فوق 900 جنية",
+    "freeShipping": "شحن مجاني لكل الطلبات",
     "shippingEgypt": "شحن لجميع أنحاء مصر",
     "handmade": "منتجات يدوية 100%",
     "premiumQuality": "خامات عالية الجودة"

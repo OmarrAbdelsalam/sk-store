@@ -145,7 +145,11 @@ const ProductsPage = () => {
         setPrice(fullProduct.base_price ? fullProduct.base_price.toString() : "");
         setComparePrice(fullProduct.compare_at_price ? fullProduct.compare_at_price.toString() : "");
         setBadge(fullProduct.badge || "");
-        setMainImageSecond(!!fullProduct.main_image_second);
+        setMainImageSecond(
+          fullProduct.main_image_second === 1 || 
+          fullProduct.main_image_second === true || 
+          fullProduct.main_image_second === "1"
+        );
         
         setSelectedColors(fullProduct.color_ids || []);
         

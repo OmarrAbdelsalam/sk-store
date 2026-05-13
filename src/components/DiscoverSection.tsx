@@ -22,7 +22,7 @@ const DiscoverSection = async () => {
   const displayItems = items.length >= 2 ? items.slice(0, 2) : fallbackItems;
 
   return (
-    <section className="bg-background overflow-hidden">
+    <section className="bg-white overflow-hidden">
       <div className="container mx-auto px-5">
         <div className="text-center mb-10">
           <h2 className="font-playfair text-3xl md:text-4xl text-[#2D2A26] mb-2">

@@ -116,6 +116,7 @@ export const productService = {
 
     return {
       ...data,
+      main_image_second: data.main_image_second ?? 0,
       related_ids: data.related_products.map((rp: any) => rp.related_product_id),
       color_ids: data.product_colors.map((pc: any) => pc.color_id),
       chain_options: chainOpt?.option_values || [],
@@ -138,7 +139,7 @@ export const productService = {
         material_ar: input.material_en, // Auto-fill
         category_id: input.category_id,
         badge: input.badge || null,
-        main_image_second: input.main_image_second || 0,
+        main_image_second: input.main_image_second ?? 0,
         is_active: 1
       })
       .select()
@@ -199,7 +200,7 @@ export const productService = {
         material_ar: input.material_en,
         category_id: input.category_id,
         badge: input.badge || null,
-        main_image_second: input.main_image_second || 0,
+        main_image_second: input.main_image_second ?? 0,
         updated_at: new Date().toISOString()
       })
       .eq("id", id);

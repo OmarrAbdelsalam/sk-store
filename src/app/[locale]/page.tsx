@@ -97,7 +97,7 @@ export default async function Page({
       </Suspense>
 
       {/* Sections with consistent spacing (48px mobile / 64px desktop) */}
-      <div className="space-y-12 md:space-y-16 pt-12 md:pt-16 pb-12 md:pb-16">
+      <div className="bg-white space-y-12 md:space-y-16 pt-12 md:pt-16 pb-12 md:pb-16">
         {/* New Arrivals - Server Component */}
         <Suspense fallback={null}>
           <NewArrivals />
