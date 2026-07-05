@@ -399,7 +399,7 @@ const ProductImageGallery = ({
       {/* ======== MOBILE LAYOUT: Swipeable carousel ======== */}
       <div className="lg:hidden">
         <div
-          className="relative aspect-[4/5] bg-gray-50 overflow-hidden cursor-zoom-in group"
+          className="relative aspect-[4/4.8] w-full bg-gray-50 overflow-hidden cursor-zoom-in group rounded-b-[40px] shadow-[0_10px_40px_rgba(0,0,0,0.08)]"
           onClick={() => setIsLightboxOpen(true)}
         >
           <AnimatePresence initial={false} custom={direction}>
@@ -495,8 +495,8 @@ const ProductImageGallery = ({
                   className={clsx(
                     "rounded-full transition-all duration-300",
                     idx === currentImageIndex
-                      ? currentImages[currentImageIndex]?.isMain ? "w-6 h-2 bg-black" : "w-6 h-2 bg-white"
-                      : currentImages[currentImageIndex]?.isMain ? "w-2 h-2 bg-black/30" : "w-2 h-2 bg-white/50"
+                      ? currentImages[currentImageIndex]?.isMain ? "w-8 h-1.5 bg-black" : "w-8 h-1.5 bg-white"
+                      : currentImages[currentImageIndex]?.isMain ? "w-2 h-1.5 bg-black/30" : "w-2 h-1.5 bg-white/50"
                   )}
                   onClick={(e) => {
                     e.stopPropagation();

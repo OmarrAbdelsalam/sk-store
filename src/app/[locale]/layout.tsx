@@ -9,7 +9,7 @@ import NavigationLoadingOverlay from '@/components/ui/NavigationLoadingOverlay';
 import { Toaster } from '@/components/ui/toaster';
 import CommonLayout from '@/components/CommonLayout';
 import TopBanner from '@/components/TopBanner';
-import { Cairo, Inter, Playfair_Display } from 'next/font/google';
+import { Cairo, Inter, Playfair_Display, Boogaloo } from 'next/font/google';
 import { generateDefaultMetadata } from '@/lib/metadata';
 import SEOHead from '@/components/SEOHead';
 import { Analytics } from '@vercel/analytics/next';
@@ -28,6 +28,13 @@ const inter = Inter({
   subsets: ['latin'],
   weight: ['400', '500', '600'],
   variable: '--font-inter',
+  display: 'swap',
+});
+
+const boogaloo = Boogaloo({
+  subsets: ['latin'],
+  weight: ['400'],
+  variable: '--font-boogaloo',
   display: 'swap',
 });
 
@@ -82,7 +89,7 @@ export default async function LocaleLayout({
         <meta name="twitter:image" content={siteOgImage} />
         <meta name="twitter:card" content="summary_large_image" />
       </head>
-      <body className={`${cairo.variable} ${inter.variable} ${playfair.variable} ${(locale as string) === 'ar' ? 'font-cairo' : 'font-inter'}`}>
+      <body className={`${cairo.variable} ${inter.variable} ${playfair.variable} ${boogaloo.variable} ${(locale as string) === 'ar' ? 'font-cairo' : 'font-sans'}`}>
         <SEOHead locale={locale} />
         <ScrollToTop />
         <NextIntlClientProvider locale={locale}>

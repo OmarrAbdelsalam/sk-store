@@ -1,4 +1,5 @@
 "use client"
+import { useState, useEffect } from "react";
 
 import { MobileMenu } from "./navigation/MobileMenu";
 import { DesktopMenu } from "./navigation/DesktopMenu";
@@ -32,54 +33,63 @@ export const LanguageSwitcher = () => {
 const Navigation = () => {
   const t = useTranslations();
   const locale = useLocale();
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    handleScroll(); // Initial check
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
-    <header className="w-full bg-white border-b border-border sticky top-0 z-50">
+    <header className={`w-full sticky top-0 z-50 transition-all duration-300 pt-0`}>
       {/* Main Navigation */}
-      <div className="container mx-auto px-5 h-14 md:h-16 flex items-center">
-        {/* Mobile Layout - يظهر فقط على الموبايل */}
-        <div className="md:hidden w-full">
-          <div className="flex items-center justify-between">
-            {/* Left: Menu Button & Logo */}
-            <div className="flex items-center gap-2">
+      <div className={`pointer-events-auto transition-all duration-300 w-full`}>
+        <div className={`h-16 md:h-20 flex items-center bg-white/90 backdrop-blur-xl border-b border-[#2D2A26]/10 px-4 md:px-12 transition-all duration-300 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)]`}>
+          {/* Mobile Layout - يظهر فقط على الموبايل */}
+          <div className="md:hidden w-full relative flex items-center justify-between">
+            {/* Left: Menu Button */}
+            <div className="flex-1 flex justify-start">
               <MobileMenu />
-              <Link href="/" className="hover:opacity-80 transition-opacity">
-                <Image src="/SK_Logo.svg" alt="SK Bags" width={80} height={32} className="h-8 w-auto" priority />
+            </div>
+            
+            {/* Center: Logo */}
+            <div className="flex-1 flex justify-center">
+              <Link href="/" className="hover:opacity-70 transition-opacity duration-300">
+                <Image src="/SK_Logo.svg" alt="SK Bags" width={90} height={36} className="h-9 w-auto mix-blend-multiply" priority />
               </Link>
             </div>
             
-            {/* Right: Icons (Search, User, Heart, Cart) */}
-            <div className="flex items-center gap-0.5">
-              <SearchAndFilters />
-              
-
-
+            {/* Right: Cart */}
+            <div className="flex-1 flex justify-end">
               <CartButton isMobile={true} />
             </div>
           </div>
-        </div>
 
         {/* Desktop Layout - يظهر فقط على الكمبيوتر */}
-        <div className="hidden md:flex items-center justify-between w-full">
+        <div className="hidden md:flex items-center justify-between w-full max-w-[1400px] mx-auto">
           {/* Logo + Separator + Categories */}
-          <div className="flex items-center gap-6">
-            <Link href="/" className="hover:opacity-80 transition-opacity">
-              <Image src="/SK_Logo.svg" alt="SK Bags" width={120} height={40} className="h-10 w-auto" priority />
+          <div className="flex items-center gap-10">
+            <Link href="/" className="hover:opacity-70 transition-opacity duration-300">
+              <Image src="/SK_Logo.svg" alt="SK Bags" width={130} height={44} className="h-11 w-auto mix-blend-multiply" priority />
             </Link>
+            <div className="w-px h-8 bg-[#2D2A26]/10"></div>
             <DesktopMenu />
           </div>
 
           {/* Right Icons + Language Switcher */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-4">
             <SearchAndFilters />
             
-
-            
-
+            <div className="w-px h-5 bg-[#2D2A26]/10 mx-2"></div>
             
             <CartButton isMobile={false} />
             {/* Language switcher hidden for now */}
           </div>
+        </div>
         </div>
       </div>
     </header>

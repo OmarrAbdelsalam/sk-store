@@ -264,7 +264,7 @@ export default function Checkout() {
           </div>
 
           {/* Form - shows first on mobile */}
-          <div className="order-first lg:order-first lg:col-span-7 bg-[#F0EBE3] p-5 sm:p-8 border border-[#d4c9bc] rounded-sm">
+          <div className="order-first lg:order-first lg:col-span-7 bg-[#F0EBE3]/40 p-5 sm:p-8 border border-[#d4c9bc] rounded-[32px]">
             {orderError && (
               <div className="p-4 bg-red-50 border border-red-300 text-red-700 text-sm rounded-sm mb-6">
                 {orderError}

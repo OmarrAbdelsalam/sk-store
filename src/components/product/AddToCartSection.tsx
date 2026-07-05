@@ -82,14 +82,14 @@ const AddToCartSection = React.memo(({
   };
 
   const getButtonClasses = () => {
-    const base = "w-full text-sm py-3 transition-all duration-300";
+    const base = "w-full text-base font-medium h-14 rounded-full transition-all duration-300 shadow-xl border border-transparent";
     switch (buttonState) {
       case "loading":
         return `${base} bg-gray-700 text-white cursor-wait`;
       case "added":
-        return `${base} bg-emerald-700 hover:bg-emerald-700 text-white`;
+        return `${base} bg-emerald-700 text-white border-emerald-600`;
       default:
-        return `${base} bg-black hover:bg-black/90 text-white`;
+        return `${base} bg-[#2D2A26] hover:bg-black text-white border-white/10 hover:scale-[1.02]`;
     }
   };
 
@@ -98,7 +98,7 @@ const AddToCartSection = React.memo(({
       
       {/* Mobile button - fixed at bottom always */}
       <div 
-        className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border p-3 lg:hidden shadow-lg"
+        className="fixed bottom-0 left-0 right-0 z-50 bg-white/85 backdrop-blur-xl border-t border-white/50 px-5 pt-4 pb-8 lg:hidden shadow-[0_-20px_40px_rgba(0,0,0,0.06)] rounded-t-[40px]"
         dir={dir}
       >
         <Button
@@ -112,8 +112,8 @@ const AddToCartSection = React.memo(({
         </Button>
       </div>
 
-      {/* Mobile WhatsApp - not sticky, in normal flow (Add to Cart is only in the sticky bar) */}
-      <div className="lg:hidden" dir={dir}>
+      {/* Mobile WhatsApp and inline Add to Cart - not sticky, in normal flow */}
+      <div className="lg:hidden mt-4 flex flex-col gap-3 pb-4" dir={dir}>
         <a
           href="https://wa.me/201234567890"
           target="_blank"
@@ -123,11 +123,22 @@ const AddToCartSection = React.memo(({
           <Button
             variant="outline"
             size="lg"
-            className="w-full text-sm py-3 bg-[#075E54] hover:bg-[#064d44] text-white hover:text-white border-[#075E54] hover:border-[#064d44]"
+            className="w-full text-base font-medium h-14 rounded-full bg-[#075E54] hover:bg-[#064d44] text-white hover:text-white border-none shadow-md transition-all duration-300"
           >
             {isAr ? "اسألينا على واتساب" : "Ask Us on WhatsApp"}
           </Button>
         </a>
+        
+        {/* Inline Add to Cart button (in addition to the fixed one at bottom) */}
+        <Button
+          size="lg"
+          className={getButtonClasses()}
+          onClick={handleAddToCart}
+          onMouseEnter={handleCartHover}
+          disabled={disabled || buttonState === "loading"}
+        >
+          {getButtonContent()}
+        </Button>
       </div>
 
       {/* Desktop - Regular button */}
@@ -152,7 +163,7 @@ const AddToCartSection = React.memo(({
           <Button
             variant="outline"
             size="lg"
-            className="w-full text-sm py-3 bg-[#075E54] hover:bg-[#064d44] text-white hover:text-white border-[#075E54] hover:border-[#064d44] transition-all duration-200"
+            className="w-full text-base font-medium h-14 rounded-full bg-[#075E54] hover:bg-[#064d44] text-white hover:text-white border-none shadow-md transition-all duration-300"
           >
             {isAr ? "اسألينا على واتساب" : "Ask Us on WhatsApp"}
           </Button>

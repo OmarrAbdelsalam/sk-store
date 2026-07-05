@@ -57,15 +57,15 @@ export const CartButton = ({ isMobile = false, className = "" }: CartButtonProps
     <Button 
       variant="ghost" 
       size="sm" 
-      className={`relative ${isBouncing ? "animate-cart-bounce" : ""}`}
+      className={`relative hover:bg-transparent hover:opacity-70 transition-opacity px-2 ${isBouncing ? "animate-cart-bounce" : ""}`}
       aria-label={cartItemsCount > 0 ? `Cart (${cartItemsCount} items)` : 'Cart'}
       onClick={handleClick}
     >
-      <ShoppingBag className="h-5 w-5" />
+      <ShoppingBag className="h-6 w-6" strokeWidth={1.2} color="#2D2A26" />
       {cartItemsCount > 0 && (
         <span 
           ref={badgeRef}
-          className={`absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center font-semibold transition-transform duration-300 ${isBouncing ? "animate-badge-pop" : ""}`}
+          className={`absolute -top-1 -right-1 bg-[#2D2A26] text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center font-medium shadow-md border-[1.5px] border-white transition-transform duration-300 ${isBouncing ? "animate-badge-pop" : ""}`}
         >
           {cartItemsCount}
         </span>

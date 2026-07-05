@@ -28,7 +28,7 @@ const FeaturesSection = async () => {
   ];
 
   return (
-    <section className="bg-background pt-8">
+    <section className="bg-white py-12 md:py-16">
       <div className="container mx-auto px-5">
         {/* Features Grid */}
         <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
@@ -36,7 +36,7 @@ const FeaturesSection = async () => {
             <div key={index} className="flex flex-col items-center text-center group">
               <div className="mb-6 relative">
                 {/* Soft Gold Background Circle */}
-                <div className="absolute inset-0 bg-[#C2A878]/15 rounded-full scale-110 group-hover:scale-125 transition-transform duration-300" />
+                <div className="absolute inset-0 bg-[#C2A878]/20 rounded-full scale-110 group-hover:scale-125 transition-transform duration-300" />
                 <div className="relative w-16 h-16 flex items-center justify-center text-[#2D2A26]">
                   <feature.icon strokeWidth={1.5} className="w-8 h-8 group-hover:scale-110 transition-transform duration-300" />
                 </div>

@@ -77,7 +77,7 @@
     --border: 0 0% 90%;
     --input: 0 0% 90%;
     --ring: 0 0% 20%;
-    --radius: 4px;
+    --radius: 1rem;
 
     /* 2026 Spacing & Sizing Standards */
     --screen-padding: 16px;
@@ -97,9 +97,9 @@
     --ios-safe-area: env(safe-area-inset-bottom, 0px);
 
     /* Border Radius - Premium/Luxury */
-    --radius-card: 4px;
-    --radius-btn: 0px;
-    --radius-input: 4px;
+    --radius-card: 1.5rem;
+    --radius-btn: 9999px;
+    --radius-input: 9999px;
 
     --luxury-cream: 35 25% 96%;
     --luxury-stone: 20 6% 85%;
@@ -172,7 +172,6 @@
   }
 
   html {
-    scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
   }
 
@@ -180,18 +179,6 @@
     @apply bg-background text-foreground font-sans antialiased;
     -webkit-overflow-scrolling: touch;
     padding-bottom: env(safe-area-inset-bottom);
-  }
-
-  .font-luxury {
-    font-family: var(--font-playfair), serif;
-  }
-
-  .font-sans {
-    font-family: var(--font-inter), sans-serif;
-  }
-
-  .font-cairo {
-    font-family: var(--font-cairo), sans-serif;
   }
 
   .font-inter {

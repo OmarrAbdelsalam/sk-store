@@ -11,11 +11,13 @@ import { getFeaturedSocialProofs, type SocialProofVideo } from "@/api/socialProo
 
 export const ReelsShowcase = () => {
   const t = useTranslations("ReelsShowcase");
+  const locale = useLocale();
   const [emblaRef] = useEmblaCarousel({
     align: "center",
-    loop: false,
-    dragFree: true,
-    skipSnaps: false
+    loop: true,
+    dragFree: false,
+    skipSnaps: false,
+    direction: locale === 'ar' ? 'rtl' : 'ltr'
   });
 
   const [selectedReel, setSelectedReel] = useState<SocialProofVideo | null>(null);
@@ -31,7 +33,6 @@ export const ReelsShowcase = () => {
   const [loading, setLoading] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const locale = useLocale();
 
   const [mounted, setMounted] = useState(false);
 
@@ -112,6 +113,14 @@ export const ReelsShowcase = () => {
 
   if (videos.length === 0) return null;
 
+  const getCenterClasses = () => {
+    const len = videos.length;
+    if (len === 1) return "justify-center";
+    if (len === 2) return "md:justify-center lg:justify-center";
+    if (len <= 4) return "lg:justify-center";
+    return "";
+  };
+
   return (
     <section className="bg-[#F0EBE3] py-12 md:py-16">
       <div className="container mx-auto px-5">
@@ -123,8 +132,8 @@ export const ReelsShowcase = () => {
           <div className="w-24 h-[2px] bg-[#C2A878] rounded-full mx-auto mt-3"></div>
         </div>
 
-        <div className="overflow-hidden" ref={emblaRef}>
-          <div className="flex -ml-4">
+        <div className="overflow-hidden -mx-5 md:mx-0" ref={emblaRef}>
+          <div className={`flex -ml-4 ${getCenterClasses()}`}>
             {videos.map((video) => (
               <div
                 key={video.id}

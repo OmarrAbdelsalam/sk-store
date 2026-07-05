@@ -48,16 +48,16 @@ const OrderSummary = memo(
     );
 
     return (
-      <div dir={dir} className="lg:sticky lg:top-8">
-        <div className="border border-border">
+      <div dir={dir} className="lg:sticky lg:top-24">
+        <div className="bg-[#F0EBE3]/50 rounded-[32px] p-6 sm:p-8 border border-[#d4c9bc] shadow-sm">
           {/* Header */}
-          <div className="px-5 sm:px-6 py-4 border-b border-border">
-            <h2 className="text-xs sm:text-sm font-medium tracking-widest uppercase">
+          <div className="mb-6">
+            <h2 className="text-sm sm:text-base font-medium tracking-widest uppercase">
               Order Summary
             </h2>
           </div>
 
-          <div className="p-5 sm:p-6 space-y-4">
+          <div className="space-y-6">
             {/* BOGO Banner */}
             {bogoDiscount > 0 && (
               <div className="flex items-center gap-2.5 px-4 py-3 bg-emerald-100 border border-emerald-300 text-emerald-900">

@@ -26,61 +26,33 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-primary text-primary-foreground py-16">
-      <div className="container mx-auto px-5">
-        {/* Newsletter Section */}
-        <div className="text-center mb-16">
-          <h3 className="font-luxury text-3xl font-bold tracking-widest text-white">
-            SK Bags
+    <footer className="bg-[#2D2A26] text-white py-16 mt-12 rounded-t-[40px] md:rounded-t-[60px] shadow-[0_-10px_40px_rgba(0,0,0,0.05)] relative z-20 overflow-hidden">
+      <div className="container mx-auto px-6 md:px-10">
+        
+        {/* Top Section */}
+        <div className="flex flex-col items-center justify-center mb-16 text-center space-y-3">
+          <h2 className="text-3xl md:text-4xl font-bold tracking-[0.2em] text-white">
+            SK BAGS
+          </h2>
+          <h3 className="text-base md:text-lg font-medium tracking-wide text-[#C2A878] max-w-xl leading-relaxed">
+            {t('Footer.brandDesc') || "Handcrafted crochet bags that blend elegance with everyday functionality. Each piece is unique, just like you."}
           </h3>
         </div>
-        {/* Footer Links */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
-          {/* Brand & Orders */}
-          <div className="space-y-6">
-            {/* Brand */}
-            <div>
-              <div className="mb-4">
-                <Image 
-                  src="/SK_Logo.svg" 
-                  alt="SK Bags Logo" 
-                  width={120} 
-                  height={40} 
-                  className="h-10 w-auto"
-                />
-              </div>
-              <p className="text-primary-foreground text-sm leading-relaxed">
-                {t('Footer.brandDesc')}
-              </p>
-            </div>
 
-            {/* Orders */}
-            <div>
-              <h5 className="font-semibold mb-4">{t('Footer.orders')}</h5>
-              <div className="space-y-2">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="text-primary-foreground hover:text-white justify-start w-full p-0 h-auto"
-                  onClick={() => router.push(`/${locale}/my-orders`)}
-                >
-                  <span className="text-sm">{t('Footer.myOrders')}</span>
-                </Button>
-              </div>
-            </div>
-          </div>
+        {/* Footer Links */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-16 border-t border-white/10 pt-16">
           
           {/* Shop Categories */}
-          <div>
-            <h5 className="font-semibold mb-4">{t('Footer.shop')}</h5>
-            <ul className="space-y-2 text-sm">
+          <div className="flex flex-col items-center md:items-start text-center md:text-start">
+            <h5 className="text-xl font-bold mb-6 tracking-wider text-[#C2A878]">{t('Footer.shop')}</h5>
+            <ul className="space-y-4 text-base">
               {mounted && categories.map((category) => {
                 const categoryName = locale === 'ar' ? category.arabicName : category.englishName;
                 return (
-                  <li key={category.key}>
+                  <li key={category.key} className="group">
                     <button
                       onClick={() => goToCategory(category.key, categoryName)}
-                      className={`text-primary-foreground hover:text-white transition-colors w-full ${locale === 'ar' ? 'text-right' : 'text-left'}`}
+                      className={`text-gray-200 hover:text-white transition-all duration-300 ${locale === 'ar' ? 'group-hover:-translate-x-2 text-right' : 'group-hover:translate-x-2 text-left'}`}
                     >
                       {categoryName}
                     </button>
@@ -90,77 +62,77 @@ const Footer = () => {
             </ul>
           </div>
           
+          {/* Orders & Help */}
+          <div className="flex flex-col items-center md:items-start text-center md:text-start">
+            <h5 className="text-xl font-bold mb-6 tracking-wider text-[#C2A878]">{t('Footer.orders')}</h5>
+            <div className="space-y-4">
+              <div className="group">
+                <button 
+                  className={`text-gray-200 hover:text-white transition-all duration-300 ${locale === 'ar' ? 'group-hover:-translate-x-2 text-right' : 'group-hover:translate-x-2 text-left'}`}
+                  onClick={() => router.push(`/${locale}/my-orders`)}
+                >
+                  {t('Footer.myOrders')}
+                </button>
+              </div>
+            </div>
+          </div>
+          
           {/* Contact */}
-          <div>
-            <h5 className="font-semibold mb-4">{t('Footer.contactUs')}</h5>
-            <div className="space-y-2">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-primary-foreground hover:text-white justify-start w-full p-0 h-auto"
-                onClick={() => window.open("https://wa.me/+201501881005", "_blank")}
-              >
-                <span className="text-sm">{t('Footer.whatsapp')}</span>
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-primary-foreground hover:text-white justify-start w-full p-0 h-auto"
-                onClick={() => window.open("https://www.facebook.com/skbags/", "_blank")}
-              >
-                <span className="text-sm">{t('Footer.facebook')}</span>
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-primary-foreground hover:text-white justify-start w-full p-0 h-auto"
-                onClick={() => window.open("https://www.instagram.com/skbags/", "_blank")}
-              >
-                <span className="text-sm">{t('Footer.instagram')}</span>
-              </Button>
+          <div className="flex flex-col items-center md:items-start text-center md:text-start">
+            <h5 className="text-xl font-bold mb-6 tracking-wider text-[#C2A878]">{t('Footer.contactUs')}</h5>
+            <div className="space-y-4">
+              <div className="group">
+                <button 
+                  className={`text-gray-200 hover:text-white transition-all duration-300 ${locale === 'ar' ? 'group-hover:-translate-x-2 text-right' : 'group-hover:translate-x-2 text-left'}`}
+                  onClick={() => window.open("https://wa.me/+201501881005", "_blank")}
+                >
+                  {t('Footer.whatsapp')}
+                </button>
+              </div>
+              <div className="group">
+                <button 
+                  className={`text-gray-200 hover:text-white transition-all duration-300 ${locale === 'ar' ? 'group-hover:-translate-x-2 text-right' : 'group-hover:translate-x-2 text-left'}`}
+                  onClick={() => window.open("https://www.facebook.com/skbags/", "_blank")}
+                >
+                  {t('Footer.facebook')}
+                </button>
+              </div>
+              <div className="group">
+                <button 
+                  className={`text-gray-200 hover:text-white transition-all duration-300 ${locale === 'ar' ? 'group-hover:-translate-x-2 text-right' : 'group-hover:translate-x-2 text-left'}`}
+                  onClick={() => window.open("https://www.instagram.com/skbags/", "_blank")}
+                >
+                  {t('Footer.instagram')}
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Footer Image */}
-          <div className="flex items-center justify-center md:justify-end">
-            <Image 
-              src="/footer.webp" 
-              alt="Footer decoration" 
-              width={300}
-              height={450}
-              className={`w-full h-auto object-contain ${locale === 'ar' ? 'scale-x-[-1]' : ''}`}
-              sizes="(max-width: 768px) 100vw, 25vw"
-              loading="lazy"
-            />
-          </div>
         </div>
+
         {/* Bottom Section */}
-        <div className="border-t border-white/10 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="border-t border-white/10 pt-8 pb-4">
+          <div className="flex flex-col-reverse md:flex-row justify-between items-center gap-6">
             <div className="text-center md:text-left">
-              <p className="text-primary-foreground text-sm">
+              <p className="text-white/80 text-sm tracking-wide">
                 © {new Date().getFullYear()} SK Bags. {locale === 'ar' ? 'جميع الحقوق محفوظة.' : 'All rights reserved.'}
               </p>
             </div>
-            <div className="flex items-center space-x-6">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-primary-foreground hover:text-white"
+            <div className="flex items-center space-x-4">
+              <button 
+                className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-[#C2A878] hover:scale-110 transition-all duration-300"
                 onClick={() => window.open("https://www.instagram.com/skbags/", "_blank")}
                 aria-label="Instagram"
               >
                 <Instagram className="h-5 w-5" />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-primary-foreground hover:text-white"
+              </button>
+              <button 
+                className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-[#C2A878] hover:scale-110 transition-all duration-300 ml-4"
                 onClick={() => window.open("https://www.facebook.com/skbags/", "_blank")}
                 aria-label="Facebook"
               >
                 <Facebook className="h-5 w-5" />
-              </Button>
+              </button>
             </div>
           </div>
         </div>

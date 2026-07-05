@@ -26,7 +26,7 @@ export default function HeroFallback() {
         <div className="relative z-10 container mx-auto px-5 h-full flex items-end justify-center pb-16 text-center">
           <Link href="/products">
             <Button
-              className="min-h-[48px] px-8 py-3 bg-white/95 text-gray-900 hover:bg-white text-sm tracking-[0.2em] font-medium uppercase transition-all duration-300 shadow-lg rounded-none backdrop-blur-sm"
+              className="min-h-[48px] px-8 py-3 bg-white/95 text-gray-900 hover:bg-white text-sm tracking-[0.2em] font-medium uppercase transition-all duration-300 shadow-lg rounded-full backdrop-blur-sm"
             >
               SHOP BAGS
             </Button>
@@ -52,7 +52,7 @@ export default function HeroFallback() {
             </p>
             <div className="pt-6">
               <Link href="/products">
-                <Button className="px-12 py-7 min-h-[54px] bg-black text-white hover:bg-gray-800 rounded-none tracking-[0.2em] uppercase text-sm transition-all duration-300 shadow-xl hover:shadow-2xl hover:-translate-y-1">
+                <Button className="px-12 py-7 min-h-[54px] bg-black text-white hover:bg-gray-800 rounded-full tracking-[0.2em] uppercase text-sm transition-all duration-300 shadow-xl hover:shadow-2xl hover:-translate-y-1">
                   SHOP NOW
                 </Button>
               </Link>

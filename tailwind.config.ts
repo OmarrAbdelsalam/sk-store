@@ -89,14 +89,14 @@ export default {
 					stone: 'hsl(var(--luxury-stone))',
 					charcoal: 'hsl(var(--luxury-charcoal))',
 					platinum: 'hsl(var(--luxury-platinum))'
-				}
+				},
 			},
 			fontFamily: {
 				'luxury': ['Playfair Display', 'serif'],
 				'arabic': ['Noto Sans Arabic', 'sans-serif'],
 				'tajawal': ['Tajawal', 'sans-serif'],
 				'alexandria': ['var(--font-alexandria)', 'sans-serif'],
-				'sans': ['Inter', 'sans-serif']
+				'sans': ['var(--font-boogaloo)', 'sans-serif']
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

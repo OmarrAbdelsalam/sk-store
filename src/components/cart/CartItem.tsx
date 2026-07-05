@@ -80,10 +80,10 @@ const CartItem = memo(({ item, onUpdateQuantity, onRemove, maxQuantity }: CartIt
 
   return (
     <div
-      className={`group relative border-b border-border transition-all duration-300
+      className={`group relative bg-white rounded-[24px] p-4 sm:p-6 mb-4 shadow-sm border border-[#2D2A26]/5 transition-all duration-300
         ${isRemoving ? "opacity-0 scale-95 -translate-x-4" : "opacity-100 scale-100 translate-x-0"}`}
     >
-      <div className="py-5 sm:py-6">
+      <div>
         {/* Desktop Layout */}
         <div className="hidden sm:block">
           <div className="flex gap-5">

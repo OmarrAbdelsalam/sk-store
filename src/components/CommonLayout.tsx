@@ -17,10 +17,12 @@ export default function CommonLayout({ children, topBanner }: { children: React.
     <>
       {topBanner}
       <Navigation />
-      <main id="main-content" className="pb-20 md:pb-16 bg-white">
-        {children}
-      </main>
-      <Footer />
+      <div className="bg-white flex flex-col min-h-[calc(100vh-100px)]">
+        <main id="main-content" className="flex-grow pb-20 md:pb-16">
+          {children}
+        </main>
+        <Footer />
+      </div>
     </>
   );
 }

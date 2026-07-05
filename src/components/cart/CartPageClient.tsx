@@ -88,7 +88,7 @@ export default function CartPageClient() {
           const progress = Math.min((subtotal / freeShippingThreshold) * 100, 100);
           const remaining = Math.max(freeShippingThreshold - subtotal, 0);
           return (
-            <div className="w-full border border-border/60 px-4 py-3 space-y-2">
+            <div className="w-full border border-border/60 px-4 py-3 space-y-2 rounded-[24px]">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
                 <span>
@@ -109,7 +109,7 @@ export default function CartPageClient() {
 
         {/* Prominent Free Shipping Success Banner */}
         {freeShippingApplied && (
-          <div className="w-full bg-emerald-900 text-emerald-50 py-3 px-4 flex flex-col sm:flex-row items-center justify-center text-center animate-fade-in shadow-sm">
+          <div className="w-full bg-emerald-900 text-emerald-50 py-3 px-4 flex flex-col sm:flex-row items-center justify-center text-center animate-fade-in shadow-sm rounded-[24px]">
             <div className="flex items-center gap-2 font-medium tracking-[0.1em] uppercase text-xs sm:text-sm">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 text-emerald-300">
                 <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" fill="currentColor" />
@@ -173,18 +173,18 @@ export default function CartPageClient() {
       </Suspense>
 
       {/* Mobile Sticky Bottom Bar - Total + Checkout */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border px-4 py-3 lg:hidden shadow-[0_-4px_12px_rgba(0,0,0,0.08)]" dir={dir}>
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-medium tracking-wider uppercase text-muted-foreground">
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/85 backdrop-blur-xl border-t border-white/50 px-5 pt-4 pb-8 lg:hidden shadow-[0_-20px_40px_rgba(0,0,0,0.06)] rounded-t-[40px]" dir={dir}>
+        <div className="flex items-center justify-between mb-4 px-2">
+          <span className="text-sm font-medium tracking-wider uppercase text-muted-foreground">
             {isAr ? 'الإجمالي' : 'Total'}
           </span>
-          <span className="text-lg font-semibold tracking-wider">
+          <span className="text-xl font-semibold tracking-wider">
             {Math.max(0, getTotalPrice() - bogoDiscount).toLocaleString()} <span className="text-xs uppercase">EGP</span>
           </span>
         </div>
         <button
-          className="w-full h-12 bg-foreground text-background text-xs font-medium tracking-widest uppercase
-            transition-all duration-300 hover:bg-foreground/90 active:scale-[0.99]
+          className="w-full h-14 rounded-full bg-[#2D2A26] hover:bg-black text-white text-sm font-medium tracking-widest uppercase
+            transition-all duration-300 hover:scale-[1.02] shadow-xl border border-white/10
             inline-flex items-center justify-center gap-2"
           onClick={() => router.push(`/${locale}/checkout`)}
         >

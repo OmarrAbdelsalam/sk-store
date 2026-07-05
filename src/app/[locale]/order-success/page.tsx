@@ -122,19 +122,19 @@ function OrderSuccessContent() {
   }
 
   return (
-    <div className="min-h-screen bg-background" dir={dir}>
+    <div className="min-h-screen bg-white" dir={dir}>
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
-        <div className="text-center space-y-6 sm:space-y-8">
+        <div className="text-center space-y-8 sm:space-y-10">
 
           {/* Success Icon */}
           <div className="flex justify-center">
-            <div className="w-16 h-16 border-2 border-green-600 flex items-center justify-center">
-              <Check className="h-8 w-8 text-green-600" strokeWidth={2} />
+            <div className="w-20 h-20 rounded-full bg-[#E8F5E9] flex items-center justify-center shadow-sm">
+              <Check className="h-10 w-10 text-[#2E7D32]" strokeWidth={2.5} />
             </div>
           </div>
 
           {/* Success Message */}
-          <div className="space-y-3">
+          <div className="space-y-4">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-light tracking-wider uppercase">
               {t("title")}
             </h1>
@@ -145,13 +145,13 @@ function OrderSuccessContent() {
           </div>
 
           {/* Order Details */}
-          <div className="border border-border text-start">
-            <div className="px-5 sm:px-6 py-4 border-b border-border">
-              <h3 className="text-xs sm:text-sm font-medium tracking-widest uppercase">
+          <div className="bg-[#F0EBE3]/40 rounded-[32px] p-6 sm:p-8 border border-[#d4c9bc] text-start shadow-sm">
+            <div className="pb-4 mb-4 border-b border-[#d4c9bc]/60">
+              <h3 className="text-sm font-bold tracking-widest uppercase text-[#2D2A26]">
                 {t("orderDetails")}
               </h3>
             </div>
-            <div className="p-5 sm:p-6 space-y-5">
+            <div className="space-y-6">
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <p className="text-xs tracking-wider uppercase text-muted-foreground mb-1.5">
@@ -170,11 +170,11 @@ function OrderSuccessContent() {
               </div>
 
               {orderData?.customerName && (
-                <div className="border-t border-border pt-5">
+                <div className="border-t border-[#d4c9bc]/60 pt-5">
                   <p className="text-xs tracking-wider uppercase text-muted-foreground mb-1.5">
                     {isAr ? "اسم العميل" : "Customer"}
                   </p>
-                  <p className="text-sm font-medium">{orderData.customerName}</p>
+                  <p className="text-sm font-medium text-[#2D2A26]">{orderData.customerName}</p>
                   {(orderData.government || orderData.city) && (
                     <p className="text-xs text-muted-foreground mt-1">
                       {[orderData.city, orderData.government].filter(Boolean).join(", ")}
@@ -183,7 +183,7 @@ function OrderSuccessContent() {
                 </div>
               )}
 
-              <div className="border-t border-border pt-5">
+              <div className="border-t border-[#d4c9bc]/60 pt-5">
                 <p className="text-xs tracking-wider uppercase text-muted-foreground mb-1.5">
                   {t("shippingInfoTitle")}
                 </p>
@@ -196,20 +196,19 @@ function OrderSuccessContent() {
 
           {/* Ordered Items */}
           {orderData && orderData.items && orderData.items.length > 0 && (
-            <div className="border border-border text-start">
-              <div className="px-5 sm:px-6 py-4 border-b border-border">
-                <h3 className="text-xs sm:text-sm font-medium tracking-widest uppercase">
+            <div className="bg-[#F0EBE3]/40 rounded-[32px] p-6 sm:p-8 border border-[#d4c9bc] text-start shadow-sm">
+              <div className="pb-4 mb-4 border-b border-[#d4c9bc]/60">
+                <h3 className="text-sm font-bold tracking-widest uppercase text-[#2D2A26]">
                   {t("orderedItems")}
                 </h3>
               </div>
-              <div className="p-5 sm:p-6">
-                <div className="space-y-0">
+              <div className="space-y-0">
                   {orderData.items.map((item, index) => {
                     const colorName = isAr ? item.colorNameAr : item.colorNameEn;
                     const productName = isAr ? (item.productNameAr || item.productName) : item.productName;
                     return (
-                      <div key={index} className="flex gap-4 items-center py-4 border-b border-border/50 last:border-0 last:pb-0 first:pt-0">
-                        <div className="relative w-16 h-20 bg-[#f5f5f5] overflow-hidden flex-shrink-0">
+                      <div key={index} className="flex gap-4 items-center py-4 border-b border-[#d4c9bc]/40 last:border-0 last:pb-0 first:pt-0">
+                        <div className="relative w-16 h-20 bg-white rounded-[16px] overflow-hidden flex-shrink-0 shadow-sm border border-[#d4c9bc]/50">
                           {item.image ? (
                             <img src={item.image} alt={productName} className="w-full h-full object-cover" />
                           ) : (
@@ -244,7 +243,7 @@ function OrderSuccessContent() {
                 </div>
 
                 {/* Totals */}
-                <div className="mt-4 pt-4 border-t border-border space-y-2">
+                <div className="mt-6 pt-6 border-t border-[#d4c9bc]/60 space-y-3">
                   {orderData.shippingCost > 0 && (
                     <div className="flex justify-between text-sm text-muted-foreground">
                       <span className="tracking-wider uppercase text-xs">{isAr ? "الشحن" : "Shipping"}</span>
@@ -257,30 +256,29 @@ function OrderSuccessContent() {
                       <span>- {orderData.discountAmount.toLocaleString()} {isAr ? "جنيه" : "EGP"}</span>
                     </div>
                   )}
-                  <div className="flex justify-between items-center pt-2 border-t border-foreground">
-                    <span className="text-sm font-medium tracking-wider uppercase">{t("total")}</span>
-                    <span className="text-xl font-light tracking-wider">
-                      {orderData.total.toLocaleString()} <span className="text-xs tracking-wider uppercase">{isAr ? "جنيه" : "EGP"}</span>
+                  <div className="flex justify-between items-center pt-3 mt-2 border-t border-[#d4c9bc]">
+                    <span className="text-sm font-bold tracking-wider uppercase text-[#2D2A26]">{t("total")}</span>
+                    <span className="text-2xl font-bold text-[#2D2A26] tracking-wider">
+                      {orderData.total.toLocaleString()} <span className="text-sm font-medium tracking-wider uppercase">{isAr ? "جنيه" : "EGP"}</span>
                     </span>
                   </div>
                 </div>
               </div>
-            </div>
           )}
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row justify-center gap-3 pt-2">
+          <div className="flex flex-col sm:flex-row justify-center gap-4 pt-6">
             <button
               onClick={() => router.push("/my-orders")}
-              className="h-12 px-8 border border-foreground text-foreground text-xs font-medium tracking-widest uppercase
-                transition-all duration-200 hover:bg-foreground hover:text-background"
+              className="h-14 px-10 rounded-full border border-[#2D2A26] text-[#2D2A26] bg-white text-sm font-bold tracking-widest uppercase
+                transition-all duration-300 hover:bg-[#F0EBE3]"
             >
               {t("trackOrders")}
             </button>
             <button
               onClick={() => router.push("/")}
-              className="h-12 px-8 bg-foreground text-background text-xs font-medium tracking-widest uppercase
-                transition-all duration-200 hover:bg-foreground/90 inline-flex items-center justify-center gap-2"
+              className="h-14 px-10 rounded-full bg-[#2D2A26] text-white text-sm font-bold tracking-widest uppercase
+                transition-all duration-300 hover:bg-black hover:-translate-y-1 shadow-md hover:shadow-xl inline-flex items-center justify-center gap-2"
             >
               {t("continueShopping")}
               <ArrowRight className="h-4 w-4" />
@@ -288,17 +286,17 @@ function OrderSuccessContent() {
           </div>
 
           {/* Customer Support */}
-          <div className="border border-border p-6 sm:p-8 text-center">
-            <h3 className="text-xs sm:text-sm font-medium tracking-widest uppercase mb-2">
+          <div className="bg-[#F0EBE3]/20 rounded-[32px] p-8 text-center border border-[#d4c9bc]">
+            <h3 className="text-sm font-bold tracking-widest uppercase mb-3 text-[#2D2A26]">
               {t("needHelp")}
             </h3>
-            <p className="text-xs text-muted-foreground mb-5 tracking-wider">
+            <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
               {t("needHelpBody")}
             </p>
             <button
               onClick={() => window.open("https://wa.me/+201501881005", "_blank")}
-              className="h-11 px-6 bg-green-600 text-white text-xs font-medium tracking-widest uppercase
-                transition-all duration-200 hover:bg-green-700"
+              className="h-12 px-8 rounded-full bg-[#25D366] text-white text-xs font-bold tracking-widest uppercase
+                transition-all duration-300 hover:bg-[#1EBE5D] hover:-translate-y-1 shadow-md hover:shadow-lg inline-flex items-center justify-center gap-2"
             >
               {t("contactWhatsApp")}
             </button>

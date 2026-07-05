@@ -171,27 +171,27 @@ export default function MyOrdersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background" dir={dir}>
+    <div className="min-h-screen bg-white" dir={dir}>
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
         {/* Page Title */}
         <div className="mb-8 sm:mb-12">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-light tracking-wider uppercase">{t("title")}</h1>
-          <div className="h-px w-12 bg-foreground mt-3" />
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-light tracking-wider uppercase text-[#2D2A26]">{t("title")}</h1>
+          <div className="h-px w-12 bg-[#2D2A26] mt-3" />
           <p className="text-xs tracking-wider text-muted-foreground mt-3">{t("subtitle")}</p>
         </div>
 
         {/* Empty State */}
         {orders.length === 0 ? (
-          <div className="border border-border p-10 sm:p-16 text-center space-y-5">
-            <Package className="h-10 w-10 text-muted-foreground/40 mx-auto" />
-            <h3 className="text-sm font-medium tracking-widest uppercase">{t("noOrders")}</h3>
-            <p className="text-xs text-muted-foreground tracking-wider">{t("noOrdersDesc")}</p>
+          <div className="bg-[#F0EBE3]/30 rounded-[32px] border border-[#d4c9bc] p-10 sm:p-16 text-center space-y-5 shadow-sm">
+            <Package className="h-12 w-12 text-[#2D2A26]/40 mx-auto" />
+            <h3 className="text-base font-bold tracking-widest uppercase text-[#2D2A26]">{t("noOrders")}</h3>
+            <p className="text-sm text-muted-foreground tracking-wider">{t("noOrdersDesc")}</p>
             <button
               onClick={() => router.push("/")}
-              className="h-11 px-8 bg-foreground text-background text-xs font-medium tracking-widest uppercase hover:bg-foreground/90 transition-colors inline-flex items-center gap-2"
+              className="h-14 px-10 rounded-full bg-[#2D2A26] text-white text-sm font-bold tracking-widest uppercase hover:bg-black hover:-translate-y-1 shadow-md hover:shadow-xl transition-all duration-300 inline-flex items-center gap-2 mt-4"
             >
               {t("startShopping")}
-              <ArrowRight className="h-3.5 w-3.5" />
+              <ArrowRight className="h-4 w-4" />
             </button>
           </div>
         ) : (
@@ -199,7 +199,7 @@ export default function MyOrdersPage() {
             {orders.map((order) => {
               const isOpen = openOrderId === order.id;
               return (
-                <div key={order.id} className="border border-border">
+                <div key={order.id} className="bg-[#F0EBE3]/40 rounded-[24px] border border-[#d4c9bc] overflow-hidden shadow-sm transition-all duration-300 hover:shadow-md">
                   {/* Order Header */}
                   <div className="p-5 sm:p-6">
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
@@ -208,7 +208,7 @@ export default function MyOrdersPage() {
                           <h3 className="text-sm font-medium tracking-wider">
                             #{order.id}
                           </h3>
-                          <span className={`px-2.5 py-0.5 text-[10px] font-medium tracking-wider uppercase border ${getStatusStyle(order.orderStatus)}`}>
+                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${getStatusStyle(order.orderStatus)}`}>
                             {t(`status.${order.orderStatus.toLowerCase()}`)}
                           </span>
                         </div>
@@ -235,7 +235,7 @@ export default function MyOrdersPage() {
                   {/* Expand Toggle */}
                   <button
                     onClick={() => setOpenOrderId(isOpen ? null : order.id)}
-                    className="w-full flex items-center justify-between px-5 sm:px-6 py-3 border-t border-border text-xs tracking-widest uppercase text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors"
+                    className="w-full flex items-center justify-between px-5 sm:px-6 py-4 border-t border-[#d4c9bc]/60 text-xs tracking-widest uppercase text-[#2D2A26] font-bold hover:bg-white/50 transition-colors"
                   >
                     <span>{t("viewDetails")}</span>
                     {isOpen ? (
@@ -247,10 +247,10 @@ export default function MyOrdersPage() {
 
                   {/* Expanded Details */}
                   {isOpen && (
-                    <div className="border-t border-border">
+                    <div className="border-t border-[#d4c9bc]/60 bg-white/60">
                       {/* Items Section */}
                       <div className="p-5 sm:p-6">
-                        <h4 className="text-xs font-medium tracking-widest uppercase text-muted-foreground mb-4">
+                        <h4 className="text-xs font-bold tracking-widest uppercase text-[#2D2A26] mb-4">
                           {t("items")}
                         </h4>
                         <div className="space-y-0">
@@ -258,7 +258,7 @@ export default function MyOrdersPage() {
                             const colorName = isAr ? item.colorNameAr : item.colorNameEn;
                             return (
                               <div key={idx} className="space-y-2">
-                                <div className="flex justify-between items-center py-3 border-b border-border/50 last:border-0">
+                                <div className="flex justify-between items-center py-4 border-b border-[#d4c9bc]/40 last:border-0">
                                   <div className="flex-1 min-w-0">
                                     <p className="text-sm font-medium">{item.productName}</p>
                                     <p className="text-xs text-muted-foreground mt-0.5">
@@ -293,10 +293,10 @@ export default function MyOrdersPage() {
 
                       {/* Shipping Address */}
                       <div className="px-5 sm:px-6 pb-5 sm:pb-6">
-                        <h4 className="text-xs font-medium tracking-widest uppercase text-muted-foreground mb-3">
+                        <h4 className="text-xs font-bold tracking-widest uppercase text-[#2D2A26] mb-3">
                           {t("shippingAddress")}
                         </h4>
-                        <div className="border border-border/50 p-4 space-y-1.5 text-sm">
+                        <div className="bg-white rounded-[16px] border border-[#d4c9bc]/50 p-5 space-y-2 text-sm shadow-sm">
                           <p>
                             <span className="text-xs text-muted-foreground">{t("name")}:</span>{" "}
                             {order.customerName}
@@ -330,10 +330,10 @@ export default function MyOrdersPage() {
 
                       {/* Payment Summary */}
                       <div className="px-5 sm:px-6 pb-5 sm:pb-6">
-                        <h4 className="text-xs font-medium tracking-widest uppercase text-muted-foreground mb-3">
+                        <h4 className="text-xs font-bold tracking-widest uppercase text-[#2D2A26] mb-3">
                           {t("paymentSummary")}
                         </h4>
-                        <div className="border border-border/50 p-4 space-y-2.5 text-sm">
+                        <div className="bg-white rounded-[16px] border border-[#d4c9bc]/50 p-5 space-y-3 text-sm shadow-sm">
                           <div className="flex justify-between">
                             <span className="text-xs tracking-wider uppercase text-muted-foreground">{t("subtotal")}</span>
                             <span>{order.subTotal} {isAr ? "جنيه" : "EGP"}</span>
@@ -348,15 +348,15 @@ export default function MyOrdersPage() {
                               <span>-{order.discountAmount} {isAr ? "جنيه" : "EGP"}</span>
                             </div>
                           )}
-                          <div className="border-t border-foreground pt-3 mt-1">
+                          <div className="border-t border-[#d4c9bc] pt-3 mt-1">
                             <div className="flex justify-between items-center">
-                              <span className="text-sm font-medium tracking-wider uppercase">{t("total")}</span>
-                              <span className="text-lg font-light tracking-wider">
-                                {order.totalAmount} <span className="text-xs">{isAr ? "جنيه" : "EGP"}</span>
+                              <span className="text-sm font-bold tracking-wider uppercase text-[#2D2A26]">{t("total")}</span>
+                              <span className="text-xl font-bold tracking-wider text-[#2D2A26]">
+                                {order.totalAmount} <span className="text-xs font-medium uppercase">{isAr ? "جنيه" : "EGP"}</span>
                               </span>
                             </div>
                           </div>
-                          <div className="pt-2 border-t border-border/50">
+                          <div className="pt-3 border-t border-[#d4c9bc]/40">
                             <span className="text-xs text-muted-foreground tracking-wider uppercase">
                               {t("paymentMethod")}: {order.paymentMethod}
                             </span>

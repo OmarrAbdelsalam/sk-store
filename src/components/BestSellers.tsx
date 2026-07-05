@@ -72,7 +72,7 @@ const BestSellers = () => {
           <h2 className="font-playfair text-3xl md:text-4xl text-[#2D2A26] mb-2">
             {t('title')}
           </h2>
-          <div className="w-24 h-[2px] bg-[#C2A878] rounded-full mx-auto mt-3"></div>
+          <div className="w-24 h-1 bg-[#C2A878] mx-auto rounded-full"></div>
         </div>
 
         {/* Carousel */}
@@ -135,9 +135,7 @@ const BestSellers = () => {
         {/* View All Button */}
         <div className="text-center mt-12">
           <Link href="/products">
-            <Button 
-              className="px-8 py-3 bg-black text-white hover:bg-gray-800 rounded-none tracking-[0.2em] uppercase text-xs transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1"
-            >
+            <Button className="px-8 py-3 bg-[#2D2A26] text-white hover:bg-yellow-500 rounded-full tracking-[0.2em] uppercase text-xs transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1">
               {t('viewAll')}
             </Button>
           </Link>

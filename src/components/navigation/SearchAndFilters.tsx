@@ -134,8 +134,8 @@ export const SearchAndFilters = () => {
   // Don't render Sheet until mounted to avoid hydration mismatch
   if (!mounted) {
     return (
-      <Button variant="ghost" size="sm" aria-label={t("openFilters")}>
-        <Search className="h-5 w-5" />
+      <Button variant="ghost" size="sm" className="hover:bg-transparent hover:opacity-70 transition-opacity px-2" aria-label={t("openFilters")}>
+        <Search className="h-6 w-6" strokeWidth={1.2} color="#2D2A26" />
       </Button>
     );
   }
@@ -143,8 +143,8 @@ export const SearchAndFilters = () => {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="sm" aria-label={t("openFilters")}>
-          <Search className="h-5 w-5" />
+        <Button variant="ghost" size="sm" className="hover:bg-transparent hover:opacity-70 transition-opacity px-2" aria-label={t("openFilters")}>
+          <Search className="h-6 w-6" strokeWidth={1.2} color="#2D2A26" />
         </Button>
       </SheetTrigger>
 

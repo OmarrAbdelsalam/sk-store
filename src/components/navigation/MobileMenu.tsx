@@ -11,6 +11,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useCategories } from "@/hooks/useCategories";
 import { useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
 
 export const MobileMenu = () => {
   const [open, setOpen] = useState(false);
@@ -58,8 +59,8 @@ export const MobileMenu = () => {
   // Don't render Sheet until mounted to avoid hydration mismatch
   if (!mounted) {
     return (
-      <Button variant="ghost" size="sm" aria-label={t("openMenu")}>
-        <Menu className="h-5 w-5" />
+      <Button variant="ghost" size="sm" className="px-2" aria-label={t("openMenu")}>
+        <Menu className="h-6 w-6" strokeWidth={1.2} color="#2D2A26" />
       </Button>
     );
   }
@@ -67,14 +68,14 @@ export const MobileMenu = () => {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="sm" aria-label={t("openMenu")}>
-          <Menu className="h-5 w-5" />
+        <Button variant="ghost" size="sm" className="hover:bg-transparent hover:opacity-70 transition-opacity px-2" aria-label={t("openMenu")}>
+          <Menu className="h-6 w-6" strokeWidth={1.2} color="#2D2A26" />
         </Button>
       </SheetTrigger>
 
-      <SheetContent side={sheetSide} className="w-80 overflow-y-auto" dir={dir} aria-label={t("menuAriaLabel")}>
-        <SheetHeader>
-          <SheetTitle className="text-xl font-luxury">{t("menuTitle")}</SheetTitle>
+      <SheetContent side={sheetSide} className={cn("w-80 overflow-y-auto", locale === 'ar' ? "font-cairo" : "font-sans")} dir={dir} aria-label={t("menuAriaLabel")}>
+        <SheetHeader className="sr-only">
+          <SheetTitle>{t("menuTitle")}</SheetTitle>
         </SheetHeader>
 
         <div className="space-y-6 mt-8 pb-8">
@@ -82,7 +83,7 @@ export const MobileMenu = () => {
           <div>
             <Link
               href={`/${locale}`}
-              className="flex items-center py-3 text-lg font-medium text-foreground hover:text-primary transition-colors"
+              className="flex items-center py-3 text-lg font-normal text-foreground hover:text-primary transition-colors"
               aria-label={t("home")}
               onClick={() => setOpen(false)}
             >
@@ -94,14 +95,14 @@ export const MobileMenu = () => {
 
           {/* الفئات */}
           <div className="space-y-1">
-            <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
+            <p className="text-sm font-normal text-muted-foreground uppercase tracking-wider mb-3">
               {t("categories")}
             </p>
 
             <Button
               key="all"
               variant="ghost"
-              className="w-full justify-start text-base py-3 h-auto"
+              className="w-full justify-start text-base py-3 h-auto font-normal"
               onClick={goToAllProducts}
               aria-label={t("allProducts")}
             >
@@ -125,7 +126,7 @@ export const MobileMenu = () => {
                   <Button
                     key={category.key}
                     variant="ghost"
-                    className="w-full justify-start text-base py-3 h-auto"
+                    className="w-full justify-start text-base py-3 h-auto font-normal"
                     onClick={() => goToCategory(category.key, categoryName)}
                     aria-label={category.label}
                   >
@@ -143,11 +144,11 @@ export const MobileMenu = () => {
 
           {/* التسوق / السلة */}
           <div className="space-y-3">
-            <p className="text-sm font-medium mb-3 text-muted-foreground uppercase tracking-wider">
+            <p className="text-sm font-normal mb-3 text-muted-foreground uppercase tracking-wider">
               {t("shopping")}
             </p>
             <Link href={`/${locale}/cart`} onClick={() => setOpen(false)}>
-              <Button variant="outline" className="w-full justify-start" aria-label={t("cart")}>
+              <Button variant="outline" className="w-full justify-start font-normal" aria-label={t("cart")}>
                 <ShoppingBag className="h-4 w-4 mr-2" />
                 {t("cart")}
                 {cartItemsCount > 0 && (
@@ -166,11 +167,11 @@ export const MobileMenu = () => {
 
           {/* الطلبات */}
           <div className="space-y-3 ">
-            <p className="text-sm font-medium mb-3 text-muted-foreground uppercase tracking-wider">
+            <p className="text-sm font-normal mb-3 text-muted-foreground uppercase tracking-wider">
               {t("orders")}
             </p>
             <Link href={`/${locale}/my-orders`} onClick={() => setOpen(false)}>
-              <Button variant="outline" className="w-full justify-start" aria-label={t("myOrders")}>
+              <Button variant="outline" className="w-full justify-start font-normal" aria-label={t("myOrders")}>
                 {t("myOrders")}
               </Button>
             </Link>

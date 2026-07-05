@@ -92,16 +92,16 @@ export const DesktopMenu = () => {
   };
 
   return (
-    <nav className="flex items-center gap-1">
+    <nav className="flex items-center gap-2 md:gap-4">
       <Button 
         variant="ghost" 
         onClick={goToAllProducts}
-        className={`font-medium ${isActive(null) ? 'bg-gray-100 rounded-lg' : ''}`}
+        className={`font-medium hover:bg-transparent hover:text-black transition-colors px-2 ${isActive(null) ? 'text-black' : 'text-black/60'}`}
       >
         {t("Nav.allProducts")}
       </Button>
 
-      {(!mounted || loading) && <span className="text-sm text-muted-foreground">…</span>}
+      {(!mounted || loading) && <span className="text-sm text-muted-foreground px-2">…</span>}
 
       {mounted && !loading && categories.length > 0 &&
         categories.map((category) => {
@@ -116,7 +116,7 @@ export const DesktopMenu = () => {
               key={category.key}
               variant="ghost"
               onClick={() => goToCategory(category.key, categoryName)}
-              className={`font-medium ${isActiveCategory ? 'bg-gray-100 rounded-lg' : ''}`}
+              className={`font-medium hover:bg-transparent hover:text-black transition-colors px-2 ${isActiveCategory ? 'text-black' : 'text-black/60'}`}
               disabled={isPending}
             >
               {categoryName}

@@ -63,21 +63,21 @@ const CheckoutOrderSummary = memo(({
 
   return (
     <div className="sticky top-24" dir={dir}>
-      <div className="border border-border bg-white">
+      <div className="bg-[#F0EBE3]/50 rounded-[32px] p-6 sm:p-8 border border-[#d4c9bc] shadow-sm">
         {/* Header */}
-        <div className="px-5 sm:px-6 py-4 border-b border-border flex items-center justify-between">
-          <h2 className="text-xs sm:text-sm font-medium tracking-widest uppercase">{t("title")}</h2>
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="text-sm sm:text-base font-medium tracking-widest uppercase">{t("title")}</h2>
           <span className="text-xs text-muted-foreground tracking-wider">
             {items.length} {isAr ? "منتج" : "items"}
           </span>
         </div>
 
-        <div className="p-5 sm:p-6 space-y-5">
+        <div className="space-y-6">
           {/* Product List */}
           <div className="space-y-4 max-h-72 overflow-y-auto scrollbar-hide">
             {items.map((item) => (
               <div key={item.id} className="flex gap-4 pb-4 border-b border-border/50 last:border-0 last:pb-0">
-                <div className="relative w-16 h-20 bg-muted overflow-hidden flex-shrink-0">
+                <div className="relative w-16 h-20 bg-muted overflow-hidden flex-shrink-0 rounded-lg">
                   <Image
                     src={item.image || "/SK_Logo.svg"}
                     alt={item.name}

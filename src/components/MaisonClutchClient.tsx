@@ -80,7 +80,7 @@ const MaisonClutchClient = ({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           {/* Text Content */}
           <div className="order-2 lg:order-1 flex flex-col items-center lg:items-start text-center lg:text-left space-y-8">
-            <h2 className="font-playfair text-3xl md:text-5xl lg:text-6xl text-gray-900 leading-tight">
+            <h2 className="font-playfair text-3xl md:text-5xl lg:text-6xl text-[#2D2A26] leading-tight">
               {title}
             </h2>
 
@@ -95,8 +95,7 @@ const MaisonClutchClient = ({
 
             <Button
               onClick={handleShopClick}
-              className="px-8 py-3 bg-black text-white hover:bg-gray-800 rounded-none tracking-[0.2em] uppercase text-xs"
-              variant="default"
+              className="px-8 py-3 min-h-[48px] bg-[#2D2A26] text-white hover:bg-yellow-500 rounded-full tracking-[0.2em] uppercase text-xs transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1"
             >
               {buttonText}
             </Button>

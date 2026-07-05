@@ -128,12 +128,12 @@ const CheckoutForm = memo(({ onSubmit, isProcessing, totalAmount, onGovernorateC
             <Label htmlFor="name" className="text-xs font-medium tracking-wider uppercase text-foreground/70 mb-2 block">
               {isAr ? "الاسم" : "Full Name"} <span className="text-red-500">*</span>
             </Label>
-            <Input
-              id="name"
-              value={formData.name || ""}
-              onChange={(e) => handleInputChange("name", e.target.value)}
-              className="h-11 rounded-sm border border-[#c8bdb0] bg-white focus-visible:ring-1 focus-visible:ring-foreground focus-visible:border-foreground text-sm shadow-sm"
-              placeholder={isAr ? "أدخل اسمك الكامل" : "Enter your full name"}
+              <Input
+                id="name"
+                value={formData.name || ""}
+                onChange={(e) => handleInputChange("name", e.target.value)}
+                className="h-12 rounded-xl border border-[#c8bdb0]/70 bg-white/80 focus-visible:ring-1 focus-visible:ring-foreground focus-visible:border-foreground text-sm shadow-sm transition-all"
+                placeholder={isAr ? "أدخل اسمك الكامل" : "Enter your full name"}
               required
             />
           </div>
@@ -151,7 +151,7 @@ const CheckoutForm = memo(({ onSubmit, isProcessing, totalAmount, onGovernorateC
                 value={formData.phone || ""}
                 onChange={(e) => handlePhoneChange(e.target.value)}
                 className={cn(
-                  "h-11 rounded-sm border border-[#c8bdb0] bg-white focus-visible:ring-1 focus-visible:ring-foreground focus-visible:border-foreground text-sm shadow-sm",
+                  "h-12 rounded-xl border border-[#c8bdb0]/70 bg-white/80 focus-visible:ring-1 focus-visible:ring-foreground focus-visible:border-foreground text-sm shadow-sm transition-all",
                   phoneError && "border-red-500 focus-visible:ring-red-500"
                 )}
                 placeholder={isAr ? "01xxxxxxxxx" : "01xxxxxxxxx"}
@@ -194,7 +194,7 @@ const CheckoutForm = memo(({ onSubmit, isProcessing, totalAmount, onGovernorateC
                     variant="outline"
                     role="combobox"
                     aria-expanded={governorateOpen}
-                    className="w-full justify-between bg-white h-11 rounded-sm border border-[#c8bdb0] text-sm font-normal shadow-sm hover:bg-white hover:border-foreground/40"
+                    className="w-full justify-between bg-white/80 h-12 rounded-xl border border-[#c8bdb0]/70 text-sm font-normal shadow-sm hover:bg-white hover:border-foreground/40 transition-all"
                   >
                     {formData.governorate || (isAr ? "اختر المحافظة" : "Select governorate")}
                     <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
@@ -239,7 +239,7 @@ const CheckoutForm = memo(({ onSubmit, isProcessing, totalAmount, onGovernorateC
                 placeholder={isAr ? "أدخل اسم المدينة" : "Enter city name"}
                 value={formData.city || ""}
                 onChange={(e) => handleInputChange("city", e.target.value)}
-                className="h-11 rounded-sm border border-[#c8bdb0] bg-white focus-visible:ring-1 focus-visible:ring-foreground focus-visible:border-foreground text-sm shadow-sm"
+                className="h-12 rounded-xl border border-[#c8bdb0]/70 bg-white/80 focus-visible:ring-1 focus-visible:ring-foreground focus-visible:border-foreground text-sm shadow-sm transition-all"
                 required
               />
             </div>
@@ -255,7 +255,7 @@ const CheckoutForm = memo(({ onSubmit, isProcessing, totalAmount, onGovernorateC
               placeholder={isAr ? "الشارع، رقم المبنى، الشقة، أي علامة مميزة..." : "Street, building number, apartment, landmarks..."}
               value={formData.detailedAddress || ""}
               onChange={(e) => handleInputChange("detailedAddress", e.target.value)}
-              className="min-h-[80px] rounded-sm border border-[#c8bdb0] bg-white focus-visible:ring-1 focus-visible:ring-foreground focus-visible:border-foreground text-sm resize-none shadow-sm"
+              className="min-h-[100px] p-4 rounded-2xl border border-[#c8bdb0]/70 bg-white/80 focus-visible:ring-1 focus-visible:ring-foreground focus-visible:border-foreground text-sm resize-none shadow-sm transition-all"
               required
             />
           </div>
@@ -270,7 +270,7 @@ const CheckoutForm = memo(({ onSubmit, isProcessing, totalAmount, onGovernorateC
               placeholder={isAr ? "أي تعليمات خاصة للتوصيل..." : "Any special delivery instructions..."}
               value={formData.notes || ""}
               onChange={(e) => handleInputChange("notes", e.target.value)}
-              className="min-h-[60px] rounded-sm border border-[#c8bdb0] bg-white focus-visible:ring-1 focus-visible:ring-foreground focus-visible:border-foreground text-sm resize-none shadow-sm"
+              className="min-h-[80px] p-4 rounded-2xl border border-[#c8bdb0]/70 bg-white/80 focus-visible:ring-1 focus-visible:ring-foreground focus-visible:border-foreground text-sm resize-none shadow-sm transition-all"
             />
           </div>
         </div>
@@ -294,19 +294,19 @@ const CheckoutForm = memo(({ onSubmit, isProcessing, totalAmount, onGovernorateC
             type="button"
             onClick={() => setPaymentMethod("visa")}
             className={cn(
-              "flex flex-col items-center gap-2.5 p-4 border rounded-sm transition-all duration-200",
+              "flex flex-col items-center gap-2.5 p-5 border rounded-2xl transition-all duration-300",
               paymentMethod === "visa"
-                ? "border-green-600 bg-white shadow-sm ring-1 ring-green-600/20"
-                : "border-[#c8bdb0] bg-white/60 hover:border-foreground/40 hover:bg-white"
+                ? "border-[#2D2A26] bg-white shadow-md ring-1 ring-[#2D2A26]/10 scale-[1.02]"
+                : "border-[#c8bdb0]/70 bg-white/60 hover:border-foreground/40 hover:bg-white"
             )}
           >
             <CreditCard className={cn(
-              "w-5 h-5",
-              paymentMethod === "visa" ? "text-green-700" : "text-muted-foreground"
+              "w-6 h-6",
+              paymentMethod === "visa" ? "text-[#2D2A26]" : "text-muted-foreground"
             )} />
             <span className={cn(
-              "text-[11px] font-medium tracking-widest uppercase",
-              paymentMethod === "visa" ? "text-green-700" : "text-muted-foreground"
+              "text-xs font-semibold tracking-widest uppercase",
+              paymentMethod === "visa" ? "text-[#2D2A26]" : "text-muted-foreground"
             )}>
               {isAr ? "بطاقة ائتمان" : "Credit Card"}
             </span>
@@ -317,19 +317,19 @@ const CheckoutForm = memo(({ onSubmit, isProcessing, totalAmount, onGovernorateC
             type="button"
             onClick={() => setPaymentMethod("wallet")}
             className={cn(
-              "flex flex-col items-center gap-2.5 p-4 border rounded-sm transition-all duration-200",
+              "flex flex-col items-center gap-2.5 p-5 border rounded-2xl transition-all duration-300",
               paymentMethod === "wallet"
-                ? "border-green-600 bg-white shadow-sm ring-1 ring-green-600/20"
-                : "border-[#c8bdb0] bg-white/60 hover:border-foreground/40 hover:bg-white"
+                ? "border-[#2D2A26] bg-white shadow-md ring-1 ring-[#2D2A26]/10 scale-[1.02]"
+                : "border-[#c8bdb0]/70 bg-white/60 hover:border-foreground/40 hover:bg-white"
             )}
           >
             <Wallet className={cn(
-              "w-5 h-5",
-              paymentMethod === "wallet" ? "text-green-700" : "text-muted-foreground"
+              "w-6 h-6",
+              paymentMethod === "wallet" ? "text-[#2D2A26]" : "text-muted-foreground"
             )} />
             <span className={cn(
-              "text-[11px] font-medium tracking-widest uppercase",
-              paymentMethod === "wallet" ? "text-green-700" : "text-muted-foreground"
+              "text-xs font-semibold tracking-widest uppercase",
+              paymentMethod === "wallet" ? "text-[#2D2A26]" : "text-muted-foreground"
             )}>
               {isAr ? "محفظة إلكترونية" : "E-Wallet"}
             </span>
@@ -341,9 +341,9 @@ const CheckoutForm = memo(({ onSubmit, isProcessing, totalAmount, onGovernorateC
       <button
         type="submit"
         className={cn(
-          "w-full h-14 bg-foreground text-background text-sm font-medium tracking-widest uppercase transition-all duration-300 rounded-sm",
-          "hover:bg-foreground/90 active:scale-[0.99]",
-          isProcessing && "opacity-50 cursor-not-allowed"
+          "w-full h-14 rounded-full bg-[#2D2A26] hover:bg-black text-white text-sm font-medium tracking-widest uppercase transition-all duration-300 shadow-xl border border-white/10 mt-4",
+          "hover:scale-[1.02]",
+          isProcessing && "opacity-50 cursor-not-allowed hover:scale-100"
         )}
         disabled={isProcessing}
         onMouseEnter={() => router.prefetch(`/${locale}/order-success`)}

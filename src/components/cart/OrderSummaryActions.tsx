@@ -25,9 +25,9 @@ const OrderSummaryActions = memo(({ onCheckoutClick }: { onCheckoutClick?: () =>
   return (
     <div>
       <button
-        className="w-full h-12 bg-foreground text-background text-xs font-medium tracking-widest uppercase
-          transition-all duration-300 hover:bg-foreground/90 active:scale-[0.99]
-          disabled:opacity-50 disabled:cursor-not-allowed
+        className="w-full h-14 rounded-full bg-[#2D2A26] hover:bg-black text-white text-sm font-medium tracking-widest uppercase
+          transition-all duration-300 hover:scale-[1.02] shadow-xl border border-white/10
+          disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100
           inline-flex items-center justify-center gap-2"
         onClick={validateStockAndCheckout}
         disabled={isValidating}
