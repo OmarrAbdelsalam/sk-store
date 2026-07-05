@@ -4,13 +4,14 @@ import { Button } from "@/components/ui/button";
 import { ShoppingBag, Check, Loader2 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 
 interface AddToCartSectionProps {
   totalPrice: number;
   onAddToCart: () => void | Promise<void>;
   onBuyNow?: () => void;
   disabled?: boolean;
+  inlineRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 type ButtonState = "idle" | "loading" | "added";
@@ -20,6 +21,7 @@ const AddToCartSection = React.memo(({
   onAddToCart,
   onBuyNow,
   disabled = false,
+  inlineRef,
 }: AddToCartSectionProps) => {
   const t = useTranslations("AddToCart");
   const locale = useLocale();
@@ -28,6 +30,37 @@ const AddToCartSection = React.memo(({
   const router = useRouter();
   const [buttonState, setButtonState] = useState<ButtonState>("idle");
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const inlineButtonRef = useRef<HTMLButtonElement | null>(null);
+  const [showSticky, setShowSticky] = useState(false);
+
+  // Show sticky bar only when the sentinel element is scrolled out of view
+  useEffect(() => {
+    // Use the externally provided ref (e.g. product info section) if available,
+    // otherwise fall back to the inline button itself
+    const el: Element | null = inlineRef?.current ?? inlineButtonRef.current;
+    if (!el) return;
+
+    let observer: IntersectionObserver;
+
+    const timer = setTimeout(() => {
+      const rect = el.getBoundingClientRect();
+      const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
+      setShowSticky(!isVisible);
+
+      observer = new IntersectionObserver(
+        ([entry]) => {
+          setShowSticky(!entry.isIntersecting);
+        },
+        { threshold: 0.1 }
+      );
+      observer.observe(el);
+    }, 100);
+
+    return () => {
+      clearTimeout(timer);
+      observer?.disconnect();
+    };
+  }, [inlineRef]);
 
   // Prefetch cart page on hover
   const handleCartHover = React.useCallback(() => {
@@ -82,7 +115,7 @@ const AddToCartSection = React.memo(({
   };
 
   const getButtonClasses = () => {
-    const base = "w-full text-base font-medium h-14 rounded-full transition-all duration-300 shadow-xl border border-transparent";
+    const base = "w-full text-sm font-medium h-11 rounded-full transition-all duration-300 shadow-md border border-transparent";
     switch (buttonState) {
       case "loading":
         return `${base} bg-gray-700 text-white cursor-wait`;
@@ -96,9 +129,9 @@ const AddToCartSection = React.memo(({
   return (
     <>
       
-      {/* Mobile button - fixed at bottom always */}
+      {/* Mobile button - fixed at bottom, shown only when inline button scrolled out of view */}
       <div 
-        className="fixed bottom-0 left-0 right-0 z-50 bg-white/85 backdrop-blur-xl border-t border-white/50 px-5 pt-4 pb-8 lg:hidden shadow-[0_-20px_40px_rgba(0,0,0,0.06)] rounded-t-[40px]"
+        className={`fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-100 px-4 pt-3 pb-5 lg:hidden shadow-[0_-8px_20px_rgba(0,0,0,0.06)] transition-transform duration-300 ${showSticky ? "translate-y-0" : "translate-y-full"}`}
         dir={dir}
       >
         <Button
@@ -129,8 +162,9 @@ const AddToCartSection = React.memo(({
           </Button>
         </a>
         
-        {/* Inline Add to Cart button (in addition to the fixed one at bottom) */}
+        {/* Inline Add to Cart button — observed by IntersectionObserver */}
         <Button
+          ref={inlineButtonRef}
           size="lg"
           className={getButtonClasses()}
           onClick={handleAddToCart}

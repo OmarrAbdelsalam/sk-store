@@ -49,15 +49,14 @@ const OrderSummary = memo(
 
     return (
       <div dir={dir} className="lg:sticky lg:top-24">
-        <div className="bg-[#F0EBE3]/50 rounded-[32px] p-6 sm:p-8 border border-[#d4c9bc] shadow-sm">
-          {/* Header */}
-          <div className="mb-6">
-            <h2 className="text-sm sm:text-base font-medium tracking-widest uppercase">
+        <div className="bg-[#F0EBE3]/50 rounded-2xl p-4 sm:p-5 border border-[#d4c9bc] shadow-sm">
+          <div className="mb-4">
+            <h2 className="text-xs font-medium tracking-widest uppercase">
               Order Summary
             </h2>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* BOGO Banner */}
             {bogoDiscount > 0 && (
               <div className="flex items-center gap-2.5 px-4 py-3 bg-emerald-100 border border-emerald-300 text-emerald-900">
@@ -87,7 +86,7 @@ const OrderSummary = memo(
               <span className="text-sm font-medium tracking-wider uppercase">
                 {t("total")}
               </span>
-              <span className="text-xl sm:text-2xl font-light tracking-wider">
+              <span className="text-lg sm:text-xl font-light tracking-wider">
                 {Math.max(0, total).toLocaleString()} <span className="text-xs tracking-wider uppercase">{currency}</span>
               </span>
             </div>

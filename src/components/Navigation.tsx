@@ -1,5 +1,4 @@
 "use client"
-import { useState, useEffect } from "react";
 
 import { MobileMenu } from "./navigation/MobileMenu";
 import { DesktopMenu } from "./navigation/DesktopMenu";
@@ -33,22 +32,12 @@ export const LanguageSwitcher = () => {
 const Navigation = () => {
   const t = useTranslations();
   const locale = useLocale();
-  const [isScrolled, setIsScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-    handleScroll(); // Initial check
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   return (
-    <header className={`w-full sticky top-0 z-50 transition-all duration-300 pt-0`}>
+    <header className={`w-full sticky top-0 z-50`}>
       {/* Main Navigation */}
-      <div className={`pointer-events-auto transition-all duration-300 w-full`}>
-        <div className={`h-16 md:h-20 flex items-center bg-white/90 backdrop-blur-xl border-b border-[#2D2A26]/10 px-4 md:px-12 transition-all duration-300 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)]`}>
+      <div className={`pointer-events-auto w-full`}>
+        <div className={`h-16 md:h-20 flex items-center bg-white border-b border-[#2D2A26]/10 px-4 md:px-12 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)]`}>
           {/* Mobile Layout - يظهر فقط على الموبايل */}
           <div className="md:hidden w-full relative flex items-center justify-between">
             {/* Left: Menu Button */}

@@ -25,9 +25,10 @@ export type SlideData = {
 export default function HeroCarousel({ slides }: { slides: SlideData[] }) {
   const [api, setApi] = useState<CarouselApi>();
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const isMultiple = slides.length > 1;
 
   useEffect(() => {
-    if (!api) return;
+    if (!api || !isMultiple) return;
 
     const onSelect = () => {
       setSelectedIndex(api.selectedScrollSnap());
@@ -50,7 +51,7 @@ export default function HeroCarousel({ slides }: { slides: SlideData[] }) {
       clearInterval(interval);
       api.off("select", onSelect);
     };
-  }, [api]);
+  }, [api, isMultiple]);
 
   return (
     <Carousel
@@ -60,7 +61,7 @@ export default function HeroCarousel({ slides }: { slides: SlideData[] }) {
     >
       <CarouselContent className="h-full ml-0">
         {slides.map((slide, index) => (
-          <CarouselItem key={index} className="pl-0 basis-full h-[calc(100svh-104px)] lg:h-[calc(100vh-120px)]">
+          <CarouselItem key={index} className="pl-0 basis-full h-[calc(100svh-101px)] lg:h-[calc(100vh-120px)]">
             <div className="relative h-full w-full overflow-hidden bg-white">
               {/* Mobile/Tablet Layout */}
               <div className="lg:hidden relative h-full w-full">
@@ -119,14 +120,7 @@ export default function HeroCarousel({ slides }: { slides: SlideData[] }) {
                   </div>
                 </div>
 
-                {/* Scroll Indicator (Only on first slide) */}
-                {index === 0 && (
-                  <div className="absolute bottom-4 md:bottom-8 left-1/2 transform -translate-x-1/2">
-                    <div className="w-px h-8 md:h-12 bg-white/50 relative">
-                      <div className="absolute top-0 w-px h-3 md:h-4 bg-white animate-pulse" />
-                    </div>
-                  </div>
-                )}
+
               </div>
 
               {/* Desktop Split Layout */}
@@ -169,17 +163,19 @@ export default function HeroCarousel({ slides }: { slides: SlideData[] }) {
         ))}
       </CarouselContent>
       
-      {/* Dots Indicator */}
-      <div className="absolute bottom-6 lg:bottom-10 left-1/2 transform -translate-x-1/2 flex items-center justify-center gap-2 z-20">
-        {slides.map((_, index) => (
-          <button
-            key={index}
-            className="w-2 h-2 rounded-full transition-all duration-300 bg-white/40 hover:bg-white/80 aria-selected:w-8 aria-selected:bg-white"
-            aria-selected={selectedIndex === index}
-            onClick={() => api?.scrollTo(index)}
-          />
-        ))}
-      </div>
+      {/* Dots Indicator - only shown when multiple slides */}
+      {isMultiple && (
+        <div className="absolute bottom-6 lg:bottom-10 left-1/2 transform -translate-x-1/2 flex items-center justify-center gap-2 z-20">
+          {slides.map((_, index) => (
+            <button
+              key={index}
+              className="w-2 h-2 rounded-full transition-all duration-300 bg-white/40 hover:bg-white/80 aria-selected:w-8 aria-selected:bg-white"
+              aria-selected={selectedIndex === index}
+              onClick={() => api?.scrollTo(index)}
+            />
+          ))}
+        </div>
+      )}
     </Carousel>
   );
 }

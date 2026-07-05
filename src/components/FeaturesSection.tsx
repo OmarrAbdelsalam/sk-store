@@ -41,7 +41,7 @@ const FeaturesSection = async () => {
                   <feature.icon strokeWidth={1.5} className="w-8 h-8 group-hover:scale-110 transition-transform duration-300" />
                 </div>
               </div>
-              <h3 className="font-medium text-lg text-[#2D2A26] mb-2 tracking-wide">
+              <h3 className="font-medium text-sm md:text-base text-[#2D2A26] mb-2 tracking-wide">
                 {feature.title}
               </h3>
               <p className="text-[#5C564D] text-sm leading-relaxed max-w-xs">

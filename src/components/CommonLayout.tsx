@@ -18,7 +18,7 @@ export default function CommonLayout({ children, topBanner }: { children: React.
       {topBanner}
       <Navigation />
       <div className="bg-white flex flex-col min-h-[calc(100vh-100px)]">
-        <main id="main-content" className="flex-grow pb-20 md:pb-16">
+        <main id="main-content" className="flex-grow">
           {children}
         </main>
         <Footer />

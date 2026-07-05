@@ -399,7 +399,7 @@ const ProductImageGallery = ({
       {/* ======== MOBILE LAYOUT: Swipeable carousel ======== */}
       <div className="lg:hidden">
         <div
-          className="relative aspect-[4/4.8] w-full bg-gray-50 overflow-hidden cursor-zoom-in group rounded-b-[40px] shadow-[0_10px_40px_rgba(0,0,0,0.08)]"
+          className="relative aspect-[4/4.8] w-full bg-gray-50 overflow-hidden cursor-zoom-in group rounded-b-2xl shadow-[0_6px_24px_rgba(0,0,0,0.08)]"
           onClick={() => setIsLightboxOpen(true)}
         >
           <AnimatePresence initial={false} custom={direction}>

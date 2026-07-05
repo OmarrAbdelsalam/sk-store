@@ -173,18 +173,18 @@ export default function CartPageClient() {
       </Suspense>
 
       {/* Mobile Sticky Bottom Bar - Total + Checkout */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/85 backdrop-blur-xl border-t border-white/50 px-5 pt-4 pb-8 lg:hidden shadow-[0_-20px_40px_rgba(0,0,0,0.06)] rounded-t-[40px]" dir={dir}>
-        <div className="flex items-center justify-between mb-4 px-2">
-          <span className="text-sm font-medium tracking-wider uppercase text-muted-foreground">
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-100 px-4 pt-3 pb-5 lg:hidden shadow-[0_-8px_20px_rgba(0,0,0,0.06)]" dir={dir}>
+        <div className="flex items-center justify-between mb-3 px-1">
+          <span className="text-xs font-medium tracking-wider uppercase text-muted-foreground">
             {isAr ? 'الإجمالي' : 'Total'}
           </span>
-          <span className="text-xl font-semibold tracking-wider">
+          <span className="text-base font-semibold tracking-wider">
             {Math.max(0, getTotalPrice() - bogoDiscount).toLocaleString()} <span className="text-xs uppercase">EGP</span>
           </span>
         </div>
         <button
-          className="w-full h-14 rounded-full bg-[#2D2A26] hover:bg-black text-white text-sm font-medium tracking-widest uppercase
-            transition-all duration-300 hover:scale-[1.02] shadow-xl border border-white/10
+          className="w-full h-10 rounded-full bg-[#2D2A26] hover:bg-black text-white text-xs font-medium tracking-widest uppercase
+            transition-all duration-300 hover:scale-[1.02] shadow-md border border-white/10
             inline-flex items-center justify-center gap-2"
           onClick={() => router.push(`/${locale}/checkout`)}
         >

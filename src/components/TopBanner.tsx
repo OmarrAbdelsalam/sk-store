@@ -40,20 +40,20 @@ export default async function TopBanner() {
             /* Two identical strips side-by-side, each scrolling left */
             <div className="flex shrink-0 animate-marquee" style={{ animationDuration: `${settings?.scroll_speed || 30}s` }}>
               {/* Strip 1 */}
-              <div className="flex items-center shrink-0 text-[15.5px] md:text-[17px] tracking-widest text-white pt-1">
+              <div className="flex items-center shrink-0 text-xs md:text-sm tracking-widest text-white pt-1">
                 {items.map((item) => (
                   <span key={item.id} className="flex items-center shrink-0">
-                    <Sparkles className="w-4 h-4 text-yellow-500 mr-2" />
+                    <Sparkles className="w-3 h-3 text-yellow-500 mr-2" />
                     <span className="mx-4 md:mx-6 whitespace-nowrap">{item.text}</span>
                     <span className="opacity-30 ml-4 md:ml-6 md:opacity-50">•</span>
                   </span>
                 ))}
               </div>
               {/* Strip 2 (duplicate) */}
-              <div className="flex items-center shrink-0 text-[15.5px] md:text-[17px] tracking-widest text-white pt-1">
+              <div className="flex items-center shrink-0 text-xs md:text-sm tracking-widest text-white pt-1">
                 {items.map((item) => (
                   <span key={`d-${item.id}`} className="flex items-center shrink-0">
-                    <Sparkles className="w-4 h-4 text-yellow-500 mr-2" />
+                    <Sparkles className="w-3 h-3 text-yellow-500 mr-2" />
                     <span className="mx-4 md:mx-6 whitespace-nowrap">{item.text}</span>
                     <span className="opacity-30 ml-4 md:ml-6 md:opacity-50">•</span>
                   </span>
@@ -61,9 +61,9 @@ export default async function TopBanner() {
               </div>
             </div>
           ) : (
-            <div className="flex items-center justify-center w-full text-[15.5px] md:text-[17px] tracking-widest text-white pt-1">
+            <div className="flex items-center justify-center w-full text-xs md:text-sm tracking-widest text-white pt-1">
               <span className="mx-6 md:mx-8 whitespace-nowrap flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-yellow-500" />
+                <Sparkles className="w-3 h-3 text-yellow-500" />
                 {items[0]?.text || "Mix & match any 3 × 50ml or 100ml — get 10% off"}
               </span>
             </div>

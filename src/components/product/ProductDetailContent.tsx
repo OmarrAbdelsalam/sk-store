@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useCart } from "@/hooks/useCart";
@@ -213,6 +213,7 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
   }, [photos, selectedColorId, selectedChainId]);
 
   const [cartItems, setCartItems] = useState<any[]>([]);
+  const addToCartSentinelRef = useRef<HTMLDivElement>(null);
 
   // Fetch cart on load
   useEffect(() => {
@@ -368,7 +369,7 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
 
   return (
     <>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-8">
         {/* Left column: Images + Specs */}
         <div className={`order-1 lg:order-1 ${isAr ? "lg:col-start-1" : ""}`}>
           <div className="space-y-6">
@@ -401,6 +402,8 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
         {/* Right column: Info */}
         <div className={`order-2 lg:order-2 px-4 lg:px-0 ${isAr ? "lg:col-start-2" : ""}`}>
           <div className="lg:sticky lg:top-24 space-y-6">
+            {/* Sentinel: observed to show/hide the sticky add to cart bar */}
+            <div ref={addToCartSentinelRef} />
             <ProductInfo
               name={isAr ? (product.nameAr || product.nameEn || "") : (product.nameEn || product.nameAr || "")}
               description={isAr ? (product.descriptionAr || product.descriptionEn || "") : (product.descriptionEn || product.descriptionAr || "")}
@@ -450,6 +453,7 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
               onAddToCart={handleAddToCart}
               onBuyNow={handleBuyNow}
               disabled={addDisabled}
+              inlineRef={addToCartSentinelRef}
             />
           </div>
         </div>

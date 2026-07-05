@@ -20,11 +20,11 @@ export default async function Hero() {
     // keep defaults on error
   }
 
-  // Slide 1: Summer Edition
+  // Summer Edition slide only
   const slide1 = {
     title: "Summer Edition",
     description: "Discover our vibrant new summer collection of handcrafted bags.",
-    desktopImage: "/hero.png", // Using hero.png for desktop as well to match
+    desktopImage: "/hero.png",
     mobileMedia: "/hero.png",
     mobileIsVideo: false,
     buttonText: "SHOP SUMMER",
@@ -32,21 +32,9 @@ export default async function Hero() {
     mobileButtonLink: `/products?category=summer-collection`,
   };
 
-  // Slide 2: Current Hero
-  const slide2 = {
-    title: hero.title || "New Collection",
-    description: hero.description || "Discover our premium handmade bags",
-    desktopImage: hero.image_url || DEFAULT_HERO.image_url,
-    mobileMedia: mobileHero.media_url || DEFAULT_MOBILE_HERO.media_url,
-    mobileIsVideo: mobileHero.media_type === "video",
-    buttonText: hero.button_text || DEFAULT_HERO.button_text,
-    buttonLink: hero.button_link || DEFAULT_HERO.button_link,
-    mobileButtonLink: mobileHero.button_link || DEFAULT_MOBILE_HERO.button_link,
-  };
-
   return (
-    <section className="w-full bg-white">
-      <HeroCarousel slides={[slide1, slide2]} />
+    <section className="w-full bg-white overflow-hidden">
+      <HeroCarousel slides={[slide1]} />
     </section>
   );
 }

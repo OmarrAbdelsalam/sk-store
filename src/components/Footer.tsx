@@ -31,10 +31,10 @@ const Footer = () => {
         
         {/* Top Section */}
         <div className="flex flex-col items-center justify-center mb-16 text-center space-y-3">
-          <h2 className="text-3xl md:text-4xl font-bold tracking-[0.2em] text-white">
+          <h2 className="text-2xl md:text-3xl font-bold tracking-[0.2em] text-white">
             SK BAGS
           </h2>
-          <h3 className="text-base md:text-lg font-medium tracking-wide text-[#C2A878] max-w-xl leading-relaxed">
+          <h3 className="text-sm md:text-base font-medium tracking-wide text-[#C2A878] max-w-xl leading-relaxed">
             {t('Footer.brandDesc') || "Handcrafted crochet bags that blend elegance with everyday functionality. Each piece is unique, just like you."}
           </h3>
         </div>
@@ -44,8 +44,8 @@ const Footer = () => {
           
           {/* Shop Categories */}
           <div className="flex flex-col items-center md:items-start text-center md:text-start">
-            <h5 className="text-xl font-bold mb-6 tracking-wider text-[#C2A878]">{t('Footer.shop')}</h5>
-            <ul className="space-y-4 text-base">
+            <h5 className="text-sm font-bold mb-6 tracking-wider text-[#C2A878]">{t('Footer.shop')}</h5>
+            <ul className="space-y-3 text-sm">
               {mounted && categories.map((category) => {
                 const categoryName = locale === 'ar' ? category.arabicName : category.englishName;
                 return (
@@ -64,8 +64,8 @@ const Footer = () => {
           
           {/* Orders & Help */}
           <div className="flex flex-col items-center md:items-start text-center md:text-start">
-            <h5 className="text-xl font-bold mb-6 tracking-wider text-[#C2A878]">{t('Footer.orders')}</h5>
-            <div className="space-y-4">
+            <h5 className="text-sm font-bold mb-6 tracking-wider text-[#C2A878]">{t('Footer.orders')}</h5>
+            <div className="space-y-3">
               <div className="group">
                 <button 
                   className={`text-gray-200 hover:text-white transition-all duration-300 ${locale === 'ar' ? 'group-hover:-translate-x-2 text-right' : 'group-hover:translate-x-2 text-left'}`}
@@ -79,8 +79,8 @@ const Footer = () => {
           
           {/* Contact */}
           <div className="flex flex-col items-center md:items-start text-center md:text-start">
-            <h5 className="text-xl font-bold mb-6 tracking-wider text-[#C2A878]">{t('Footer.contactUs')}</h5>
-            <div className="space-y-4">
+            <h5 className="text-sm font-bold mb-6 tracking-wider text-[#C2A878]">{t('Footer.contactUs')}</h5>
+            <div className="space-y-3">
               <div className="group">
                 <button 
                   className={`text-gray-200 hover:text-white transition-all duration-300 ${locale === 'ar' ? 'group-hover:-translate-x-2 text-right' : 'group-hover:translate-x-2 text-left'}`}
