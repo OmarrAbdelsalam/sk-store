@@ -17,7 +17,7 @@ export const DEFAULT_MOBILE_HERO: Omit<MobileHero, 'id' | 'created_at' | 'update
   button_text: 'SHOP BAGS',
   button_link: '/products',
   text_color: '#ffffff',
-  media_url: '/hero.webp',
+  media_url: '/hero.png',
   media_type: 'image',
   is_active: true,
 };

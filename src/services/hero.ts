@@ -21,7 +21,7 @@ export const DEFAULT_HERO: Omit<HeroSettings, 'id' | 'created_at' | 'updated_at'
   description: 'Discover our curated collection of handcrafted bags and accessories — where timeless elegance meets everyday luxury.',
   button_text: 'SHOP NOW',
   button_link: '/products',
-  image_url: '/hero.webp',
+  image_url: '/hero.png',
   is_active: true,
 };
 
