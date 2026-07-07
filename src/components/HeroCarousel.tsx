@@ -56,7 +56,7 @@ export default function HeroCarousel({ slides }: { slides: SlideData[] }) {
   return (
     <Carousel
       setApi={setApi}
-      opts={{ loop: true }}
+      opts={{ loop: isMultiple, watchDrag: isMultiple }}
       className="w-full h-full"
     >
       <CarouselContent className="h-full ml-0">

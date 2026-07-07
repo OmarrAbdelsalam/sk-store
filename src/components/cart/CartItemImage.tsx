@@ -16,6 +16,7 @@ export default function CartItemImage({ src, alt }: CartItemImageProps) {
         className="object-cover"
         loading="lazy"
         quality={80}
+        unoptimized
       />
     </div>
   );

@@ -110,6 +110,7 @@ export default function DropboxImage({
       sizes={sizes}
       onLoad={handleLoad}
       onError={handleError}
+      unoptimized
     />
   );
 }

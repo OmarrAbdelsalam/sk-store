@@ -93,6 +93,7 @@ function SafeImage({
       onMouseMove={onMouseMove}
       onMouseLeave={onMouseLeave}
       style={style}
+      unoptimized
     />
   );
 }

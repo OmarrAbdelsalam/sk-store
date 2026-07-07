@@ -96,7 +96,7 @@ export const DesktopMenu = () => {
       <Button 
         variant="ghost" 
         onClick={goToAllProducts}
-        className={`font-medium hover:bg-transparent hover:text-black transition-colors px-2 ${isActive(null) ? 'text-black' : 'text-black/60'}`}
+        className={`text-base font-medium hover:bg-transparent hover:text-black transition-colors px-2 ${isActive(null) ? 'text-black' : 'text-black/60'}`}
       >
         {t("Nav.allProducts")}
       </Button>
@@ -116,7 +116,7 @@ export const DesktopMenu = () => {
               key={category.key}
               variant="ghost"
               onClick={() => goToCategory(category.key, categoryName)}
-              className={`font-medium hover:bg-transparent hover:text-black transition-colors px-2 ${isActiveCategory ? 'text-black' : 'text-black/60'}`}
+              className={`text-base font-medium hover:bg-transparent hover:text-black transition-colors px-2 ${isActiveCategory ? 'text-black' : 'text-black/60'}`}
               disabled={isPending}
             >
               {categoryName}

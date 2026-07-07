@@ -26,7 +26,7 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-[#2D2A26] text-white py-16 mt-12 rounded-t-[40px] md:rounded-t-[60px] shadow-[0_-10px_40px_rgba(0,0,0,0.05)] relative z-20 overflow-hidden">
+    <footer className="bg-[#2D2A26] text-white py-16 mt-12 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] relative z-20 overflow-hidden">
       <div className="container mx-auto px-6 md:px-10">
         
         {/* Top Section */}
