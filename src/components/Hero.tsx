@@ -20,12 +20,17 @@ export default async function Hero() {
     // keep defaults on error
   }
 
+  const getValidUrl = (url: string | null | undefined, fallback: string) => {
+    if (!url || url === '/hero.webp') return fallback;
+    return url;
+  };
+
   // Summer Edition slide only
   const slide1 = {
     title: "Summer Edition",
     description: "Discover our vibrant new summer collection of handcrafted bags.",
-    desktopImage: hero.image_url || DEFAULT_HERO.image_url,
-    mobileMedia: mobileHero.media_url || DEFAULT_MOBILE_HERO.media_url,
+    desktopImage: getValidUrl(hero.image_url, "/e.webp"),
+    mobileMedia: getValidUrl(mobileHero.media_url, "/e.webp"),
     mobileIsVideo: mobileHero.media_type === "video",
     buttonText: "SHOP SUMMER",
     buttonLink: `/products?category=summer-collection`,
