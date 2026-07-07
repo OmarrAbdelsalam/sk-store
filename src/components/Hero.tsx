@@ -24,9 +24,9 @@ export default async function Hero() {
   const slide1 = {
     title: "Summer Edition",
     description: "Discover our vibrant new summer collection of handcrafted bags.",
-    desktopImage: "/hero.png",
-    mobileMedia: "/hero.png",
-    mobileIsVideo: false,
+    desktopImage: hero.image_url || DEFAULT_HERO.image_url,
+    mobileMedia: mobileHero.media_url || DEFAULT_MOBILE_HERO.media_url,
+    mobileIsVideo: mobileHero.media_type === "video",
     buttonText: "SHOP SUMMER",
     buttonLink: `/products?category=summer-collection`,
     mobileButtonLink: `/products?category=summer-collection`,
