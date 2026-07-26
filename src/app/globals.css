@@ -181,8 +181,8 @@
     padding-bottom: env(safe-area-inset-bottom);
   }
 
-  .font-inter {
-    font-family: var(--font-inter), sans-serif;
+  .font-plus-jakarta {
+    font-family: var(--font-plus-jakarta), sans-serif;
   }
 
   .luxury-card {

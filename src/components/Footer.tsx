@@ -26,25 +26,25 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-[#2D2A26] text-white py-16 mt-12 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] relative z-20 overflow-hidden">
+    <footer className="bg-black text-white py-16 mt-12 relative z-20 overflow-hidden">
       <div className="container mx-auto px-6 md:px-10">
         
         {/* Top Section */}
-        <div className="flex flex-col items-center justify-center mb-16 text-center space-y-3">
-          <h2 className="text-2xl md:text-3xl font-bold tracking-[0.2em] text-white">
+        <div className="flex flex-col items-center justify-center mb-16 text-center space-y-4">
+          <h2 className="text-3xl md:text-4xl font-black tracking-widest text-white uppercase">
             SK BAGS
           </h2>
-          <h3 className="text-sm md:text-base font-medium tracking-wide text-[#C2A878] max-w-xl leading-relaxed">
+          <p className="text-sm md:text-base font-light text-gray-400 max-w-xl leading-relaxed">
             {t('Footer.brandDesc') || "Handcrafted crochet bags that blend elegance with everyday functionality. Each piece is unique, just like you."}
-          </h3>
+          </p>
         </div>
 
-        {/* Footer Links */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-16 border-t border-white/10 pt-16">
+        {/* Footer Links & Image */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16 border-t border-white/10 pt-16">
           
           {/* Shop Categories */}
           <div className="flex flex-col items-center md:items-start text-center md:text-start">
-            <h5 className="text-sm font-bold mb-6 tracking-wider text-[#C2A878]">{t('Footer.shop')}</h5>
+            <h5 className="text-sm font-bold mb-6 tracking-widest text-white uppercase">{t('Footer.shop')}</h5>
             <ul className="space-y-3 text-sm">
               {mounted && categories.map((category) => {
                 const categoryName = locale === 'ar' ? category.arabicName : category.englishName;
@@ -64,7 +64,7 @@ const Footer = () => {
           
           {/* Orders & Help */}
           <div className="flex flex-col items-center md:items-start text-center md:text-start">
-            <h5 className="text-sm font-bold mb-6 tracking-wider text-[#C2A878]">{t('Footer.orders')}</h5>
+            <h5 className="text-sm font-bold mb-6 tracking-widest text-white uppercase">{t('Footer.orders')}</h5>
             <div className="space-y-3">
               <div className="group">
                 <button 
@@ -79,7 +79,7 @@ const Footer = () => {
           
           {/* Contact */}
           <div className="flex flex-col items-center md:items-start text-center md:text-start">
-            <h5 className="text-sm font-bold mb-6 tracking-wider text-[#C2A878]">{t('Footer.contactUs')}</h5>
+            <h5 className="text-sm font-bold mb-6 tracking-widest text-white uppercase">{t('Footer.contactUs')}</h5>
             <div className="space-y-3">
               <div className="group">
                 <button 
@@ -108,6 +108,18 @@ const Footer = () => {
             </div>
           </div>
 
+          {/* 4th Column: Footer Image */}
+          <div className="flex flex-col items-center md:items-start text-center md:text-start mt-8 md:mt-0">
+            <div className="relative w-full h-[250px] sm:h-[300px] md:h-full md:min-h-[160px] overflow-hidden opacity-90 hover:opacity-100 transition-opacity duration-300">
+              <Image 
+                src="/footer.webp" 
+                alt="SK Bags Collection"
+                fill
+                className="object-cover object-center"
+              />
+            </div>
+          </div>
+
         </div>
 
         {/* Bottom Section */}
@@ -120,18 +132,18 @@ const Footer = () => {
             </div>
             <div className="flex items-center space-x-4">
               <button 
-                className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-[#C2A878] hover:scale-110 transition-all duration-300"
+                className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white hover:bg-white hover:text-black hover:scale-110 transition-all duration-300"
                 onClick={() => window.open("https://www.instagram.com/skbags/", "_blank")}
                 aria-label="Instagram"
               >
-                <Instagram className="h-5 w-5" />
+                <Instagram className="h-4 w-4" />
               </button>
               <button 
-                className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-[#C2A878] hover:scale-110 transition-all duration-300 ml-4"
+                className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white hover:bg-white hover:text-black hover:scale-110 transition-all duration-300 ml-4"
                 onClick={() => window.open("https://www.facebook.com/skbags/", "_blank")}
                 aria-label="Facebook"
               >
-                <Facebook className="h-5 w-5" />
+                <Facebook className="h-4 w-4" />
               </button>
             </div>
           </div>

@@ -61,7 +61,7 @@ export default function HeroCarousel({ slides }: { slides: SlideData[] }) {
     >
       <CarouselContent className="h-full ml-0">
         {slides.map((slide, index) => (
-          <CarouselItem key={index} className="pl-0 basis-full h-[calc(100svh-101px)] lg:h-[calc(100vh-120px)]">
+          <CarouselItem key={index} className="pl-0 basis-full h-[calc(100svh-101px)] lg:h-auto lg:aspect-video">
             <div className="relative h-full w-full overflow-hidden bg-white">
               {/* Mobile/Tablet Layout */}
               <div className="lg:hidden relative h-full w-full">
@@ -100,7 +100,7 @@ export default function HeroCarousel({ slides }: { slides: SlideData[] }) {
                   <div className="w-full flex flex-col items-center text-center animate-slide-up space-y-4">
                     
                     <div className="space-y-2">
-                      <h2 className="font-playfair text-3xl md:text-4xl font-bold text-white tracking-wide drop-shadow-md">
+                      <h2 className="font-sans font-bold text-3xl md:text-4xl font-bold text-white tracking-wide drop-shadow-md">
                         {slide.title}
                       </h2>
                       {slide.description && (
@@ -123,39 +123,41 @@ export default function HeroCarousel({ slides }: { slides: SlideData[] }) {
 
               </div>
 
-              {/* Desktop Split Layout */}
-              <div className="hidden lg:flex h-full w-full items-center">
-                {/* Left: Text Content (60%) */}
-                <div className="w-[60%] h-full flex flex-col items-center justify-center text-center px-12 md:px-20 bg-white border-r border-gray-100">
-                  <div className="max-w-2xl space-y-8">
-                    <h1 className="font-playfair text-5xl md:text-7xl text-[#2D2A26] leading-tight">
+              {/* Desktop Full-Width Layout */}
+              <div className="hidden lg:block relative h-full w-full">
+                {/* Full-width background image */}
+                <Image
+                  src={slide.desktopImage}
+                  alt={slide.title}
+                  fill
+                  priority={index === 0}
+                  className="object-cover object-center"
+                  sizes="100vw"
+                />
+
+                {/* Dark overlay for text readability */}
+                <div className="absolute inset-0 bg-black/35" />
+
+                {/* Bottom gradient */}
+                <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+
+                {/* Text content overlay - center left */}
+                <div className="relative z-10 h-full flex flex-col items-start justify-center px-16">
+                  <div className="max-w-xl space-y-6 text-left">
+                    <h1 className="font-sans text-5xl md:text-7xl text-white font-bold leading-tight drop-shadow-lg">
                       {slide.title}
                     </h1>
-                    <p className="text-gray-600 text-lg md:text-xl font-light tracking-wide max-w-lg mx-auto leading-relaxed">
+                    <p className="text-white/90 text-lg md:text-xl font-light tracking-wide leading-relaxed drop-shadow-md">
                       {slide.description}
                     </p>
-                    <div className="pt-6">
+                    <div className="pt-2">
                       <Link href={slide.buttonLink}>
-                        <Button className="px-10 py-5 min-h-[48px] bg-[#2D2A26] text-white hover:bg-yellow-500 rounded-full tracking-[0.2em] uppercase text-xs font-bold transition-all duration-300 shadow-xl hover:shadow-2xl hover:-translate-y-1">
+                        <Button className="px-10 py-5 min-h-[48px] bg-white text-gray-900 hover:bg-[#C2A878] hover:text-white rounded-full tracking-[0.2em] uppercase text-xs font-bold transition-all duration-300 shadow-xl hover:shadow-2xl hover:-translate-y-1">
                           {slide.buttonText || "SHOP NOW"}
                         </Button>
                       </Link>
                     </div>
                   </div>
-                </div>
-
-                {/* Right: Image (40%) */}
-                <div className="w-[40%] h-full relative overflow-hidden">
-                  <Image
-                    src={slide.desktopImage}
-                    alt={slide.title}
-                    fill
-                    priority={index === 0}
-                    className="object-cover"
-                    style={{ objectPosition: "center -26px" }}
-                    sizes="40vw"
-                  />
-                  <div className="absolute inset-0 bg-black/5" />
                 </div>
               </div>
             </div>

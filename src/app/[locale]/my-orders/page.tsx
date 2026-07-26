@@ -175,20 +175,20 @@ export default function MyOrdersPage() {
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
         {/* Page Title */}
         <div className="mb-8 sm:mb-12">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-light tracking-wider uppercase text-[#2D2A26]">{t("title")}</h1>
-          <div className="h-px w-12 bg-[#2D2A26] mt-3" />
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-light tracking-wider uppercase text-gray-900">{t("title")}</h1>
+          <div className="h-px w-12 bg-black mt-3" />
           <p className="text-xs tracking-wider text-muted-foreground mt-3">{t("subtitle")}</p>
         </div>
 
         {/* Empty State */}
         {orders.length === 0 ? (
           <div className="bg-[#F0EBE3]/30 rounded-[32px] border border-[#d4c9bc] p-10 sm:p-16 text-center space-y-5 shadow-sm">
-            <Package className="h-12 w-12 text-[#2D2A26]/40 mx-auto" />
-            <h3 className="text-base font-bold tracking-widest uppercase text-[#2D2A26]">{t("noOrders")}</h3>
+            <Package className="h-12 w-12 text-gray-900/40 mx-auto" />
+            <h3 className="text-base font-bold tracking-widest uppercase text-gray-900">{t("noOrders")}</h3>
             <p className="text-sm text-muted-foreground tracking-wider">{t("noOrdersDesc")}</p>
             <button
               onClick={() => router.push("/")}
-              className="h-14 px-10 rounded-full bg-[#2D2A26] text-white text-sm font-bold tracking-widest uppercase hover:bg-black hover:-translate-y-1 shadow-md hover:shadow-xl transition-all duration-300 inline-flex items-center gap-2 mt-4"
+              className="h-14 px-10 rounded-full bg-black text-white text-sm font-bold tracking-widest uppercase hover:bg-black hover:-translate-y-1 shadow-md hover:shadow-xl transition-all duration-300 inline-flex items-center gap-2 mt-4"
             >
               {t("startShopping")}
               <ArrowRight className="h-4 w-4" />
@@ -235,7 +235,7 @@ export default function MyOrdersPage() {
                   {/* Expand Toggle */}
                   <button
                     onClick={() => setOpenOrderId(isOpen ? null : order.id)}
-                    className="w-full flex items-center justify-between px-5 sm:px-6 py-4 border-t border-[#d4c9bc]/60 text-xs tracking-widest uppercase text-[#2D2A26] font-bold hover:bg-white/50 transition-colors"
+                    className="w-full flex items-center justify-between px-5 sm:px-6 py-4 border-t border-[#d4c9bc]/60 text-xs tracking-widest uppercase text-gray-900 font-bold hover:bg-white/50 transition-colors"
                   >
                     <span>{t("viewDetails")}</span>
                     {isOpen ? (
@@ -250,7 +250,7 @@ export default function MyOrdersPage() {
                     <div className="border-t border-[#d4c9bc]/60 bg-white/60">
                       {/* Items Section */}
                       <div className="p-5 sm:p-6">
-                        <h4 className="text-xs font-bold tracking-widest uppercase text-[#2D2A26] mb-4">
+                        <h4 className="text-xs font-bold tracking-widest uppercase text-gray-900 mb-4">
                           {t("items")}
                         </h4>
                         <div className="space-y-0">
@@ -293,7 +293,7 @@ export default function MyOrdersPage() {
 
                       {/* Shipping Address */}
                       <div className="px-5 sm:px-6 pb-5 sm:pb-6">
-                        <h4 className="text-xs font-bold tracking-widest uppercase text-[#2D2A26] mb-3">
+                        <h4 className="text-xs font-bold tracking-widest uppercase text-gray-900 mb-3">
                           {t("shippingAddress")}
                         </h4>
                         <div className="bg-white rounded-[16px] border border-[#d4c9bc]/50 p-5 space-y-2 text-sm shadow-sm">
@@ -330,7 +330,7 @@ export default function MyOrdersPage() {
 
                       {/* Payment Summary */}
                       <div className="px-5 sm:px-6 pb-5 sm:pb-6">
-                        <h4 className="text-xs font-bold tracking-widest uppercase text-[#2D2A26] mb-3">
+                        <h4 className="text-xs font-bold tracking-widest uppercase text-gray-900 mb-3">
                           {t("paymentSummary")}
                         </h4>
                         <div className="bg-white rounded-[16px] border border-[#d4c9bc]/50 p-5 space-y-3 text-sm shadow-sm">
@@ -350,8 +350,8 @@ export default function MyOrdersPage() {
                           )}
                           <div className="border-t border-[#d4c9bc] pt-3 mt-1">
                             <div className="flex justify-between items-center">
-                              <span className="text-sm font-bold tracking-wider uppercase text-[#2D2A26]">{t("total")}</span>
-                              <span className="text-xl font-bold tracking-wider text-[#2D2A26]">
+                              <span className="text-sm font-bold tracking-wider uppercase text-gray-900">{t("total")}</span>
+                              <span className="text-xl font-bold tracking-wider text-gray-900">
                                 {order.totalAmount} <span className="text-xs font-medium uppercase">{isAr ? "جنيه" : "EGP"}</span>
                               </span>
                             </div>

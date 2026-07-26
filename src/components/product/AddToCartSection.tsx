@@ -115,14 +115,14 @@ const AddToCartSection = React.memo(({
   };
 
   const getButtonClasses = () => {
-    const base = "w-full text-sm font-medium h-11 rounded-full transition-all duration-300 shadow-md border border-transparent";
+    const base = "w-full font-sans font-medium text-sm h-11 rounded-full transition-all duration-300 shadow-md border border-transparent";
     switch (buttonState) {
       case "loading":
         return `${base} bg-gray-700 text-white cursor-wait`;
       case "added":
         return `${base} bg-emerald-700 text-white border-emerald-600`;
       default:
-        return `${base} bg-[#2D2A26] hover:bg-black text-white border-white/10 hover:scale-[1.02]`;
+        return `${base} bg-black hover:bg-black text-white border-white/10 hover:scale-[1.02]`;
     }
   };
 
@@ -156,7 +156,7 @@ const AddToCartSection = React.memo(({
           <Button
             variant="outline"
             size="lg"
-            className="w-full text-base font-medium h-14 rounded-full bg-[#075E54] hover:bg-[#064d44] text-white hover:text-white border-none shadow-md transition-all duration-300"
+            className="w-full font-sans font-medium text-base h-14 rounded-full bg-[#075E54] hover:bg-[#064d44] text-white hover:text-white border-none shadow-md transition-all duration-300"
           >
             {isAr ? "اسألينا على واتساب" : "Ask Us on WhatsApp"}
           </Button>
@@ -197,7 +197,7 @@ const AddToCartSection = React.memo(({
           <Button
             variant="outline"
             size="lg"
-            className="w-full text-base font-medium h-14 rounded-full bg-[#075E54] hover:bg-[#064d44] text-white hover:text-white border-none shadow-md transition-all duration-300"
+            className="w-full font-sans font-medium text-base h-14 rounded-full bg-[#075E54] hover:bg-[#064d44] text-white hover:text-white border-none shadow-md transition-all duration-300"
           >
             {isAr ? "اسألينا على واتساب" : "Ask Us on WhatsApp"}
           </Button>

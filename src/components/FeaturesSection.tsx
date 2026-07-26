@@ -37,11 +37,11 @@ const FeaturesSection = async () => {
               <div className="mb-6 relative">
                 {/* Soft Gold Background Circle */}
                 <div className="absolute inset-0 bg-[#C2A878]/20 rounded-full scale-110 group-hover:scale-125 transition-transform duration-300" />
-                <div className="relative w-16 h-16 flex items-center justify-center text-[#2D2A26]">
+                <div className="relative w-16 h-16 flex items-center justify-center text-gray-900">
                   <feature.icon strokeWidth={1.5} className="w-8 h-8 group-hover:scale-110 transition-transform duration-300" />
                 </div>
               </div>
-              <h3 className="font-medium text-sm md:text-base text-[#2D2A26] mb-2 tracking-wide">
+              <h3 className="font-medium text-sm md:text-base text-gray-900 mb-2 tracking-wide">
                 {feature.title}
               </h3>
               <p className="text-[#5C564D] text-sm leading-relaxed max-w-xs">

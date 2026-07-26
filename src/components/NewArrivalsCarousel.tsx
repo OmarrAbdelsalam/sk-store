@@ -145,7 +145,7 @@ const NewArrivalsCarousel = ({ products, viewAllText }: NewArrivalsCarouselProps
 
       <div className="text-center mt-12">
         <Link href="/products">
-          <Button className="px-8 py-3 bg-[#2D2A26] text-white hover:bg-yellow-500 rounded-full tracking-[0.2em] uppercase text-xs font-bold transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1">
+          <Button className="px-8 py-3 bg-black text-white hover:bg-[#C2A878] rounded-full tracking-[0.2em] font-sans font-medium uppercase text-xs transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1">
             {viewAllText}
           </Button>
         </Link>

@@ -25,7 +25,7 @@ const DiscoverSection = async () => {
     <section className="bg-white overflow-hidden">
       <div className="container mx-auto px-5">
         <div className="text-center mb-10">
-          <h2 className="font-playfair text-3xl md:text-4xl text-[#2D2A26] mb-2">
+          <h2 className="font-sans font-bold text-3xl md:text-4xl text-gray-900 mb-2">
             {t("title")}
           </h2>
           <div className="w-24 h-[2px] bg-[#C2A878] mx-auto mt-3 rounded-full"></div>
@@ -45,7 +45,7 @@ const DiscoverSection = async () => {
                 <div className="absolute inset-0 bg-black/5 group-hover:bg-black/15 transition-colors duration-500" />
                 {item.title && (
                   <div className="absolute bottom-4 left-0 right-0 text-center">
-                    <span className="text-white font-playfair text-lg drop-shadow-md">{item.title}</span>
+                    <span className="text-white font-sans font-bold text-lg drop-shadow-md">{item.title}</span>
                   </div>
                 )}
               </div>

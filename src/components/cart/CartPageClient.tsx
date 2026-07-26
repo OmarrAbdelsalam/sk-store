@@ -183,7 +183,7 @@ export default function CartPageClient() {
           </span>
         </div>
         <button
-          className="w-full h-10 rounded-full bg-[#2D2A26] hover:bg-black text-white text-xs font-medium tracking-widest uppercase
+          className="w-full h-10 rounded-full bg-black hover:bg-black text-white text-xs font-medium tracking-widest uppercase
             transition-all duration-300 hover:scale-[1.02] shadow-md border border-white/10
             inline-flex items-center justify-center gap-2"
           onClick={() => router.push(`/${locale}/checkout`)}

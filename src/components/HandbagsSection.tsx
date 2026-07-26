@@ -26,6 +26,12 @@ const HandbagsSection = () => {
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(true);
 
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const scrollPrev = useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi]);
   const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
 
@@ -43,6 +49,9 @@ const HandbagsSection = () => {
     emblaApi.on("select", onSelect);
     emblaApi.on("reInit", onSelect);
   }, [emblaApi, onSelect]);
+
+  // Prevent hydration mismatch
+  if (!mounted) return null;
 
   // Don't render until data is available
   if (loading && products.length === 0) {
@@ -68,7 +77,7 @@ const HandbagsSection = () => {
       <div className="container mx-auto px-5">
         {/* Header */}
         <div className="text-center mb-10">
-          <h2 className="font-playfair text-3xl md:text-4xl text-[#2D2A26] mb-2">
+          <h2 className="font-sans font-bold text-3xl md:text-4xl text-gray-900 mb-2">
             {t('title')}
           </h2>
           <div className="w-24 h-1 bg-[#C2A878] mx-auto rounded-full"></div>
@@ -134,7 +143,7 @@ const HandbagsSection = () => {
         {/* View All Button */}
         <div className="text-center mt-12">
           <Link href="/products">
-            <Button className="px-8 py-3 bg-[#2D2A26] text-white hover:bg-yellow-500 rounded-full tracking-[0.2em] uppercase text-xs transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1">
+            <Button className="px-8 py-3 bg-black text-white hover:bg-[#C2A878] rounded-full tracking-[0.2em] font-sans font-medium uppercase text-xs transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1">
               {t('viewAll')}
             </Button>
           </Link>

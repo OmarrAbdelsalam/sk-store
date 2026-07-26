@@ -135,7 +135,7 @@ export const SearchAndFilters = () => {
   if (!mounted) {
     return (
       <Button variant="ghost" size="sm" className="hover:bg-transparent hover:opacity-70 transition-opacity px-2" aria-label={t("openFilters")}>
-        <Search className="h-6 w-6" strokeWidth={1.2} color="#2D2A26" />
+        <Search className="h-6 w-6" strokeWidth={1.2} color="black" />
       </Button>
     );
   }
@@ -144,7 +144,7 @@ export const SearchAndFilters = () => {
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button variant="ghost" size="sm" className="hover:bg-transparent hover:opacity-70 transition-opacity px-2" aria-label={t("openFilters")}>
-          <Search className="h-6 w-6" strokeWidth={1.2} color="#2D2A26" />
+          <Search className="h-6 w-6" strokeWidth={1.2} color="black" />
         </Button>
       </SheetTrigger>
 

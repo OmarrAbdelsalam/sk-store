@@ -9,7 +9,7 @@ import NavigationLoadingOverlay from '@/components/ui/NavigationLoadingOverlay';
 import { Toaster } from '@/components/ui/toaster';
 import CommonLayout from '@/components/CommonLayout';
 import TopBanner from '@/components/TopBanner';
-import { Cairo, Inter, Playfair_Display, Boogaloo } from 'next/font/google';
+import { Cairo, Poppins } from 'next/font/google';
 import { generateDefaultMetadata } from '@/lib/metadata';
 import SEOHead from '@/components/SEOHead';
 import { Analytics } from '@vercel/analytics/next';
@@ -24,26 +24,13 @@ const cairo = Cairo({
   display: 'swap',
 });
 
-const inter = Inter({
+const poppins = Poppins({
   subsets: ['latin'],
-  weight: ['400', '500', '600'],
-  variable: '--font-inter',
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-poppins',
   display: 'swap',
 });
 
-const boogaloo = Boogaloo({
-  subsets: ['latin'],
-  weight: ['400'],
-  variable: '--font-boogaloo',
-  display: 'swap',
-});
-
-const playfair = Playfair_Display({
-  subsets: ['latin'],
-  weight: ['400', '500', '600'],
-  variable: '--font-playfair',
-  display: 'swap',
-});
 
 export async function generateMetadata({
   params,
@@ -89,7 +76,7 @@ export default async function LocaleLayout({
         <meta name="twitter:image" content={siteOgImage} />
         <meta name="twitter:card" content="summary_large_image" />
       </head>
-      <body className={`${cairo.variable} ${inter.variable} ${playfair.variable} ${boogaloo.variable} ${(locale as string) === 'ar' ? 'font-cairo' : 'font-sans'}`}>
+      <body className={`${cairo.variable} ${poppins.variable} ${(locale as string) === 'ar' ? 'font-cairo' : 'font-sans'}`}>
         <SEOHead locale={locale} />
         <ScrollToTop />
         <NextIntlClientProvider locale={locale}>

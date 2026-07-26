@@ -754,7 +754,7 @@ const HomepagePage = () => {
             <div className="bg-gray-50 rounded-lg overflow-hidden">
               <div className="flex">
                 <div className="w-1/2 p-4">
-                  <h2 className="font-playfair text-xl font-bold mb-2">{heroForm.title}</h2>
+                  <h2 className="font-sans font-bold text-xl font-bold mb-2">{heroForm.title}</h2>
                   <p className="text-xs text-gray-600 mb-2 italic">{heroForm.subtitle}</p>
                   <p className="text-xs text-gray-500 mb-3 line-clamp-3">{heroForm.description}</p>
                   <button className="px-3 py-1.5 bg-[hsl(var(--luxury-charcoal))] text-white text-xs rounded-lg">

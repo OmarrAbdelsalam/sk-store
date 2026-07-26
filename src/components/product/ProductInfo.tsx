@@ -97,7 +97,7 @@ const ProductInfo = React.memo(function ProductInfo({
     <div className="space-y-4 md:space-y-6">
       {/* الاسم + السعر */}
       <div className="space-y-3">
-        <h1 className="text-2xl md:text-3xl font-medium text-gray-900" aria-label={t("a11y.productName")}>
+        <h1 className="font-sans font-bold text-2xl md:text-3xl text-gray-900" aria-label={t("a11y.productName")}>
           {name}
         </h1>
         <div className="flex items-center gap-3" aria-label={t("a11y.price")}>
@@ -106,7 +106,7 @@ const ProductInfo = React.memo(function ProductInfo({
               {beforePrice} {locale === 'ar' ? 'جنيه' : 'EGP'}
             </p>
           )}
-          <p className="text-xl font-semibold text-gray-900">
+          <p className="font-sans font-bold text-xl text-gray-900">
             {priceText}
           </p>
         </div>

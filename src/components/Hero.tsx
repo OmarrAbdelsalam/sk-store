@@ -29,7 +29,7 @@ export default async function Hero() {
   const slide1 = {
     title: "Summer Edition",
     description: "Discover our vibrant new summer collection of handcrafted bags.",
-    desktopImage: "/e.webp",
+    desktopImage: "/heroo.jpeg",
     mobileMedia: "/e.webp",
     mobileIsVideo: false,
     buttonText: "SHOP SUMMER",

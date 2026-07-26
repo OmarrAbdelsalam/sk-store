@@ -147,7 +147,7 @@ function OrderSuccessContent() {
           {/* Order Details */}
           <div className="bg-[#F0EBE3]/40 rounded-[32px] p-6 sm:p-8 border border-[#d4c9bc] text-start shadow-sm">
             <div className="pb-4 mb-4 border-b border-[#d4c9bc]/60">
-              <h3 className="text-sm font-bold tracking-widest uppercase text-[#2D2A26]">
+              <h3 className="text-sm font-bold tracking-widest uppercase text-gray-900">
                 {t("orderDetails")}
               </h3>
             </div>
@@ -174,7 +174,7 @@ function OrderSuccessContent() {
                   <p className="text-xs tracking-wider uppercase text-muted-foreground mb-1.5">
                     {isAr ? "اسم العميل" : "Customer"}
                   </p>
-                  <p className="text-sm font-medium text-[#2D2A26]">{orderData.customerName}</p>
+                  <p className="text-sm font-medium text-gray-900">{orderData.customerName}</p>
                   {(orderData.government || orderData.city) && (
                     <p className="text-xs text-muted-foreground mt-1">
                       {[orderData.city, orderData.government].filter(Boolean).join(", ")}
@@ -198,7 +198,7 @@ function OrderSuccessContent() {
           {orderData && orderData.items && orderData.items.length > 0 && (
             <div className="bg-[#F0EBE3]/40 rounded-[32px] p-6 sm:p-8 border border-[#d4c9bc] text-start shadow-sm">
               <div className="pb-4 mb-4 border-b border-[#d4c9bc]/60">
-                <h3 className="text-sm font-bold tracking-widest uppercase text-[#2D2A26]">
+                <h3 className="text-sm font-bold tracking-widest uppercase text-gray-900">
                   {t("orderedItems")}
                 </h3>
               </div>
@@ -257,8 +257,8 @@ function OrderSuccessContent() {
                     </div>
                   )}
                   <div className="flex justify-between items-center pt-3 mt-2 border-t border-[#d4c9bc]">
-                    <span className="text-sm font-bold tracking-wider uppercase text-[#2D2A26]">{t("total")}</span>
-                    <span className="text-2xl font-bold text-[#2D2A26] tracking-wider">
+                    <span className="text-sm font-bold tracking-wider uppercase text-gray-900">{t("total")}</span>
+                    <span className="text-2xl font-bold text-gray-900 tracking-wider">
                       {orderData.total.toLocaleString()} <span className="text-sm font-medium tracking-wider uppercase">{isAr ? "جنيه" : "EGP"}</span>
                     </span>
                   </div>
@@ -270,14 +270,14 @@ function OrderSuccessContent() {
           <div className="flex flex-col sm:flex-row justify-center gap-4 pt-6">
             <button
               onClick={() => router.push("/my-orders")}
-              className="h-14 px-10 rounded-full border border-[#2D2A26] text-[#2D2A26] bg-white text-sm font-bold tracking-widest uppercase
+              className="h-14 px-10 rounded-full border border-gray-900 text-gray-900 bg-white text-sm font-bold tracking-widest uppercase
                 transition-all duration-300 hover:bg-[#F0EBE3]"
             >
               {t("trackOrders")}
             </button>
             <button
               onClick={() => router.push("/")}
-              className="h-14 px-10 rounded-full bg-[#2D2A26] text-white text-sm font-bold tracking-widest uppercase
+              className="h-14 px-10 rounded-full bg-black text-white text-sm font-bold tracking-widest uppercase
                 transition-all duration-300 hover:bg-black hover:-translate-y-1 shadow-md hover:shadow-xl inline-flex items-center justify-center gap-2"
             >
               {t("continueShopping")}
@@ -287,7 +287,7 @@ function OrderSuccessContent() {
 
           {/* Customer Support */}
           <div className="bg-[#F0EBE3]/20 rounded-[32px] p-8 text-center border border-[#d4c9bc]">
-            <h3 className="text-sm font-bold tracking-widest uppercase mb-3 text-[#2D2A26]">
+            <h3 className="text-sm font-bold tracking-widest uppercase mb-3 text-gray-900">
               {t("needHelp")}
             </h3>
             <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">

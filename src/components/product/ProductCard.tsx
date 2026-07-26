@@ -190,7 +190,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
       {/* Product Details */}
       <div className="text-center space-y-1">
-        <h3 className="text-sm font-medium text-gray-900 truncate px-2">
+        <h3 className="font-sans font-medium text-sm text-gray-900 truncate px-2">
           {product.name}
         </h3>
         

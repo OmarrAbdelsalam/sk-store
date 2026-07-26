@@ -37,7 +37,7 @@ const Navigation = () => {
     <header className={`w-full sticky top-0 z-50`}>
       {/* Main Navigation */}
       <div className={`pointer-events-auto w-full`}>
-        <div className={`h-16 md:h-20 flex items-center bg-white border-b border-[#2D2A26]/10 px-4 md:px-12 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)]`}>
+        <div className={`h-16 md:h-20 flex items-center bg-white border-b border-gray-900/10 px-4 md:px-12 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)]`}>
           {/* Mobile Layout - يظهر فقط على الموبايل */}
           <div className="md:hidden w-full relative flex items-center justify-between">
             {/* Left: Menu Button */}
@@ -65,7 +65,7 @@ const Navigation = () => {
             <Link href="/" className="hover:opacity-70 transition-opacity duration-300">
               <Image src="/SK_Logo.svg" alt="SK Bags" width={130} height={44} className="h-11 w-auto mix-blend-multiply" priority />
             </Link>
-            <div className="w-px h-8 bg-[#2D2A26]/10"></div>
+            <div className="w-px h-8 bg-black/10"></div>
             <DesktopMenu />
           </div>
 
@@ -73,7 +73,7 @@ const Navigation = () => {
           <div className="flex items-center space-x-4">
             <SearchAndFilters />
             
-            <div className="w-px h-5 bg-[#2D2A26]/10 mx-2"></div>
+            <div className="w-px h-5 bg-black/10 mx-2"></div>
             
             <CartButton isMobile={false} />
             {/* Language switcher hidden for now */}

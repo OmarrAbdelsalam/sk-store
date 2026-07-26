@@ -385,7 +385,7 @@ const ProductGrid = ({ isFullPage = false }: ProductGridProps) => {
                   }}
                   className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${
                     activeFilter === "All"
-                      ? "bg-[#2D2A26] text-white"
+                      ? "bg-black text-white"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                 >
@@ -402,7 +402,7 @@ const ProductGrid = ({ isFullPage = false }: ProductGridProps) => {
                     }}
                     className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${
                       String(activeFilter) === String(cat.key)
-                        ? "bg-[#2D2A26] text-white"
+                        ? "bg-black text-white"
                         : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     }`}
                   >
@@ -414,7 +414,7 @@ const ProductGrid = ({ isFullPage = false }: ProductGridProps) => {
           </>
         ) : (
           <div className="text-center mb-10">
-            <h2 className="font-playfair text-3xl md:text-4xl text-[#2D2A26] mb-2">
+            <h2 className="font-sans font-bold text-3xl md:text-4xl text-gray-900 mb-2">
               {displayTitle}
             </h2>
             <div className="w-24 h-1 bg-[#C2A878] mx-auto rounded-full"></div>
@@ -462,7 +462,7 @@ const ProductGrid = ({ isFullPage = false }: ProductGridProps) => {
               <div className="text-center mt-12">
                 <Button 
                   onClick={() => router.push(`/${locale}/products`)}
-                  className="px-8 py-3 bg-[#2D2A26] text-white hover:bg-yellow-500 rounded-full tracking-[0.2em] uppercase text-xs transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1"
+                  className="px-8 py-3 bg-black text-white hover:bg-[#C2A878] rounded-full tracking-[0.2em] font-sans font-medium uppercase text-xs transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1"
                 >
                   {t("ProductGrid.viewAll") || "View All"}
                 </Button>

@@ -296,17 +296,17 @@ const CheckoutForm = memo(({ onSubmit, isProcessing, totalAmount, onGovernorateC
             className={cn(
               "flex flex-col items-center gap-2.5 p-5 border rounded-2xl transition-all duration-300",
               paymentMethod === "visa"
-                ? "border-[#2D2A26] bg-white shadow-md ring-1 ring-[#2D2A26]/10 scale-[1.02]"
+                ? "border-gray-900 bg-white shadow-md ring-1 ring-gray-900/10 scale-[1.02]"
                 : "border-[#c8bdb0]/70 bg-white/60 hover:border-foreground/40 hover:bg-white"
             )}
           >
             <CreditCard className={cn(
               "w-6 h-6",
-              paymentMethod === "visa" ? "text-[#2D2A26]" : "text-muted-foreground"
+              paymentMethod === "visa" ? "text-gray-900" : "text-muted-foreground"
             )} />
             <span className={cn(
               "text-xs font-semibold tracking-widest uppercase",
-              paymentMethod === "visa" ? "text-[#2D2A26]" : "text-muted-foreground"
+              paymentMethod === "visa" ? "text-gray-900" : "text-muted-foreground"
             )}>
               {isAr ? "بطاقة ائتمان" : "Credit Card"}
             </span>
@@ -319,17 +319,17 @@ const CheckoutForm = memo(({ onSubmit, isProcessing, totalAmount, onGovernorateC
             className={cn(
               "flex flex-col items-center gap-2.5 p-5 border rounded-2xl transition-all duration-300",
               paymentMethod === "wallet"
-                ? "border-[#2D2A26] bg-white shadow-md ring-1 ring-[#2D2A26]/10 scale-[1.02]"
+                ? "border-gray-900 bg-white shadow-md ring-1 ring-gray-900/10 scale-[1.02]"
                 : "border-[#c8bdb0]/70 bg-white/60 hover:border-foreground/40 hover:bg-white"
             )}
           >
             <Wallet className={cn(
               "w-6 h-6",
-              paymentMethod === "wallet" ? "text-[#2D2A26]" : "text-muted-foreground"
+              paymentMethod === "wallet" ? "text-gray-900" : "text-muted-foreground"
             )} />
             <span className={cn(
               "text-xs font-semibold tracking-widest uppercase",
-              paymentMethod === "wallet" ? "text-[#2D2A26]" : "text-muted-foreground"
+              paymentMethod === "wallet" ? "text-gray-900" : "text-muted-foreground"
             )}>
               {isAr ? "محفظة إلكترونية" : "E-Wallet"}
             </span>
@@ -341,7 +341,7 @@ const CheckoutForm = memo(({ onSubmit, isProcessing, totalAmount, onGovernorateC
       <button
         type="submit"
         className={cn(
-          "w-full h-14 rounded-full bg-[#2D2A26] hover:bg-black text-white text-sm font-medium tracking-widest uppercase transition-all duration-300 shadow-xl border border-white/10 mt-4",
+          "w-full h-14 rounded-full bg-black hover:bg-black text-white text-sm font-medium tracking-widest uppercase transition-all duration-300 shadow-xl border border-white/10 mt-4",
           "hover:scale-[1.02]",
           isProcessing && "opacity-50 cursor-not-allowed hover:scale-100"
         )}

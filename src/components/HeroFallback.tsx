@@ -28,7 +28,7 @@ export default function HeroFallback() {
             <Button
               className="min-h-[48px] px-8 py-3 bg-white/95 text-gray-900 hover:bg-white text-sm tracking-[0.2em] font-medium uppercase transition-all duration-300 shadow-lg rounded-full backdrop-blur-sm"
             >
-              SHOP BAGS
+              SHOP SUMMER
             </Button>
           </Link>
         </div>
@@ -40,37 +40,35 @@ export default function HeroFallback() {
         </div>
       </div>
 
-      {/* Desktop Split Layout */}
-      <div className="hidden lg:flex h-full w-full items-center">
-        <div className="w-[60%] h-full flex flex-col items-center justify-center text-center px-12 md:px-20 bg-background border-r border-gray-100">
-          <div className="max-w-2xl space-y-8">
-            <h1 className="font-playfair text-5xl md:text-7xl text-gray-900 leading-tight">
-              Crafted for Every Moment
+      {/* Desktop Full-Width Layout */}
+      <div className="hidden lg:block relative h-full w-full">
+        <Image
+          src="/heroo.jpeg"
+          alt="SK Bags Collection"
+          fill
+          priority
+          className="object-cover object-center"
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 bg-black/35" />
+        <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+
+        <div className="relative z-10 h-full flex flex-col items-start justify-end pb-16 px-16">
+          <div className="max-w-xl space-y-6 text-left">
+            <h1 className="font-sans font-bold text-5xl md:text-7xl text-white leading-tight drop-shadow-lg">
+              Summer Edition
             </h1>
-            <p className="text-gray-600 text-lg md:text-xl font-light tracking-wide max-w-lg mx-auto leading-relaxed">
-              Discover our curated collection of handcrafted bags and accessories — where timeless elegance meets everyday luxury.
+            <p className="text-white/90 text-lg md:text-xl font-light tracking-wide leading-relaxed drop-shadow-md">
+              Discover our vibrant new summer collection of handcrafted bags.
             </p>
-            <div className="pt-6">
+            <div className="pt-2">
               <Link href="/products">
-                <Button className="px-12 py-7 min-h-[54px] bg-black text-white hover:bg-gray-800 rounded-full tracking-[0.2em] uppercase text-sm transition-all duration-300 shadow-xl hover:shadow-2xl hover:-translate-y-1">
-                  SHOP NOW
+                <Button className="px-10 py-5 min-h-[48px] bg-white text-gray-900 hover:bg-[#C2A878] hover:text-white rounded-full tracking-[0.2em] uppercase text-xs font-bold transition-all duration-300 shadow-xl hover:shadow-2xl hover:-translate-y-1">
+                  SHOP SUMMER
                 </Button>
               </Link>
             </div>
           </div>
-        </div>
-
-        <div className="w-[40%] h-full relative overflow-hidden">
-          <Image
-            src="/hero.webp"
-            alt="SK Bags Collection"
-            fill
-            priority
-            className="object-cover"
-            style={{ objectPosition: "center -26px" }}
-            sizes="40vw"
-          />
-          <div className="absolute inset-0 bg-black/5" />
         </div>
       </div>
     </section>

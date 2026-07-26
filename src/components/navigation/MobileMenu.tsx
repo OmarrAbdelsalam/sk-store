@@ -60,7 +60,7 @@ export const MobileMenu = () => {
   if (!mounted) {
     return (
       <Button variant="ghost" size="sm" className="px-2" aria-label={t("openMenu")}>
-        <Menu className="h-6 w-6" strokeWidth={1.2} color="#2D2A26" />
+        <Menu className="h-6 w-6" strokeWidth={1.2} color="black" />
       </Button>
     );
   }
@@ -69,7 +69,7 @@ export const MobileMenu = () => {
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button variant="ghost" size="sm" className="hover:bg-transparent hover:opacity-70 transition-opacity px-2" aria-label={t("openMenu")}>
-          <Menu className="h-6 w-6" strokeWidth={1.2} color="#2D2A26" />
+          <Menu className="h-6 w-6" strokeWidth={1.2} color="black" />
         </Button>
       </SheetTrigger>
 
