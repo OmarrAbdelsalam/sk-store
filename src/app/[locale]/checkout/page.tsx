@@ -180,6 +180,14 @@ export default function Checkout() {
       const orderId = orderData.data?.id;
       const orderNumber = orderData.data?.orderNumber || orderData.data?.order_number;
 
+      // Build a stable numeric customerReference from the order number
+      // e.g. "SK-ABC123-XYZ" → strip non-digits → take last 9 digits as number
+      // This is stored back in easykash_customer_ref so callback can find the order
+      const rawRef = (orderNumber || orderId || String(Date.now()))
+        .replace(/\D/g, "")
+        .slice(-9);
+      const customerRef = parseInt(rawRef, 10) || Date.now() % 1000000000;
+
       // Save summary for order-success page
       try {
         localStorage.setItem(
@@ -197,6 +205,7 @@ export default function Checkout() {
             paymentPlan,
             depositAmount,
             remainingAmount,
+            easykashCustomerRef: customerRef,
             items: items.map((item) => ({
               productName: item.nameEn || item.name,
               productNameAr: item.nameAr || item.name,
@@ -215,7 +224,19 @@ export default function Checkout() {
         );
       } catch {}
 
-      // ── Step 2: Create EasyKash Direct Payment link ─────────────────────
+      // ── Step 2: Save customerRef to the order in DB ─────────────────────
+      // So the callback can look it up via easykash_customer_ref
+      if (orderId) {
+        try {
+          await fetch(`/api/orders/${orderId}/payment-ref`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ easykashCustomerRef: String(customerRef) }),
+          });
+        } catch {} // non-blocking — order is already saved
+      }
+
+      // ── Step 3: Create EasyKash Direct Payment link ─────────────────────
       const payRes = await fetch("/api/payments/easykash/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -224,10 +245,7 @@ export default function Checkout() {
           mobile: formData.phone,
           email: `${formData.phone}@skbags.com`,
           amount: total,
-          // Use orderId as customerReference so callback can find the order
-          customerReference: orderId
-            ? parseInt(orderId.replace(/-/g, "").slice(0, 8), 16)
-            : Date.now(),
+          customerReference: customerRef,
           locale,
           paymentType: paymentPlan,
         }),
