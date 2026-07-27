@@ -6,17 +6,19 @@ const EASYKASH_HMAC_SECRET = process.env.EASYKASH_HMAC_SECRET;
 
 /**
  * EasyKash Callback endpoint.
- * EasyKash POSTs payment confirmations here. We verify the HMAC signature
- * (when a secret is configured) and update the order's payment status.
  *
- * Expected payload from EasyKash (shape may vary — log and adjust as needed):
+ * EasyKash sends a POST after every successful payment with:
  * {
- *   easykashRef: string,
- *   status: string,       // e.g. "PAID", "EXPIRED", "FAILED"
- *   amount: number,
- *   voucher: string,
- *   signature?: string,   // HMAC-SHA256 of the payload
+ *   ProductCode, PaymentMethod, ProductType, Amount,
+ *   BuyerEmail, BuyerMobile, BuyerName, Timestamp,
+ *   status, voucher, easykashRef, VoucherData,
+ *   customerReference, signatureHash
  * }
+ *
+ * HMAC verification (SHA-512):
+ *   Concatenate in order: ProductCode + Amount + ProductType + PaymentMethod
+ *                        + status + easykashRef + customerReference
+ *   Hash with HMAC-SHA512 + HMAC secret key → compare with signatureHash
  */
 export async function POST(request: NextRequest) {
   try {
@@ -29,61 +31,90 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
     }
 
-    // Verify HMAC signature when a secret is configured
+    // ── HMAC Verification ──────────────────────────────────────────────────
     if (EASYKASH_HMAC_SECRET) {
-      const signature =
-        request.headers.get("x-easykash-signature") || payload.signature;
+      const {
+        ProductCode,
+        Amount,
+        ProductType,
+        PaymentMethod,
+        status,
+        easykashRef,
+        customerReference,
+        signatureHash,
+      } = payload;
 
-      if (!signature) {
-        console.warn("EasyKash callback: missing signature");
-        return NextResponse.json(
-          { error: "Missing signature" },
-          { status: 401 }
-        );
+      if (!signatureHash) {
+        console.warn("EasyKash callback: missing signatureHash");
+        return NextResponse.json({ error: "Missing signature" }, { status: 401 });
       }
 
-      const expectedSig = crypto
-        .createHmac("sha256", EASYKASH_HMAC_SECRET)
-        .update(rawBody)
+      // Exact order and field names from EasyKash docs
+      const dataStr = [
+        ProductCode,
+        Amount,
+        ProductType,
+        PaymentMethod,
+        status,
+        easykashRef,
+        customerReference,
+      ].join("");
+
+      const calculatedSig = crypto
+        .createHmac("sha512", EASYKASH_HMAC_SECRET)
+        .update(dataStr)
         .digest("hex");
 
-      if (signature !== expectedSig) {
+      if (calculatedSig !== signatureHash) {
         console.warn("EasyKash callback: invalid signature");
-        return NextResponse.json(
-          { error: "Invalid signature" },
-          { status: 401 }
-        );
+        return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
       }
     }
 
-    const { easykashRef, status } = payload;
+    const { easykashRef, status, customerReference, Amount, PaymentMethod } = payload;
 
-    if (!easykashRef) {
+    if (!easykashRef && !customerReference) {
       return NextResponse.json(
-        { error: "Missing easykashRef" },
+        { error: "Missing easykashRef and customerReference" },
         { status: 400 }
       );
     }
 
-    // Map EasyKash status to our internal payment_status
     const paymentStatus = mapEasykashStatus(status);
 
-    // Update the order matching this easykash reference
-    const { error } = await supabase
-      .from("orders")
-      .update({
-        payment_status: paymentStatus,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("easykash_ref", easykashRef);
+    // Build update object
+    const updateFields: Record<string, any> = {
+      payment_status: paymentStatus,
+      easykash_payment_method: PaymentMethod || null,
+      updated_at: new Date().toISOString(),
+    };
+    if (easykashRef) updateFields.easykash_ref = easykashRef;
 
-    if (error) {
-      console.error("Supabase update error (callback):", error);
-      // Still return 200 so EasyKash doesn't keep retrying with a bad ref
+    // Try to find by customerReference first (our order's internal ref), then easykashRef
+    let updateError: any = null;
+
+    if (customerReference) {
+      const { error } = await supabase
+        .from("orders")
+        .update(updateFields)
+        .eq("easykash_customer_ref", String(customerReference));
+      updateError = error;
+    }
+
+    if (updateError && easykashRef) {
+      const { error } = await supabase
+        .from("orders")
+        .update(updateFields)
+        .eq("easykash_ref", easykashRef);
+      updateError = error;
+    }
+
+    if (updateError) {
+      console.error("Supabase update error (callback):", updateError);
     }
 
     console.log(
-      `EasyKash callback processed: ref=${easykashRef}, status=${status} → ${paymentStatus}`
+      `EasyKash callback: ref=${easykashRef}, customerRef=${customerReference}, status=${status} → ${paymentStatus}`
     );
 
     return NextResponse.json({ received: true });
@@ -96,14 +127,20 @@ export async function POST(request: NextRequest) {
 function mapEasykashStatus(status: string | undefined): string {
   switch ((status || "").toUpperCase()) {
     case "PAID":
-    case "SUCCESS":
-    case "SUCCESSFUL":
       return "paid";
+    case "NEW":
+    case "PENDING":
+      return "pending";
     case "EXPIRED":
       return "expired";
     case "FAILED":
     case "CANCELLED":
+    case "CANCELED":
       return "failed";
+    case "REFUNDED":
+      return "refunded";
+    case "DELIVERED":
+      return "delivered";
     default:
       return "pending";
   }

@@ -1,29 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const EASYKASH_API_KEY = process.env.EASYKASH_API_KEY;
-const EASYKASH_BASE_URL =
-  process.env.EASYKASH_BASE_URL || "https://back.easykash.net/api/cash-api";
+const EASYKASH_DIRECT_URL = "https://back.easykash.net/api/directpayv1/pay";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://skbags.com";
 
+/**
+ * Creates an EasyKash Direct Payment link.
+ * Supports: Credit Card, Debit Card, Mobile Wallets, Fawry, Aman, Meeza.
+ *
+ * paymentOptions:
+ *   1 = Aman cash, 2 = Credit/Debit Card, 4 = Mobile Wallet,
+ *   5 = Fawry cash, 6 = Meeza
+ */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
     const {
-      payerEmail,
-      payerMobile,
-      payerName,
+      name,
+      email,
+      mobile,
       amount,
-      expiryDuration,
-      voucherData,
-      type = "in",
+      customerReference,
+      locale = "en",
+      paymentType = "full", // "full" | "deposit"
     } = body;
 
-    // Validate required fields
-    if (!payerMobile || !payerName || !amount) {
+    if (!mobile || !name || !amount || !customerReference) {
       return NextResponse.json(
         {
           succeeded: false,
-          message: "Missing required fields: payerMobile, payerName, amount",
+          message: "Missing required fields: name, mobile, amount, customerReference",
         },
         { status: 400 }
       );
@@ -37,50 +44,68 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Valid expiry durations: cash-in = {3, 6, 12, 48}, cash-out = {48}
-    const validDurations = type === "out" ? [48] : [3, 6, 12, 48];
-    const resolvedExpiry = validDurations.includes(Number(expiryDuration))
-      ? Number(expiryDuration)
-      : 48;
+    const numericAmount = parseFloat(String(amount));
+    if (isNaN(numericAmount) || numericAmount <= 0) {
+      return NextResponse.json(
+        { succeeded: false, message: "Invalid amount" },
+        { status: 400 }
+      );
+    }
+
+    // Deposit = 50% of total, rest is paid on delivery
+    const chargeAmount =
+      paymentType === "deposit"
+        ? parseFloat((numericAmount * 0.5).toFixed(2))
+        : numericAmount;
+
+    const redirectUrl = `${SITE_URL}/${locale}/order-success?ref=${customerReference}&paymentType=${paymentType}`;
 
     const payload = {
-      payerEmail: payerEmail || `${payerMobile}@skbags.com`,
-      payerMobile,
-      payerName,
-      amount: Number(amount),
-      expiryDuration: resolvedExpiry,
-      apiKey: EASYKASH_API_KEY,
-      VoucherData: voucherData || "SK Bags Order",
-      type,
+      amount: chargeAmount,
+      currency: "EGP",
+      // All non-installment payment options
+      paymentOptions: [1, 2, 4, 5, 6],
+      cashExpiry: 48,
+      name,
+      email: email || `${mobile}@skbags.com`,
+      mobile: String(mobile),
+      redirectUrl,
+      customerReference: Number(customerReference),
     };
 
-    const response = await fetch(`${EASYKASH_BASE_URL}/create`, {
+    const response = await fetch(EASYKASH_DIRECT_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        authorization: EASYKASH_API_KEY,
+      },
       body: JSON.stringify(payload),
     });
 
     const data = await response.json();
 
-    if (!response.ok) {
-      console.error("EasyKash API error:", data);
+    if (!response.ok || !data.redirectUrl) {
+      console.error("EasyKash Direct Pay error:", data);
       return NextResponse.json(
         {
           succeeded: false,
-          message: data?.message || "Payment creation failed",
+          message: data?.message || "Failed to create payment link",
         },
-        { status: response.status }
+        { status: response.status || 500 }
       );
     }
 
-    // EasyKash returns: voucher, expiryDate, provider, easykashRef
     return NextResponse.json({
       succeeded: true,
       data: {
-        voucher: data.voucher,
-        expiryDate: data.expiryDate,
-        provider: data.provider,
-        easykashRef: data.easykashRef,
+        // The hosted payment page URL — redirect the user here
+        paymentUrl: data.redirectUrl,
+        chargeAmount,
+        remainingAmount:
+          paymentType === "deposit"
+            ? parseFloat((numericAmount * 0.5).toFixed(2))
+            : 0,
+        paymentType,
       },
     });
   } catch (error: any) {

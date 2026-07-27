@@ -4,7 +4,7 @@ import { useMemo, useState, useEffect } from "react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
 import CheckoutOrderSummary from "@/components/checkout/CheckoutOrderSummary";
-import CheckoutForm from "@/components/checkout/CheckoutForm";
+import CheckoutForm, { type CheckoutSubmitData, type PaymentPlan } from "@/components/checkout/CheckoutForm";
 import EmptyCart from "@/components/checkout/EmptyCart";
 import { useRouter } from "next/navigation";
 import { getOrCreateSessionId } from "@/lib/session";
@@ -27,73 +27,107 @@ export default function Checkout() {
   const [selectedGovernorate, setSelectedGovernorate] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [mounted, setMounted] = useState(false);
-  const [discount, setDiscount] = useState<{ 
-    amount: number; 
-    percentage: number; 
+  const [discount, setDiscount] = useState<{
+    amount: number;
+    percentage: number;
     code: string;
     originalTotal: number;
     finalTotal: number;
   } | null>(null);
 
-  // Avoid hydration mismatch
   useEffect(() => {
     setMounted(true);
-    
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       try {
-        const saved = localStorage.getItem('checkout_form_data');
+        const saved = localStorage.getItem("checkout_form_data");
         if (saved) {
           const data = JSON.parse(saved);
           if (data.governorate) {
             setSelectedGovernorate(data.governorate);
-            const price = freeShippingApplied ? 0 : getShippingPrice(data.governorate, data.city || "");
+            const price = freeShippingApplied
+              ? 0
+              : getShippingPrice(data.governorate, data.city || "");
             setShippingPrice(price);
           }
         }
-      } catch (error) {
-        console.error('Error loading saved governorate:', error);
-      }
+      } catch {}
     }
   }, [freeShippingApplied]);
 
-  // Update shipping price when governorate changes
   useEffect(() => {
     if (selectedGovernorate) {
-      const price = freeShippingApplied ? 0 : getShippingPrice(selectedGovernorate, "");
-      setShippingPrice(price);
+      setShippingPrice(
+        freeShippingApplied ? 0 : getShippingPrice(selectedGovernorate, "")
+      );
     } else {
       setShippingPrice(0);
     }
   }, [selectedGovernorate, freeShippingApplied]);
 
-  // Prefetch order-success page
   useEffect(() => {
     router.prefetch(`/${locale}/order-success`);
   }, [locale, router]);
 
   const nf = useMemo(
-    () => new Intl.NumberFormat(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+    () =>
+      new Intl.NumberFormat(locale, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }),
     [locale]
   );
 
-  const handleSubmit = async (formData: CheckoutFormData & { paymentMethod: string; easykashResult?: { voucher: string; expiryDate: string; provider: string; easykashRef: string } }) => {
+  const computedTotal = useMemo(() => {
+    const subtotal = getTotalPrice();
+    const discountAmt = discount?.amount || 0;
+    const bogoAmt = bogoDiscount || 0;
+    return subtotal + shippingPrice - discountAmt - bogoAmt;
+  }, [getTotalPrice, shippingPrice, discount, bogoDiscount]);
+
+  /**
+   * Main checkout handler:
+   * 1. Create order in DB with status=pending, payment_status=unpaid
+   * 2. Call EasyKash Direct Payment API to get the hosted payment URL
+   * 3. Redirect customer to EasyKash payment page
+   * 4. EasyKash redirects back to /order-success?ref=...&paymentType=...
+   * 5. Callback webhook updates payment_status when payment completes
+   */
+  const handleSubmit = async (formData: CheckoutSubmitData) => {
     setIsProcessing(true);
-    const shipping = freeShippingApplied ? 0 : getShippingPrice(formData.governorate, formData.city);
+    setOrderError(null);
+
+    const shipping = freeShippingApplied
+      ? 0
+      : getShippingPrice(formData.governorate, formData.city);
     setShippingPrice(shipping);
 
     try {
       const sessionId = getOrCreateSessionId();
-      
+
       if (items.length === 0) {
         throw new Error(isAr ? "السلة فارغة" : "Cart is empty");
       }
-      
+
       const subtotal = getTotalPrice();
       const discountAmt = discount?.amount || 0;
       const bogoAmt = bogoDiscount || 0;
       const total = subtotal + shipping - discountAmt - bogoAmt;
-      
-      const payload = {
+      const { paymentPlan } = formData;
+
+      const depositAmount =
+        paymentPlan === "deposit"
+          ? parseFloat((total * 0.5).toFixed(2))
+          : total;
+      const remainingAmount =
+        paymentPlan === "deposit" ? total - depositAmount : 0;
+
+      // ── Step 1: Create order in DB ──────────────────────────────────────
+      const idempotencyKey =
+        typeof crypto !== "undefined" && crypto.randomUUID
+          ? crypto.randomUUID()
+          : Math.random().toString(36);
+
+      const orderPayload = {
         sessionId,
         customerName: formData.name,
         phoneNumber: formData.phone,
@@ -101,8 +135,11 @@ export default function Checkout() {
         city: formData.city,
         detailedAddress: formData.detailedAddress,
         notes: formData.notes,
-        paymentMethod: formData.paymentMethod,
-        items: items.map(item => ({
+        paymentMethod: "easykash",
+        paymentPlan,
+        depositAmount,
+        remainingAmount,
+        items: items.map((item) => ({
           productId: item.productId,
           name: item.name,
           nameAr: item.nameAr,
@@ -118,94 +155,114 @@ export default function Checkout() {
         shippingCost: shipping,
         discountAmount: discountAmt,
         discountCode: discount?.code,
-        bogoDiscount: bogoDiscount || 0,
+        bogoDiscount: bogoAmt,
         appliedPromotions: appliedPromotions || [],
         total,
-        // EasyKash payment data
-        ...(formData.easykashResult && {
-          easykashRef: formData.easykashResult.easykashRef,
-          easykashVoucher: formData.easykashResult.voucher,
-          easykashProvider: formData.easykashResult.provider,
-          easykashExpiry: formData.easykashResult.expiryDate,
-        }),
       };
 
-      // Save order summary to localStorage BEFORE API call
-      try {
-        localStorage.setItem('last_order_data', JSON.stringify({
-          orderNumber: null,
-          sessionId,
-          customerName: formData.name,
-          government: formData.governorate,
-          city: formData.city,
-          subtotal,
-          shippingCost: shipping,
-          discountAmount: discountAmt,
-          total,
-          paymentMethod: formData.paymentMethod,
-          easykashVoucher: formData.easykashResult?.voucher,
-          easykashProvider: formData.easykashResult?.provider,
-          easykashExpiry: formData.easykashResult?.expiryDate,
-          easykashRef: formData.easykashResult?.easykashRef,
-          items: items.map(item => ({
-            productName: item.nameEn || item.name,
-            productNameAr: item.nameAr || item.name,
-            colorNameEn: item.colorName,
-            colorNameAr: item.colorName,
-            sizeName: item.sizeName,
-            quantity: item.quantity,
-            unitPrice: parseFloat(String(item.price).replace(/[^0-9.]/g, '')) || 0,
-            subtotal: (parseFloat(String(item.price).replace(/[^0-9.]/g, '')) || 0) * item.quantity,
-            image: item.image,
-          })),
-        }));
-      } catch {}
-
-      const idempotencyKey = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-      });
-
-      const res = await fetch(API_ROUTES.orders.create(), {
+      const orderRes = await fetch(API_ROUTES.orders.create(), {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          "Idempotency-Key": idempotencyKey
+          "Idempotency-Key": idempotencyKey,
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(orderPayload),
       });
 
-      const response = await res.json();
-      
-      if (!res.ok || !response.succeeded) {
-        const errorMsg = response.message || `Order API failed with status ${res.status}`;
-        throw new Error(errorMsg);
+      const orderData = await orderRes.json();
+
+      if (!orderRes.ok || !orderData.succeeded) {
+        throw new Error(
+          orderData.message || `Order creation failed (${orderRes.status})`
+        );
       }
 
-      try { 
-        const saved = localStorage.getItem('last_order_data');
-        if (saved) {
-          const data = JSON.parse(saved);
-          data.orderNumber = response.data?.orderNumber || response.data?.order_number || null;
-          localStorage.setItem('last_order_data', JSON.stringify(data));
-        }
+      const orderId = orderData.data?.id;
+      const orderNumber = orderData.data?.orderNumber || orderData.data?.order_number;
+
+      // Save summary for order-success page
+      try {
+        localStorage.setItem(
+          "last_order_data",
+          JSON.stringify({
+            orderNumber,
+            sessionId,
+            customerName: formData.name,
+            government: formData.governorate,
+            city: formData.city,
+            subtotal,
+            shippingCost: shipping,
+            discountAmount: discountAmt,
+            total,
+            paymentPlan,
+            depositAmount,
+            remainingAmount,
+            items: items.map((item) => ({
+              productName: item.nameEn || item.name,
+              productNameAr: item.nameAr || item.name,
+              colorNameEn: item.colorName,
+              colorNameAr: item.colorName,
+              sizeName: item.sizeName,
+              quantity: item.quantity,
+              unitPrice:
+                parseFloat(String(item.price).replace(/[^0-9.]/g, "")) || 0,
+              subtotal:
+                (parseFloat(String(item.price).replace(/[^0-9.]/g, "")) || 0) *
+                item.quantity,
+              image: item.image,
+            })),
+          })
+        );
       } catch {}
-      
-      setOrderCompleted(true);
-      setOrderError(null);
+
+      // ── Step 2: Create EasyKash Direct Payment link ─────────────────────
+      const payRes = await fetch("/api/payments/easykash/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.name,
+          mobile: formData.phone,
+          email: `${formData.phone}@skbags.com`,
+          amount: total,
+          // Use orderId as customerReference so callback can find the order
+          customerReference: orderId
+            ? parseInt(orderId.replace(/-/g, "").slice(0, 8), 16)
+            : Date.now(),
+          locale,
+          paymentType: paymentPlan,
+        }),
+      });
+
+      const payData = await payRes.json();
+
+      if (!payRes.ok || !payData.succeeded || !payData.data?.paymentUrl) {
+        throw new Error(
+          payData.message ||
+            (isAr
+              ? "فشل في إنشاء رابط الدفع"
+              : "Failed to create payment link")
+        );
+      }
+
+      // ── Step 3: Clear cart and redirect to EasyKash hosted page ────────
       clearCart();
-      const orderNum = response.data?.orderNumber || response.data?.order_number;
-      router.push(`/${locale}/order-success${orderNum ? `?order=${orderNum}` : ''}`);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : typeof error === "string" ? error : t("genericErrorDesc");
-      console.error('Order error:', message);
+      setOrderCompleted(true);
+
+      // Redirect to EasyKash's hosted payment page
+      window.location.href = payData.data.paymentUrl;
+    } catch (error: any) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : typeof error === "string"
+          ? error
+          : t("genericErrorDesc");
+      console.error("Checkout error:", message);
       setOrderError(message);
-    } finally {
       setIsProcessing(false);
     }
   };
 
-  // Show loading state during hydration
   if (!mounted) {
     return (
       <div className="min-h-screen" dir={dir}>
@@ -220,14 +277,17 @@ export default function Checkout() {
     );
   }
 
-  // Show loading while order is being processed or completed
   if (orderCompleted || isProcessing) {
     return (
       <div className="min-h-screen flex items-center justify-center" dir={dir}>
         <div className="text-center space-y-6">
           <div className="animate-spin h-10 w-10 border-2 border-foreground border-t-transparent mx-auto" />
           <p className="text-sm tracking-widest uppercase text-muted-foreground">
-            {orderCompleted ? t("redirecting") : t("processingOrder")}
+            {orderCompleted
+              ? isAr
+                ? "جاري التحويل لبوابة الدفع..."
+                : "Redirecting to payment gateway..."
+              : t("processingOrder")}
           </p>
         </div>
       </div>
@@ -240,8 +300,8 @@ export default function Checkout() {
     <div className="min-h-screen bg-background" dir={dir}>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
         {/* Back Button */}
-        <button 
-          onClick={() => router.push(`/${locale}/cart`)} 
+        <button
+          onClick={() => router.push(`/${locale}/cart`)}
           className="hidden sm:inline-flex items-center gap-2 text-sm tracking-wider uppercase text-muted-foreground hover:text-foreground transition-colors mb-6"
           aria-label={t("backToCart")}
         >
@@ -255,16 +315,18 @@ export default function Checkout() {
 
         {/* Page Title */}
         <div className="mb-8 sm:mb-10">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-light tracking-wider uppercase">{t("checkoutTitle")}</h1>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-light tracking-wider uppercase">
+            {t("checkoutTitle")}
+          </h1>
           <div className="h-px w-16 bg-foreground mt-4" />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12">
-          {/* Order Summary - shows last on mobile, first on desktop (right side) */}
+          {/* Order Summary */}
           <div className="order-last lg:order-last lg:col-span-5 lg:sticky lg:top-24 lg:h-fit">
-            <CheckoutOrderSummary 
-              items={items} 
-              totalPrice={getTotalPrice()} 
+            <CheckoutOrderSummary
+              items={items}
+              totalPrice={getTotalPrice()}
               shippingPrice={shippingPrice}
               discount={discount}
               onDiscountChange={setDiscount}
@@ -275,7 +337,7 @@ export default function Checkout() {
             />
           </div>
 
-          {/* Form - shows first on mobile */}
+          {/* Form */}
           <div className="order-first lg:order-first lg:col-span-7 bg-[#F0EBE3]/40 p-5 sm:p-8 border border-[#d4c9bc] rounded-[32px]">
             {orderError && (
               <div className="p-4 bg-red-50 border border-red-300 text-red-700 text-sm rounded-sm mb-6">
@@ -285,7 +347,8 @@ export default function Checkout() {
             <CheckoutForm
               onSubmit={handleSubmit}
               isProcessing={isProcessing}
-              totalAmount={nf.format(getTotalPrice() + shippingPrice - (discount?.amount || 0) - (bogoDiscount || 0))}
+              totalPrice={computedTotal}
+              totalAmount={nf.format(computedTotal)}
               onGovernorateChange={setSelectedGovernorate}
               onPhoneChange={setPhoneNumber}
             />

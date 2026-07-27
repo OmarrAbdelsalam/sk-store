@@ -15,11 +15,16 @@ export type Order = {
   payment_method?: 'cash' | 'visa' | 'easykash';
   
   // Payment tracking
-  payment_status?: 'unpaid' | 'pending' | 'paid' | 'expired' | 'failed';
+  payment_status?: 'unpaid' | 'pending' | 'paid' | 'expired' | 'failed' | 'refunded' | 'delivered';
+  payment_plan?: 'full' | 'deposit';
+  deposit_amount?: number;
+  remaining_amount?: number;
   easykash_ref?: string;
   easykash_voucher?: string;
   easykash_provider?: string;
   easykash_expiry?: string;
+  easykash_payment_method?: string;
+  easykash_customer_ref?: string;
   
   // Shipping address
   government: string;
@@ -64,6 +69,9 @@ export type CreateOrderInput = {
   customerName: string;
   phoneNumber: string;
   paymentMethod?: 'cash' | 'visa' | 'easykash';
+  paymentPlan?: 'full' | 'deposit';
+  depositAmount?: number;
+  remainingAmount?: number;
   government: string;
   city?: string;
   detailedAddress?: string;
@@ -92,6 +100,7 @@ export type CreateOrderInput = {
   easykashVoucher?: string;
   easykashProvider?: string;
   easykashExpiry?: string;
+  easykashCustomerRef?: string;
 };
 
 // Generate order number
@@ -118,10 +127,14 @@ export const orderService = {
         phone_number: input.phoneNumber,
         payment_method: input.paymentMethod || 'cash',
         payment_status: paymentStatus,
+        payment_plan: input.paymentPlan || 'full',
+        deposit_amount: input.depositAmount || null,
+        remaining_amount: input.remainingAmount || null,
         easykash_ref: input.easykashRef || null,
         easykash_voucher: input.easykashVoucher || null,
         easykash_provider: input.easykashProvider || null,
         easykash_expiry: input.easykashExpiry || null,
+        easykash_customer_ref: input.easykashCustomerRef || null,
         government: input.government,
         city: input.city,
         detailed_address: input.detailedAddress,

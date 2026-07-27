@@ -27,20 +27,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get cart items from request body or use default values
     const items = body.items || [];
     const subtotal = body.subtotal || 0;
-    const shippingCost = body.shippingCost || 50; // Default shipping
+    const shippingCost = body.shippingCost || 50;
     const discountAmount = body.discountAmount || 0;
     const discountCode = body.discountCode;
     const total = body.total || (subtotal + shippingCost - discountAmount);
     const appliedPromotions = body.appliedPromotions || [];
     const bogoDiscount = body.bogoDiscount || 0;
 
+    // Payment plan fields
+    const paymentPlan = body.paymentPlan || 'full';
+    const depositAmount = body.depositAmount || undefined;
+    const remainingAmount = body.remainingAmount || undefined;
+
     // EasyKash payment data (if present)
     const easykashRef = body.easykashRef || undefined;
     const easykashVoucher = body.easykashVoucher || undefined;
     const easykashProvider = body.easykashProvider || undefined;
     const easykashExpiry = body.easykashExpiry || undefined;
+    const easykashCustomerRef = body.easykashCustomerRef || undefined;
 
     // Create order input
     const orderInput: CreateOrderInput = {
@@ -48,6 +55,9 @@ export async function POST(request: NextRequest) {
       customerName,
       phoneNumber,
       paymentMethod: paymentMethod || 'cash',
+      paymentPlan,
+      depositAmount,
+      remainingAmount,
       government,
       city,
       detailedAddress,
@@ -75,6 +85,7 @@ export async function POST(request: NextRequest) {
       easykashVoucher,
       easykashProvider,
       easykashExpiry,
+      easykashCustomerRef,
     };
 
     // Create order in database
@@ -91,7 +102,6 @@ export async function POST(request: NextRequest) {
         createdAt: order.created_at,
       },
     });
-
   } catch (error: any) {
     console.error("Error creating order:", error);
     return NextResponse.json(
