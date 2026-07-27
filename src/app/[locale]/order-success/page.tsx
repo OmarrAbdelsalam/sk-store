@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
-import { Check, Package, ArrowRight, Loader2 } from "lucide-react";
+import { Check, Package, ArrowRight, Loader2, Copy, Banknote, Store, Clock } from "lucide-react";
 import { orderService } from "@/services/orders";
 
 type OrderItem = {
@@ -27,6 +27,11 @@ type OrderData = {
   shippingCost: number;
   discountAmount: number;
   total: number;
+  paymentMethod?: string;
+  easykashVoucher?: string;
+  easykashProvider?: string;
+  easykashExpiry?: string;
+  easykashRef?: string;
   items: OrderItem[];
 };
 
@@ -194,6 +199,18 @@ function OrderSuccessContent() {
             </div>
           </div>
 
+          {/* EasyKash Voucher — shown when payment was made via Fawry/Aman */}
+          {orderData?.easykashVoucher && (
+            <EasyKashVoucherCard
+              voucher={orderData.easykashVoucher}
+              provider={orderData.easykashProvider}
+              expiryDate={orderData.easykashExpiry}
+              easykashRef={orderData.easykashRef}
+              total={orderData.total}
+              isAr={isAr}
+            />
+          )}
+
           {/* Ordered Items */}
           {orderData && orderData.items && orderData.items.length > 0 && (
             <div className="bg-[#F0EBE3]/40 rounded-[32px] p-6 sm:p-8 border border-[#d4c9bc] text-start shadow-sm">
@@ -308,8 +325,116 @@ function OrderSuccessContent() {
   );
 }
 
-export default function OrderSuccessPage() {
+// ─── EasyKash Voucher Card ────────────────────────────────────────────────────
+
+function EasyKashVoucherCard({
+  voucher,
+  provider,
+  expiryDate,
+  easykashRef,
+  total,
+  isAr,
+}: {
+  voucher: string;
+  provider?: string;
+  expiryDate?: string;
+  easykashRef?: string;
+  total: number;
+  isAr: boolean;
+}) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(voucher).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
+    <div className="bg-amber-50 border border-amber-200 rounded-[32px] p-6 sm:p-8 text-start shadow-sm">
+      <div className="pb-4 mb-4 border-b border-amber-200/80 flex items-center gap-2">
+        <Banknote className="w-4 h-4 text-amber-700" />
+        <h3 className="text-sm font-bold tracking-widest uppercase text-amber-900">
+          {isAr ? "كود الدفع النقدي" : "Cash Payment Code"}
+        </h3>
+      </div>
+
+      <p className="text-sm text-amber-800 mb-5">
+        {isAr
+          ? `ادفع ${total.toLocaleString()} جنيه في أقرب فرع ${provider || ""} باستخدام الكود التالي:`
+          : `Pay ${total.toLocaleString()} EGP at any ${provider || ""} branch using the code below:`}
+      </p>
+
+      {/* Voucher */}
+      <div className="bg-white rounded-2xl p-4 flex items-center justify-between gap-3 border border-amber-200 mb-4">
+        <div>
+          <p className="text-[10px] tracking-widest uppercase text-muted-foreground mb-1">
+            {isAr ? "كود الدفع" : "Payment Code"}
+          </p>
+          <p className="text-2xl font-bold tracking-widest text-gray-900 font-mono">
+            {voucher}
+          </p>
+        </div>
+        <button
+          onClick={handleCopy}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium tracking-wider uppercase transition-all ${
+            copied
+              ? "bg-green-100 text-green-700"
+              : "bg-amber-900 text-white hover:bg-amber-800"
+          }`}
+          aria-label={isAr ? "نسخ الكود" : "Copy code"}
+        >
+          {copied ? (
+            <>
+              <Check className="w-3.5 h-3.5" />
+              {isAr ? "تم النسخ" : "Copied"}
+            </>
+          ) : (
+            <>
+              <Copy className="w-3.5 h-3.5" />
+              {isAr ? "نسخ" : "Copy"}
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* Meta */}
+      <div className="grid grid-cols-2 gap-3 text-sm">
+        {provider && (
+          <div className="bg-white rounded-xl p-3 border border-amber-100">
+            <div className="flex items-center gap-1.5 mb-1">
+              <Store className="w-3.5 h-3.5 text-amber-600" />
+              <p className="text-[10px] tracking-widest uppercase text-muted-foreground">
+                {isAr ? "المزود" : "Provider"}
+              </p>
+            </div>
+            <p className="font-semibold text-gray-900">{provider}</p>
+          </div>
+        )}
+        {expiryDate && (
+          <div className="bg-white rounded-xl p-3 border border-amber-100">
+            <div className="flex items-center gap-1.5 mb-1">
+              <Clock className="w-3.5 h-3.5 text-amber-600" />
+              <p className="text-[10px] tracking-widest uppercase text-muted-foreground">
+                {isAr ? "صالح حتى" : "Expires"}
+              </p>
+            </div>
+            <p className="font-semibold text-gray-900">{expiryDate}</p>
+          </div>
+        )}
+      </div>
+
+      {easykashRef && (
+        <p className="mt-4 text-center text-[11px] text-amber-700">
+          {isAr ? "مرجع EasyKash:" : "EasyKash Ref:"}{" "}
+          <span className="font-mono font-semibold">{easykashRef}</span>
+        </p>
+      )}
+    </div>
+  );
+}
+
+export default function OrderSuccessPage() {  return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />

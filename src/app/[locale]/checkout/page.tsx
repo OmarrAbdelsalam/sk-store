@@ -76,7 +76,7 @@ export default function Checkout() {
     [locale]
   );
 
-  const handleSubmit = async (formData: CheckoutFormData & { paymentMethod: string }) => {
+  const handleSubmit = async (formData: CheckoutFormData & { paymentMethod: string; easykashResult?: { voucher: string; expiryDate: string; provider: string; easykashRef: string } }) => {
     setIsProcessing(true);
     const shipping = freeShippingApplied ? 0 : getShippingPrice(formData.governorate, formData.city);
     setShippingPrice(shipping);
@@ -121,6 +121,13 @@ export default function Checkout() {
         bogoDiscount: bogoDiscount || 0,
         appliedPromotions: appliedPromotions || [],
         total,
+        // EasyKash payment data
+        ...(formData.easykashResult && {
+          easykashRef: formData.easykashResult.easykashRef,
+          easykashVoucher: formData.easykashResult.voucher,
+          easykashProvider: formData.easykashResult.provider,
+          easykashExpiry: formData.easykashResult.expiryDate,
+        }),
       };
 
       // Save order summary to localStorage BEFORE API call
@@ -135,6 +142,11 @@ export default function Checkout() {
           shippingCost: shipping,
           discountAmount: discountAmt,
           total,
+          paymentMethod: formData.paymentMethod,
+          easykashVoucher: formData.easykashResult?.voucher,
+          easykashProvider: formData.easykashResult?.provider,
+          easykashExpiry: formData.easykashResult?.expiryDate,
+          easykashRef: formData.easykashResult?.easykashRef,
           items: items.map(item => ({
             productName: item.nameEn || item.name,
             productNameAr: item.nameAr || item.name,

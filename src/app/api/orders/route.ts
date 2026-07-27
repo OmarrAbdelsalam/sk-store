@@ -27,7 +27,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get cart items from request body or use default values
     const items = body.items || [];
     const subtotal = body.subtotal || 0;
     const shippingCost = body.shippingCost || 50; // Default shipping
@@ -36,6 +35,12 @@ export async function POST(request: NextRequest) {
     const total = body.total || (subtotal + shippingCost - discountAmount);
     const appliedPromotions = body.appliedPromotions || [];
     const bogoDiscount = body.bogoDiscount || 0;
+
+    // EasyKash payment data (if present)
+    const easykashRef = body.easykashRef || undefined;
+    const easykashVoucher = body.easykashVoucher || undefined;
+    const easykashProvider = body.easykashProvider || undefined;
+    const easykashExpiry = body.easykashExpiry || undefined;
 
     // Create order input
     const orderInput: CreateOrderInput = {
@@ -66,6 +71,10 @@ export async function POST(request: NextRequest) {
       total,
       appliedPromotions,
       bogoDiscount,
+      easykashRef,
+      easykashVoucher,
+      easykashProvider,
+      easykashExpiry,
     };
 
     // Create order in database

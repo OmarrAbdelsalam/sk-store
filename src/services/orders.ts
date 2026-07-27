@@ -12,7 +12,14 @@ export type Order = {
   customer_name: string;
   phone_number: string;
   whatsapp_number?: string;
-  payment_method?: 'cash' | 'visa';
+  payment_method?: 'cash' | 'visa' | 'easykash';
+  
+  // Payment tracking
+  payment_status?: 'unpaid' | 'pending' | 'paid' | 'expired' | 'failed';
+  easykash_ref?: string;
+  easykash_voucher?: string;
+  easykash_provider?: string;
+  easykash_expiry?: string;
   
   // Shipping address
   government: string;
@@ -56,7 +63,7 @@ export type CreateOrderInput = {
   sessionId: string;
   customerName: string;
   phoneNumber: string;
-  paymentMethod?: 'cash' | 'visa';
+  paymentMethod?: 'cash' | 'visa' | 'easykash';
   government: string;
   city?: string;
   detailedAddress?: string;
@@ -80,6 +87,11 @@ export type CreateOrderInput = {
   total: number;
   appliedPromotions?: AppliedPromotion[];
   bogoDiscount?: number;
+  // EasyKash payment data (if applicable)
+  easykashRef?: string;
+  easykashVoucher?: string;
+  easykashProvider?: string;
+  easykashExpiry?: string;
 };
 
 // Generate order number
@@ -93,6 +105,8 @@ export const orderService = {
   async create(input: CreateOrderInput): Promise<Order> {
     const orderNumber = generateOrderNumber();
     
+    const paymentStatus = input.easykashRef ? 'pending' : 'unpaid';
+    
     // 1. Create order
     const { data: order, error: orderError } = await supabase
       .from("orders")
@@ -103,6 +117,11 @@ export const orderService = {
         customer_name: input.customerName,
         phone_number: input.phoneNumber,
         payment_method: input.paymentMethod || 'cash',
+        payment_status: paymentStatus,
+        easykash_ref: input.easykashRef || null,
+        easykash_voucher: input.easykashVoucher || null,
+        easykash_provider: input.easykashProvider || null,
+        easykash_expiry: input.easykashExpiry || null,
         government: input.government,
         city: input.city,
         detailed_address: input.detailedAddress,

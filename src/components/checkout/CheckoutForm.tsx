@@ -14,6 +14,7 @@ import {
   ChevronsUpDown,
   CreditCard,
   Wallet,
+  Banknote,
   User,
   Phone,
   MapPin,
@@ -32,11 +33,12 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import PaymentModal from "./PaymentModal";
+import EasyKashModal, { type EasyKashPaymentResult } from "./EasyKashModal";
 
-type PaymentMethod = "visa" | "wallet";
+type PaymentMethod = "visa" | "wallet" | "easykash";
 
 type Props = {
-  onSubmit: (data: CheckoutFormData & { paymentMethod: PaymentMethod }) => Promise<void>;
+  onSubmit: (data: CheckoutFormData & { paymentMethod: PaymentMethod; easykashResult?: EasyKashPaymentResult }) => Promise<void>;
   isProcessing: boolean;
   totalAmount: string;
   onGovernorateChange?: (governorate: string) => void;
@@ -76,6 +78,10 @@ const CheckoutForm = memo(({ onSubmit, isProcessing, totalAmount, onGovernorateC
   const [governorateOpen, setGovernorateOpen] = useState(false);
   const [phoneError, setPhoneError] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showEasyKashModal, setShowEasyKashModal] = useState(false);
+  const [easykashLoading, setEasykashLoading] = useState(false);
+  const [easykashError, setEasykashError] = useState<string | null>(null);
+  const [easykashResult, setEasykashResult] = useState<EasyKashPaymentResult | null>(null);
 
   const handleInputChange = useCallback((field: string, value: string) => {
     setFormData((prev) => {
@@ -101,8 +107,61 @@ const CheckoutForm = memo(({ onSubmit, isProcessing, totalAmount, onGovernorateC
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Open payment modal instead of directly submitting
+
+    if (paymentMethod === "easykash") {
+      // Open EasyKash modal and initiate payment creation
+      setShowEasyKashModal(true);
+      setEasykashError(null);
+      setEasykashResult(null);
+      setEasykashLoading(true);
+
+      try {
+        const res = await fetch("/api/payments/easykash/create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            payerMobile: formData.phone,
+            payerName: formData.name,
+            // Convert totalAmount string (e.g. "1,250.00") to a number
+            amount: parseFloat(totalAmount.replace(/,/g, "")),
+            expiryDuration: 48,
+            voucherData: "SK Bags Order",
+            type: "in",
+          }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.succeeded) {
+          setEasykashError(
+            data.message ||
+              (isAr
+                ? "فشل في إنشاء كود الدفع. حاول مرة أخرى."
+                : "Failed to create payment code. Please try again.")
+          );
+        } else {
+          setEasykashResult(data.data as EasyKashPaymentResult);
+        }
+      } catch {
+        setEasykashError(
+          isAr
+            ? "خطأ في الاتصال. تحقق من الإنترنت وحاول مرة أخرى."
+            : "Connection error. Check your internet and try again."
+        );
+      } finally {
+        setEasykashLoading(false);
+      }
+      return;
+    }
+
+    // Visa / wallet → open existing payment modal
     setShowPaymentModal(true);
+  };
+
+  const handleEasyKashConfirm = async () => {
+    setShowEasyKashModal(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    await onSubmit({ ...formData, paymentMethod, easykashResult: easykashResult ?? undefined });
   };
 
   const handlePaymentSuccess = async () => {
@@ -288,27 +347,27 @@ const CheckoutForm = memo(({ onSubmit, isProcessing, totalAmount, onGovernorateC
           </h3>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           {/* Visa / Credit Card */}
           <button
             type="button"
             onClick={() => setPaymentMethod("visa")}
             className={cn(
-              "flex flex-col items-center gap-2.5 p-5 border rounded-2xl transition-all duration-300",
+              "flex flex-col items-center gap-2.5 p-4 border rounded-2xl transition-all duration-300",
               paymentMethod === "visa"
                 ? "border-gray-900 bg-white shadow-md ring-1 ring-gray-900/10 scale-[1.02]"
                 : "border-[#c8bdb0]/70 bg-white/60 hover:border-foreground/40 hover:bg-white"
             )}
           >
             <CreditCard className={cn(
-              "w-6 h-6",
+              "w-5 h-5",
               paymentMethod === "visa" ? "text-gray-900" : "text-muted-foreground"
             )} />
             <span className={cn(
-              "text-xs font-semibold tracking-widest uppercase",
+              "text-[10px] font-semibold tracking-widest uppercase text-center leading-tight",
               paymentMethod === "visa" ? "text-gray-900" : "text-muted-foreground"
             )}>
-              {isAr ? "بطاقة ائتمان" : "Credit Card"}
+              {isAr ? "بطاقة" : "Card"}
             </span>
           </button>
 
@@ -317,21 +376,44 @@ const CheckoutForm = memo(({ onSubmit, isProcessing, totalAmount, onGovernorateC
             type="button"
             onClick={() => setPaymentMethod("wallet")}
             className={cn(
-              "flex flex-col items-center gap-2.5 p-5 border rounded-2xl transition-all duration-300",
+              "flex flex-col items-center gap-2.5 p-4 border rounded-2xl transition-all duration-300",
               paymentMethod === "wallet"
                 ? "border-gray-900 bg-white shadow-md ring-1 ring-gray-900/10 scale-[1.02]"
                 : "border-[#c8bdb0]/70 bg-white/60 hover:border-foreground/40 hover:bg-white"
             )}
           >
             <Wallet className={cn(
-              "w-6 h-6",
+              "w-5 h-5",
               paymentMethod === "wallet" ? "text-gray-900" : "text-muted-foreground"
             )} />
             <span className={cn(
-              "text-xs font-semibold tracking-widest uppercase",
+              "text-[10px] font-semibold tracking-widest uppercase text-center leading-tight",
               paymentMethod === "wallet" ? "text-gray-900" : "text-muted-foreground"
             )}>
-              {isAr ? "محفظة إلكترونية" : "E-Wallet"}
+              {isAr ? "محفظة" : "E-Wallet"}
+            </span>
+          </button>
+
+          {/* Cash — EasyKash (Fawry / Aman) */}
+          <button
+            type="button"
+            onClick={() => setPaymentMethod("easykash")}
+            className={cn(
+              "flex flex-col items-center gap-2.5 p-4 border rounded-2xl transition-all duration-300",
+              paymentMethod === "easykash"
+                ? "border-gray-900 bg-white shadow-md ring-1 ring-gray-900/10 scale-[1.02]"
+                : "border-[#c8bdb0]/70 bg-white/60 hover:border-foreground/40 hover:bg-white"
+            )}
+          >
+            <Banknote className={cn(
+              "w-5 h-5",
+              paymentMethod === "easykash" ? "text-gray-900" : "text-muted-foreground"
+            )} />
+            <span className={cn(
+              "text-[10px] font-semibold tracking-widest uppercase text-center leading-tight",
+              paymentMethod === "easykash" ? "text-gray-900" : "text-muted-foreground"
+            )}>
+              {isAr ? "فوري/أمان" : "Fawry/Aman"}
             </span>
           </button>
         </div>
@@ -360,13 +442,33 @@ const CheckoutForm = memo(({ onSubmit, isProcessing, totalAmount, onGovernorateC
         )}
       </button>
 
-      {/* Payment Modal */}
-      <PaymentModal
-        isOpen={showPaymentModal}
-        onClose={() => setShowPaymentModal(false)}
-        onSuccess={handlePaymentSuccess}
-        paymentMethod={paymentMethod}
+      {/* Payment Modal (visa / wallet only) */}
+      {(paymentMethod === "visa" || paymentMethod === "wallet") && (
+        <PaymentModal
+          isOpen={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          onSuccess={handlePaymentSuccess}
+          paymentMethod={paymentMethod}
+          totalAmount={totalAmount}
+        />
+      )}
+
+      {/* EasyKash Modal (Fawry / Aman cash payment) */}
+      <EasyKashModal
+        isOpen={showEasyKashModal}
+        onClose={() => {
+          if (!easykashLoading) {
+            setShowEasyKashModal(false);
+            setEasykashResult(null);
+            setEasykashError(null);
+          }
+        }}
+        onConfirm={handleEasyKashConfirm}
+        result={easykashResult}
+        isLoading={easykashLoading}
+        error={easykashError}
         totalAmount={totalAmount}
+        isAr={isAr}
       />
     </form>
   );
