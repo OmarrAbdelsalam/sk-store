@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { fetchProducts, type ProductApi } from "@/api/products";
+import { fetchProducts, filterProducts, type ProductApi } from "@/api/products";
 import NewArrivalsCarousel from "@/components/NewArrivalsCarousel";
 import { withRetry, formatError } from "@/lib/retry";
 
@@ -11,12 +11,21 @@ const NewArrivals = async ({ products: initialProducts }: NewArrivalsProps = {})
   const t = await getTranslations("NewArrivals");
 
   // Use provided products or fetch server-side
-  let products: ProductApi[] = initialProducts?.slice(0, 4) || [];
+  let products: ProductApi[] = initialProducts?.filter(p => p.badge === 'new_arrival').slice(0, 4) || [];
+  if (products.length === 0 && initialProducts?.length) {
+    products = initialProducts.slice(0, 4);
+  }
 
   if (products.length === 0) {
     try {
-      const result = await withRetry(() => fetchProducts(1, 4), { label: "NewArrivals.fetchProducts" });
+      const result = await withRetry(() => filterProducts({ badge: 'new_arrival', pageSize: 4 }), { label: "NewArrivals.fetchProducts" });
       products = result.items;
+      
+      // Fallback if no products have the badge
+      if (products.length === 0) {
+        const fallbackResult = await withRetry(() => fetchProducts(1, 4), { label: "NewArrivals.fetchProductsFallback" });
+        products = fallbackResult.items;
+      }
     } catch (error: any) {
       console.error("Failed to fetch new arrivals:", formatError(error));
     }

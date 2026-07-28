@@ -92,12 +92,12 @@ export default {
 				},
 			},
 			fontFamily: {
-				'playfair': ['var(--font-poppins)', 'sans-serif'],
+				'playfair': ['var(--font-inter)', 'sans-serif'],
 				'luxury': ['Playfair Display', 'serif'],
 				'arabic': ['Noto Sans Arabic', 'sans-serif'],
 				'tajawal': ['Tajawal', 'sans-serif'],
 				'alexandria': ['var(--font-alexandria)', 'sans-serif'],
-				'sans': ['var(--font-poppins)', 'sans-serif']
+				'sans': ['var(--font-inter)', 'sans-serif']
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

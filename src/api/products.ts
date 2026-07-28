@@ -255,6 +255,7 @@ export async function filterProducts(params: {
   minPrice?: number;
   maxPrice?: number;
   categoryId?: string;
+  badge?: string;
   page?: number;
   pageSize?: number;
 }): Promise<Paged<ProductApi>> {
@@ -271,6 +272,9 @@ export async function filterProducts(params: {
 
   if (params.categoryId) {
     query = query.eq('category_id', params.categoryId);
+  }
+  if (params.badge) {
+    query = query.eq('badge', params.badge);
   }
   if (params.minPrice !== undefined) {
     query = query.gte('base_price', params.minPrice);

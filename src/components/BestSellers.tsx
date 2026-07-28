@@ -60,9 +60,14 @@ const BestSellers = () => {
   
   if (!products || products.length === 0) return null;
 
-  // Get best sellers - for now, we'll use the first 8 products
-  // In the future, this should be based on actual sales data
-  const bestSellers = products.slice(0, 8);
+  // Get best sellers - filter by best_seller badge
+  // Fallback to latest products if none have the badge
+  let bestSellers = products.filter(p => p.raw?.badge === 'best_seller');
+  if (bestSellers.length === 0) {
+    bestSellers = products.slice(0, 8);
+  } else {
+    bestSellers = bestSellers.slice(0, 8);
+  }
 
   return (
     <section className="bg-white">

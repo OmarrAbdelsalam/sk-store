@@ -9,7 +9,7 @@ import NavigationLoadingOverlay from '@/components/ui/NavigationLoadingOverlay';
 import { Toaster } from '@/components/ui/toaster';
 import CommonLayout from '@/components/CommonLayout';
 import TopBanner from '@/components/TopBanner';
-import { Cairo, Poppins } from 'next/font/google';
+import { Cairo, Inter } from 'next/font/google';
 import { generateDefaultMetadata } from '@/lib/metadata';
 import SEOHead from '@/components/SEOHead';
 import { Analytics } from '@vercel/analytics/next';
@@ -24,10 +24,10 @@ const cairo = Cairo({
   display: 'swap',
 });
 
-const poppins = Poppins({
+const inter = Inter({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
-  variable: '--font-poppins',
+  variable: '--font-inter',
   display: 'swap',
 });
 
@@ -76,7 +76,7 @@ export default async function LocaleLayout({
         <meta name="twitter:image" content={siteOgImage} />
         <meta name="twitter:card" content="summary_large_image" />
       </head>
-      <body className={`${cairo.variable} ${poppins.variable} ${(locale as string) === 'ar' ? 'font-cairo' : 'font-sans'}`}>
+      <body className={`${cairo.variable} ${inter.variable} ${(locale as string) === 'ar' ? 'font-cairo' : 'font-sans'}`}>
         <SEOHead locale={locale} />
         <ScrollToTop />
         <NextIntlClientProvider locale={locale}>
