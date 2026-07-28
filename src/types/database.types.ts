@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -1452,8 +1452,11 @@ export type Database = {
       }
       products: {
         Row: {
+          badge_order: number | null
           base_price: number
           category_id: string | null
+          category_order: number | null
+          global_order: number | null
           compare_at_price: number | null
           created_at: string | null
           deleted_at: string | null
@@ -1480,8 +1483,11 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          badge_order?: number | null
           base_price: number
           category_id?: string | null
+          category_order?: string | null
+          global_order?: number | null
           compare_at_price?: number | null
           created_at?: string | null
           deleted_at?: string | null
@@ -1508,8 +1514,11 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          badge_order?: number | null
           base_price?: number
           category_id?: string | null
+          category_order?: number | null
+          global_order?: number | null
           compare_at_price?: number | null
           created_at?: string | null
           deleted_at?: string | null

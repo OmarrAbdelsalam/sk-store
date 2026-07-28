@@ -414,7 +414,7 @@ const ProductGrid = ({ isFullPage = false }: ProductGridProps) => {
           </>
         ) : (
           <div className="text-center mb-10">
-            <h2 className="font-sans font-bold text-3xl md:text-4xl text-gray-900 mb-2">
+            <h2 className="font-sans font-normal text-3xl md:text-4xl text-gray-800 mb-2">
               {displayTitle}
             </h2>
             <div className="w-24 h-1 bg-[#C2A878] mx-auto rounded-full"></div>

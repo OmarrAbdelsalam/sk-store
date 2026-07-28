@@ -57,12 +57,12 @@ export default function HeroCarousel({ slides }: { slides: SlideData[] }) {
     <Carousel
       setApi={setApi}
       opts={{ loop: isMultiple, watchDrag: isMultiple }}
-      className="w-full h-full"
+      className="w-full h-full group"
     >
       <CarouselContent className="h-full ml-0">
         {slides.map((slide, index) => (
-          <CarouselItem key={index} className="pl-0 basis-full h-[calc(100svh-101px)] lg:h-auto lg:aspect-video">
-            <div className="relative h-full w-full overflow-hidden bg-white">
+          <CarouselItem key={index} className="pl-0 basis-full h-[calc(100svh-101px)] lg:h-[85vh] lg:min-h-[600px]">
+            <div className="relative h-full w-full overflow-hidden bg-[#f9f9f9]">
               {/* Mobile/Tablet Layout */}
               <div className="lg:hidden relative h-full w-full">
                 {/* Background Media */}
@@ -77,7 +77,7 @@ export default function HeroCarousel({ slides }: { slides: SlideData[] }) {
                       preload="metadata"
                       // @ts-expect-error fetchPriority not yet in React types
                       fetchPriority={index === 0 ? "high" : "auto"}
-                      className="absolute inset-0 w-full h-full object-cover"
+                      className="absolute inset-0 w-full h-full object-cover scale-105"
                     />
                   ) : (
                     <Image
@@ -85,42 +85,40 @@ export default function HeroCarousel({ slides }: { slides: SlideData[] }) {
                       alt={slide.title}
                       fill
                       priority={index === 0}
-                      className="object-cover object-center"
+                      className="object-cover object-center scale-105"
                       sizes="100vw"
                     />
                   )}
-                  <div className="absolute inset-0 bg-black/20" />
+                  {/* Subtle darkening for contrast */}
+                  <div className="absolute inset-0 bg-black/10 transition-opacity duration-700" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
                 </div>
 
-                {/* Bottom Gradient Overlay for text readability */}
-                <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none" />
-
                 {/* Content Overlay */}
-                <div className="relative z-10 h-full flex flex-col justify-end pb-12 px-6">
-                  <div className="w-full flex flex-col items-center text-center animate-slide-up space-y-4">
+                <div className="relative z-10 h-full flex flex-col justify-end pb-16 px-6">
+                  <div className="w-full flex flex-col items-center text-center space-y-5 animate-in slide-in-from-bottom-4 duration-700 fade-in">
                     
-                    <div className="space-y-2">
-                      <h2 className="font-sans font-bold text-3xl md:text-4xl font-bold text-white tracking-wide drop-shadow-md">
+                    <div className="space-y-3">
+                      <h2 className="font-sans font-normal text-4xl sm:text-5xl text-white tracking-wider">
                         {slide.title}
                       </h2>
                       {slide.description && (
-                        <p className="text-white/90 text-sm md:text-base font-medium max-w-xs mx-auto drop-shadow-sm">
+                        <p className="text-white/80 text-sm font-light max-w-xs mx-auto tracking-wide leading-relaxed">
                           {slide.description}
                         </p>
                       )}
                     </div>
                     
-                    <Link href={slide.mobileButtonLink} className="w-full max-w-sm mt-4 block">
+                    <Link href={slide.mobileButtonLink} className="mt-6 block w-[200px]">
                       <Button
-                        className="w-full h-12 bg-white text-black hover:bg-[#C2A878] hover:text-white rounded-full tracking-widest uppercase text-sm font-bold transition-colors duration-300 shadow-xl"
+                        variant="outline"
+                        className="w-full h-12 bg-transparent text-white border-white/80 hover:bg-white hover:text-black rounded-none tracking-[0.2em] uppercase text-xs transition-all duration-500 font-medium"
                       >
                         {slide.buttonText || "SHOP NOW"}
                       </Button>
                     </Link>
                   </div>
                 </div>
-
-
               </div>
 
               {/* Desktop Full-Width Layout */}
@@ -131,28 +129,29 @@ export default function HeroCarousel({ slides }: { slides: SlideData[] }) {
                   alt={slide.title}
                   fill
                   priority={index === 0}
-                  className="object-cover object-center"
+                  className="object-cover object-center scale-100 group-hover:scale-105 transition-transform duration-[10s] ease-out"
                   sizes="100vw"
                 />
 
-                {/* Dark overlay for text readability */}
-                <div className="absolute inset-0 bg-black/35" />
-
-                {/* Bottom gradient */}
-                <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+                {/* Elegant gradients for text readability without being muddy */}
+                <div className="absolute inset-0 bg-black/15" />
+                <div className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-black/50 via-black/20 to-transparent" />
 
                 {/* Text content overlay - center left */}
-                <div className="relative z-10 h-full flex flex-col items-start justify-center px-16">
-                  <div className="max-w-xl space-y-6 text-left">
-                    <h1 className="font-sans text-5xl md:text-7xl text-white font-bold leading-tight drop-shadow-lg">
+                <div className="relative z-10 h-full flex flex-col items-start justify-center px-24 2xl:px-32">
+                  <div className="max-w-2xl space-y-8 text-left animate-in slide-in-from-left-8 duration-1000 fade-in delay-150 fill-mode-both">
+                    <h1 className="font-sans text-6xl xl:text-7xl text-white font-normal leading-[1.1] tracking-wide">
                       {slide.title}
                     </h1>
-                    <p className="text-white/90 text-lg md:text-xl font-light tracking-wide leading-relaxed drop-shadow-md">
+                    <p className="text-white/80 text-lg xl:text-xl font-light tracking-wide leading-relaxed max-w-lg">
                       {slide.description}
                     </p>
-                    <div className="pt-2">
+                    <div className="pt-6">
                       <Link href={slide.buttonLink}>
-                        <Button className="px-10 py-5 min-h-[48px] bg-white text-gray-900 hover:bg-[#C2A878] hover:text-white rounded-full tracking-[0.2em] uppercase text-xs font-bold transition-all duration-300 shadow-xl hover:shadow-2xl hover:-translate-y-1">
+                        <Button 
+                          variant="outline"
+                          className="px-12 h-14 bg-white/5 backdrop-blur-sm text-white border-white/60 hover:bg-white hover:text-black hover:border-white rounded-none tracking-[0.25em] uppercase text-xs transition-all duration-500 font-medium"
+                        >
                           {slide.buttonText || "SHOP NOW"}
                         </Button>
                       </Link>
@@ -165,15 +164,16 @@ export default function HeroCarousel({ slides }: { slides: SlideData[] }) {
         ))}
       </CarouselContent>
       
-      {/* Dots Indicator - only shown when multiple slides */}
+      {/* Elegant minimalist dots Indicator */}
       {isMultiple && (
-        <div className="absolute bottom-6 lg:bottom-10 left-1/2 transform -translate-x-1/2 flex items-center justify-center gap-2 z-20">
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex items-center justify-center gap-3 z-20">
           {slides.map((_, index) => (
             <button
               key={index}
-              className="w-2 h-2 rounded-full transition-all duration-300 bg-white/40 hover:bg-white/80 aria-selected:w-8 aria-selected:bg-white"
+              className="w-1.5 h-1.5 rounded-full transition-all duration-500 bg-white/40 hover:bg-white/80 aria-selected:w-6 aria-selected:bg-white"
               aria-selected={selectedIndex === index}
               onClick={() => api?.scrollTo(index)}
+              aria-label={`Go to slide ${index + 1}`}
             />
           ))}
         </div>

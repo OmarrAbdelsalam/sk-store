@@ -43,7 +43,8 @@ import { colorService, Color } from "@/services/colors";
 import { uploadFile } from "@/api/admin/upload";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DraggableProductList } from "./DraggableProductList";
 
 const ProductsPage = () => {
   const queryClient = useQueryClient();
@@ -72,6 +73,44 @@ const ProductsPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  // Tabs & Sorting State
+  const [activeTab, setActiveTab] = useState("all");
+
+  const handleSaveBadgeOrder = async (orderedIds: string[]) => {
+    const updates = orderedIds.map((id, index) => ({ id, badge_order: index }));
+    await productService.updateOrders(updates);
+    refetch();
+    toast.success("Order saved successfully");
+  };
+
+  const handleSaveCategoryOrder = async (orderedIds: string[]) => {
+    const updates = orderedIds.map((id, index) => ({ id, category_order: index }));
+    await productService.updateOrders(updates);
+    refetch();
+    toast.success("Order saved successfully");
+  };
+
+  const handleSaveGlobalOrder = async (orderedIds: string[]) => {
+    const updates = orderedIds.map((id, index) => ({ id, global_order: index }));
+    await productService.updateOrders(updates);
+    refetch();
+    toast.success("Order saved successfully");
+  };
+
+  const [sortCategoryId, setSortCategoryId] = useState("");
+
+  const handleSetBadge = async (productId: string, newBadge: ProductBadge) => {
+    await productService.update(productId, { badge: newBadge } as ProductInput);
+    refetch();
+    toast.success("Badge updated");
+  };
+
+  const handleSetCategory = async (productId: string, newCategoryId: string) => {
+    await productService.update(productId, { category_id: newCategoryId } as ProductInput);
+    refetch();
+    toast.success("Category updated");
+  };
 
   // Form State
   const [name, setName] = useState("");
@@ -440,34 +479,48 @@ const ProductsPage = () => {
       </div>
 
       {/* Filters & Actions */}
-      <Card className="p-4">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Input
-              placeholder="Search products..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 rounded-xl"
-            />
+      {activeTab === "all" && (
+        <Card className="p-4">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 rounded-xl"
+              />
+            </div>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-full md:w-48 rounded-xl">
+                <SelectValue placeholder="All Categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {categories.map(cat => (
+                  <SelectItem key={cat.id} value={cat.id}>{cat.name_en}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button variant="outline" onClick={() => refetch()} className="rounded-xl">
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Refresh
+            </Button>
           </div>
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-full md:w-48 rounded-xl">
-              <SelectValue placeholder="All Categories" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              {categories.map(cat => (
-                <SelectItem key={cat.id} value={cat.id}>{cat.name_en}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button variant="outline" onClick={() => refetch()} className="rounded-xl">
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Refresh
-          </Button>
-        </div>
-      </Card>
+        </Card>
+      )}
+
+      {/* Main Tabs UI */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="all">All Products</TabsTrigger>
+          <TabsTrigger value="new_arrival">New Arrivals</TabsTrigger>
+          <TabsTrigger value="best_seller">Best Sellers</TabsTrigger>
+          <TabsTrigger value="our_collection">Our Collection</TabsTrigger>
+          <TabsTrigger value="categories">Category Sorting</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="all">
 
       {/* Products — Desktop Table */}
       <div className="content-card hidden md:block">
@@ -477,8 +530,8 @@ const ProductsPage = () => {
                     <tr>
                         <th>Product</th>
                         <th>Category</th>
+                        <th>Badge</th>
                         <th>Price</th>
-                        <th>Colors</th>
                         <th className="text-center">Actions</th>
                     </tr>
                 </thead>
@@ -510,9 +563,34 @@ const ProductsPage = () => {
                                     </div>
                                 </td>
                                 <td>
-                                    <span className="bg-gray-100 px-3 py-1 rounded-full text-xs font-medium">
-                                        {product.category?.name_en || "-"}
-                                    </span>
+                                    <Select 
+                                      value={product.category_id} 
+                                      onValueChange={(val) => handleSetCategory(product.id, val)}
+                                    >
+                                      <SelectTrigger className="w-[140px] h-8 text-xs rounded-lg border-gray-200">
+                                        <SelectValue placeholder="Category" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {categories.map(cat => (
+                                          <SelectItem key={cat.id} value={cat.id}>{cat.name_en}</SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                </td>
+                                <td>
+                                    <Select 
+                                      value={product.badge || "none"} 
+                                      onValueChange={(val) => handleSetBadge(product.id, val as ProductBadge)}
+                                    >
+                                      <SelectTrigger className="w-[120px] h-8 text-xs rounded-lg border-gray-200">
+                                        <SelectValue placeholder="Badge" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {BADGE_OPTIONS.map(opt => (
+                                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
                                 </td>
                                 <td>
                                     <div className="flex flex-col">
@@ -520,18 +598,6 @@ const ProductsPage = () => {
                                         {product.compare_at_price && (
                                             <span className="text-xs text-gray-400 line-through">{product.compare_at_price} EGP</span>
                                         )}
-                                    </div>
-                                </td>
-                                <td>
-                                    <div className="flex -space-x-2 ">
-                                        {product.colors?.map((color, i) => (
-                                            <div 
-                                                key={i} 
-                                                className="w-6 h-6 rounded-full border-2 border-white shadow-sm"
-                                                style={{ backgroundColor: color.hex_code }}
-                                                title={color.name_en}
-                                            />
-                                        ))}
                                     </div>
                                 </td>
                                 <td className="text-center">
@@ -629,6 +695,70 @@ const ProductsPage = () => {
           ))
         )}
       </div>
+      </TabsContent>
+
+      <TabsContent value="new_arrival">
+        <Card className="p-6">
+          <h3 className="text-lg font-bold mb-4">Reorder New Arrivals</h3>
+          <DraggableProductList 
+            products={[...products].filter(p => p.badge === 'new_arrival').sort((a, b) => (a.badge_order || 0) - (b.badge_order || 0))}
+            onSave={handleSaveBadgeOrder}
+          />
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="best_seller">
+        <Card className="p-6">
+          <h3 className="text-lg font-bold mb-4">Reorder Best Sellers</h3>
+          <DraggableProductList 
+            products={[...products].filter(p => p.badge === 'best_seller').sort((a, b) => (a.badge_order || 0) - (b.badge_order || 0))}
+            onSave={handleSaveBadgeOrder}
+          />
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="our_collection">
+        <Card className="p-6">
+          <h3 className="text-lg font-bold mb-4">Reorder Our Collection (All Products)</h3>
+          <DraggableProductList 
+            products={[...products].sort((a, b) => (a.global_order || 0) - (b.global_order || 0))}
+            onSave={handleSaveGlobalOrder}
+          />
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="categories">
+        <Card className="p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-bold">Category Order</h3>
+            <Select 
+              value={sortCategoryId || (categories.length > 0 ? categories[0].id : '')} 
+              onValueChange={setSortCategoryId}
+            >
+              <SelectTrigger className="w-64 border-gray-200">
+                <SelectValue placeholder="Select Category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map(cat => (
+                  <SelectItem key={cat.id} value={cat.id}>{cat.name_en}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {categories.length === 0 ? (
+            <p className="text-gray-500 text-sm">No categories available to reorder.</p>
+          ) : (
+            <DraggableProductList 
+              products={[...products]
+                .filter(p => p.category_id === (sortCategoryId || categories[0]?.id))
+                .sort((a, b) => (a.category_order || 0) - (b.category_order || 0))}
+              onSave={handleSaveCategoryOrder}
+            />
+          )}
+        </Card>
+      </TabsContent>
+      </Tabs>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="sm:max-w-2xl p-0 overflow-hidden bg-white shadow-2xl rounded-2xl max-h-[90vh] flex flex-col" dir="ltr">

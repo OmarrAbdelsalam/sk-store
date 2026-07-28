@@ -80,7 +80,7 @@ const MaisonClutchClient = ({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           {/* Text Content */}
           <div className="order-2 lg:order-1 flex flex-col items-center lg:items-start text-center lg:text-left space-y-8">
-            <h2 className="font-sans font-bold text-3xl md:text-5xl lg:text-6xl text-gray-900 leading-tight">
+            <h2 className="font-sans font-medium text-3xl md:text-5xl lg:text-6xl text-gray-900 leading-tight">
               {title}
             </h2>
 

@@ -16,6 +16,9 @@ export type ProductApi = {
   sizeChartImageUrl: string | null;
   tags: string[] | null;
   badge?: string | null;
+  badge_order?: number | null;
+  category_order?: number | null;
+  global_order?: number | null;
   colors: Array<{
     id: string;
     colorNameAr: string | null;
@@ -97,6 +100,9 @@ function mapRow(row: any): ProductApi {
     genderType: null,
     sizeChartImageUrl: row.size_chart_url || null,
     badge: row.badge || null,
+    badge_order: row.badge_order || null,
+    category_order: row.category_order || null,
+    global_order: row.global_order || null,
     tags: row.tags_en ? row.tags_en.split(',').map((t: string) => t.trim()) : [],
     colors: (row.product_colors || []).map((pc: any) => ({
       id: pc.colors?.id || pc.color_id,
@@ -184,6 +190,7 @@ export async function fetchProducts(pageNumber = 1, pageSize = 50): Promise<Page
     .select(PRODUCT_SELECT, { count: 'exact' })
     .eq('is_active', 1)
     .is('deleted_at', null)
+    .order('global_order', { ascending: true })
     .order('created_at', { ascending: false })
     .range(from, to);
 
@@ -231,6 +238,7 @@ export async function searchProducts(query: string, pageNumber = 1, pageSize = 5
     .eq('is_active', 1)
     .is('deleted_at', null)
     .or(`name_en.ilike.%${query}%,name_ar.ilike.%${query}%,tags_en.ilike.%${query}%,tags_ar.ilike.%${query}%`)
+    .order('global_order', { ascending: true })
     .order('created_at', { ascending: false })
     .range(from, to);
 
@@ -283,9 +291,15 @@ export async function filterProducts(params: {
     query = query.lte('base_price', params.maxPrice);
   }
 
-  const { data, error, count } = await query
-    .order('created_at', { ascending: false })
-    .range(from, to);
+  if (params.badge) {
+    query = query.order('badge_order', { ascending: true });
+  } else if (params.categoryId) {
+    query = query.order('category_order', { ascending: true });
+  } else {
+    query = query.order('global_order', { ascending: true }).order('created_at', { ascending: false });
+  }
+
+  const { data, error, count } = await query.range(from, to);
 
   if (error) throw error;
 

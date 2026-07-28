@@ -28,6 +28,9 @@ export type Product = {
   material_ar: string;
   category_id: string;
   badge?: ProductBadge;
+  badge_order?: number;
+  category_order?: number;
+  global_order?: number;
   main_image_second?: number;
   is_active: number;
   created_at?: string;
@@ -251,5 +254,23 @@ export const productService = {
       .eq("id", id);
     
     if (error) throw error;
+  },
+
+  async updateOrders(updates: { id: string; badge_order?: number; category_order?: number }[]) {
+    // Supabase JS doesn't have a bulk update for multiple rows with different values easily,
+    // so we can either use an RPC or do multiple small updates via Promise.all
+    // Since this is for admin and usually a small list, Promise.all is acceptable.
+    const promises = updates.map(update => {
+      const data: any = {};
+      if (update.badge_order !== undefined) data.badge_order = update.badge_order;
+      if (update.category_order !== undefined) data.category_order = update.category_order;
+      
+      return supabase
+        .from('products')
+        .update(data)
+        .eq('id', update.id);
+    });
+
+    await Promise.all(promises);
   }
 };
