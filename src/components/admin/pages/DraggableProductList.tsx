@@ -5,7 +5,8 @@ import {
   DndContext,
   closestCenter,
   KeyboardSensor,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   DragEndEvent,
@@ -61,11 +62,11 @@ function SortableItem({ product }: SortableItemProps) {
           <div className="w-full h-full bg-gray-100" />
         )}
       </div>
-      <div className="flex-1 min-w-0">
-        <p className="font-medium text-sm text-gray-900 truncate">{product.name_en}</p>
-        <p className="text-xs text-gray-500 truncate">{product.category?.name_en}</p>
+      <div className="flex-1 min-w-0 pr-2">
+        <p className="font-medium text-xs sm:text-sm text-gray-900 truncate">{product.name_en}</p>
+        <p className="text-[10px] sm:text-xs text-gray-500 truncate hidden sm:block">{product.category?.name_en}</p>
       </div>
-      <div className="text-sm font-semibold text-gray-900 w-24 text-right">
+      <div className="text-xs sm:text-sm font-semibold text-gray-900 whitespace-nowrap shrink-0 text-right">
         {product.base_price} EGP
       </div>
     </div>
@@ -88,7 +89,17 @@ export function DraggableProductList({ products, onSave }: DraggableProductListP
   }, [products]);
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(MouseSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })

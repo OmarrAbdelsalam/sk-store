@@ -132,6 +132,13 @@ const ProductsPage = () => {
   const [formStep, setFormStep] = useState(0);
   const [colorSearch, setColorSearch] = useState('');
 
+  // Add Color State
+  const [isAddingColor, setIsAddingColor] = useState(false);
+  const [newColorEn, setNewColorEn] = useState('');
+  const [newColorAr, setNewColorAr] = useState('');
+  const [newColorHex, setNewColorHex] = useState('#000000');
+  const [isSavingColor, setIsSavingColor] = useState(false);
+
   const STEPS = [
     { label: 'Info', key: 'info' },
     { label: 'Colors', key: 'colors' },
@@ -168,6 +175,7 @@ const ProductsPage = () => {
     setMainImageSecond(false);
     setFormStep(0);
     setColorSearch('');
+    setIsAddingColor(false);
 
     // Open modal immediately
     if (product) {
@@ -218,6 +226,33 @@ const ProductsPage = () => {
     setEditingProduct(null);
     setFormStep(0);
     setColorSearch('');
+    setIsAddingColor(false);
+  };
+
+  const handleAddColor = async () => {
+    if (!newColorEn || !newColorAr) {
+      toast.error("Please fill in both English and Arabic names");
+      return;
+    }
+    setIsSavingColor(true);
+    try {
+      const color = await colorService.create({
+        name_en: newColorEn,
+        name_ar: newColorAr,
+        hex_code: newColorHex,
+      });
+      await refetch();
+      setSelectedColors(prev => [...prev, color.id]);
+      setIsAddingColor(false);
+      setNewColorEn('');
+      setNewColorAr('');
+      setNewColorHex('#000000');
+      toast.success("Color added successfully");
+    } catch (e) {
+      toast.error("Failed to add color");
+    } finally {
+      setIsSavingColor(false);
+    }
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -924,6 +959,47 @@ const ProductsPage = () => {
                 </div>
                 {colors.filter(c => c.name_en.toLowerCase().includes(colorSearch.toLowerCase())).length === 0 && colors.length > 0 && (
                   <p className="text-sm text-gray-400 text-center py-6">No colors match &quot;{colorSearch}&quot;</p>
+                )}
+                <div className="flex items-center justify-between mt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsAddingColor(!isAddingColor)}
+                    className="text-sm text-primary font-medium hover:underline flex items-center gap-1"
+                  >
+                    <Plus size={16} /> Add New Color
+                  </button>
+                </div>
+                
+                {isAddingColor && (
+                  <div className="p-3 bg-gray-50 border rounded-xl space-y-3 mt-2 animate-in fade-in">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs text-gray-500">Name (English)</Label>
+                        <Input value={newColorEn} onChange={e => setNewColorEn(e.target.value)} placeholder="e.g. Red" className="h-8 text-sm" />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs text-gray-500">Name (Arabic)</Label>
+                        <Input value={newColorAr} onChange={e => setNewColorAr(e.target.value)} placeholder="مثال: أحمر" className="h-8 text-sm" dir="rtl" />
+                      </div>
+                    </div>
+                    <div className="flex items-end gap-3">
+                      <div className="space-y-1 flex-1">
+                        <Label className="text-xs text-gray-500">Hex Code</Label>
+                        <div className="flex items-center gap-2">
+                          <input type="color" value={newColorHex} onChange={e => setNewColorHex(e.target.value)} className="w-8 h-8 rounded border cursor-pointer p-0" />
+                          <Input value={newColorHex} onChange={e => setNewColorHex(e.target.value)} className="h-8 text-sm uppercase" />
+                        </div>
+                      </div>
+                      <Button 
+                        type="button"
+                        onClick={handleAddColor} 
+                        disabled={isSavingColor || !newColorEn || !newColorAr}
+                        className="h-8 px-4"
+                      >
+                        {isSavingColor ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Color'}
+                      </Button>
+                    </div>
+                  </div>
                 )}
                 {colors.length === 0 && <p className="text-sm text-gray-400 text-center py-8">No colors configured yet</p>}
               </div>

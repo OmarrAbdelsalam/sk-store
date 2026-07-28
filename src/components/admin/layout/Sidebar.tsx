@@ -10,7 +10,8 @@ import {
   Home,
   Tag,
   BarChart3,
-  X
+  X,
+  Palette
 } from "lucide-react";
 import { clearAuth } from "@/services/admin/auth";
 import { useRouter } from "@/i18n/navigation";
@@ -36,6 +37,7 @@ export function AppSidebar({ isOpen, onClose }: AppSidebarProps) {
     { title: "Orders", url: "/admin/orders", icon: ShoppingBag },
     { title: "Products", url: "/admin/products", icon: Package },
     { title: "Categories", url: "/admin/categories", icon: FolderTree },
+    { title: "Colors", url: "/admin/colors", icon: Palette },
     { title: "Analytics", url: "/admin/analytics", icon: BarChart3 },
   ];
 

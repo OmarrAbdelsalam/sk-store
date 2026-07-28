@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { Plus, Pencil, Trash2, Palette, Loader2, Save, Search } from "lucide-react";
 import { toast } from "sonner";
  
-
 import { PageHeader } from "@/components/admin/common";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +34,7 @@ const ColorsPage = () => {
 
   // Form State
   const [nameEn, setNameEn] = useState("");
+  const [nameAr, setNameAr] = useState("");
   const [hexCode, setHexCode] = useState("#000000");
 
   useEffect(() => {
@@ -47,15 +47,13 @@ const ColorsPage = () => {
 
   const fetchColors = async () => {
     try {
-      console.log("Fetching colors...");
       setIsLoading(true);
       const data = await colorService.getAll();
-      console.log("Colors fetched:", data);
       setColors(data);
       setFilteredColors(data);
     } catch (error) {
       console.error("Error fetching colors:", error);
-      toast.error("فشل في تحميل Colors");
+      toast.error("Failed to fetch colors");
     } finally {
       setIsLoading(false);
     }
@@ -66,12 +64,11 @@ const ColorsPage = () => {
       setFilteredColors(colors);
       return;
     }
-
     const query = searchQuery.toLowerCase();
     const results = colors.filter(
       (color) =>
         color.name_en.toLowerCase().includes(query) ||
-        color.name_ar?.toLowerCase().includes(query) ||
+        (color.name_ar && color.name_ar.toLowerCase().includes(query)) ||
         color.hex_code.toLowerCase().includes(query)
     );
     setFilteredColors(results);
@@ -81,10 +78,12 @@ const ColorsPage = () => {
     if (color) {
       setEditingColor(color);
       setNameEn(color.name_en);
+      setNameAr(color.name_ar || "");
       setHexCode(color.hex_code);
     } else {
       setEditingColor(null);
       setNameEn("");
+      setNameAr("");
       setHexCode("#000000");
     }
     setIsModalOpen(true);
@@ -97,14 +96,40 @@ const ColorsPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.error("لا يمكن إضافة أو Edit Colors - جميع Colors محددة مسبقاً في المكتبة");
-    handleCloseModal();
+    if (!nameEn || !nameAr) {
+      toast.error("Please fill in both English and Arabic names");
+      return;
+    }
+    
+    setIsSubmitting(true);
+    try {
+      if (editingColor) {
+        await colorService.update(editingColor.id, { name_en: nameEn, name_ar: nameAr, hex_code: hexCode });
+        toast.success("Color updated successfully");
+      } else {
+        await colorService.create({ name_en: nameEn, name_ar: nameAr, hex_code: hexCode });
+        toast.success("Color added successfully");
+      }
+      fetchColors();
+      handleCloseModal();
+    } catch (error) {
+      toast.error("Failed to save color");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const confirmDelete = async () => {
     if (!deleteId) return;
-    toast.error("لا يمكن Delete Colors - جميع Colors محددة مسبقاً في المكتبة");
-    setDeleteId(null);
+    try {
+      await colorService.delete(deleteId);
+      toast.success("Color deleted successfully");
+      fetchColors();
+    } catch (error) {
+      toast.error("Failed to delete color");
+    } finally {
+      setDeleteId(null);
+    }
   };
 
   if (isLoading) {
@@ -115,7 +140,7 @@ const ColorsPage = () => {
     <div className="space-y-6">
       <PageHeader
         icon={Palette}
-        title="إدارة Colors"
+        title="Manage Colors"
         subtitle={`${filteredColors.length} Available Color - Search`}
         actions={
           <div className="flex gap-3 items-center">
@@ -129,6 +154,10 @@ const ColorsPage = () => {
                 className="pr-10 w-64 h-11 rounded-xl border-gray-200 focus:border-[hsl(var(--luxury-charcoal))]"
               />
             </div>
+            <Button onClick={() => handleOpenModal()} className="h-11 rounded-xl px-4 bg-[hsl(var(--luxury-charcoal))] hover:bg-[hsl(var(--luxury-gold))] text-white gap-2 transition-all">
+              <Plus size={18} />
+              New Color
+            </Button>
           </div>
         }
       />
@@ -147,6 +176,14 @@ const ColorsPage = () => {
                 <p className="text-xs text-gray-400 font-mono">{color.hex_code}</p>
               </div>
             </div>
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Button variant="ghost" size="icon" onClick={() => handleOpenModal(color)} className="rounded-xl">
+                <Pencil size={18} className="text-gray-400 hover:text-gray-900" />
+              </Button>
+              <Button variant="ghost" size="icon" onClick={() => setDeleteId(color.id)} className="rounded-xl">
+                <Trash2 size={18} className="text-gray-400 hover:text-red-600" />
+              </Button>
+            </div>
           </div>
         ))}
         
@@ -164,16 +201,55 @@ const ColorsPage = () => {
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent className="bg-white rounded-[32px] border-none shadow-2xl" dir="ltr">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl font-luxury font-bold text-[hsl(var(--luxury-charcoal))]">Alert</AlertDialogTitle>
+            <AlertDialogTitle className="text-xl font-luxury font-bold text-[hsl(var(--luxury-charcoal))]">Confirm Delete</AlertDialogTitle>
             <AlertDialogDescription className="text-gray-500">
-              لا يمكن Delete Colors - جميع Colors محددة مسبقاً في المكتبة
+              Are you sure you want to delete this color? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2 sm:gap-0 mt-4">
-            <AlertDialogCancel className="rounded-xl border-gray-200 hover:bg-gray-50 text-gray-600 h-11">OK</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-xl border-gray-200 hover:bg-gray-50 text-gray-600 h-11">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="rounded-xl bg-red-600 hover:bg-red-700 text-white h-11">Delete Color</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={isModalOpen} onOpenChange={handleCloseModal}>
+        <DialogContent className="bg-white rounded-[32px] border-none shadow-2xl overflow-hidden max-w-md p-0">
+          <DialogHeader className="sr-only">
+            <DialogTitle>{editingColor ? 'Edit Color' : 'Add New Color'}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit}>
+            <div className="px-8 pt-8 pb-6 border-b border-gray-100">
+              <h2 className="text-2xl font-luxury font-bold text-[hsl(var(--luxury-charcoal))]">
+                {editingColor ? 'Edit Color' : 'Add New Color'}
+              </h2>
+            </div>
+            <div className="p-8 space-y-5">
+              <div className="space-y-2">
+                <Label className="text-gray-600">English Name</Label>
+                <Input value={nameEn} onChange={e => setNameEn(e.target.value)} placeholder="e.g. Red" required className="h-11 rounded-xl border-gray-200" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-gray-600">Arabic Name</Label>
+                <Input value={nameAr} onChange={e => setNameAr(e.target.value)} placeholder="مثال: أحمر" required className="h-11 rounded-xl border-gray-200" dir="rtl" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-gray-600">Hex Code</Label>
+                <div className="flex items-center gap-3">
+                  <input type="color" value={hexCode} onChange={e => setHexCode(e.target.value)} className="w-11 h-11 rounded border cursor-pointer p-0" />
+                  <Input value={hexCode} onChange={e => setHexCode(e.target.value)} required className="h-11 rounded-xl border-gray-200 flex-1 uppercase font-mono" />
+                </div>
+              </div>
+            </div>
+            <div className="p-6 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-3 rounded-b-[32px]">
+              <Button type="button" variant="outline" onClick={handleCloseModal} className="h-11 rounded-xl border-gray-200 hover:bg-white px-6">Cancel</Button>
+              <Button type="submit" disabled={isSubmitting} className="h-11 rounded-xl bg-[hsl(var(--luxury-charcoal))] hover:bg-[hsl(var(--luxury-gold))] text-white px-8 transition-colors">
+                {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : (editingColor ? 'Save Changes' : 'Add Color')}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
