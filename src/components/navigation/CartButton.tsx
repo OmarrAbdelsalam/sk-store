@@ -10,9 +10,10 @@ import { useRouter } from "next/navigation";
 interface CartButtonProps {
   isMobile?: boolean;
   className?: string;
+  isTransparent?: boolean;
 }
 
-export const CartButton = ({ isMobile = false, className = "" }: CartButtonProps) => {
+export const CartButton = ({ isMobile = false, className = "", isTransparent = false }: CartButtonProps) => {
   const locale = useLocale();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
@@ -57,15 +58,15 @@ export const CartButton = ({ isMobile = false, className = "" }: CartButtonProps
     <Button 
       variant="ghost" 
       size="sm" 
-      className={`relative hover:bg-transparent hover:opacity-70 transition-opacity px-2 ${isBouncing ? "animate-cart-bounce" : ""}`}
+      className={`relative hover:bg-transparent transition-all px-2 ${isTransparent ? "text-white hover:text-white/80 hover:bg-white/10" : "hover:opacity-70"} ${isBouncing ? "animate-cart-bounce" : ""} ${className}`}
       aria-label={cartItemsCount > 0 ? `Cart (${cartItemsCount} items)` : 'Cart'}
       onClick={handleClick}
     >
-      <ShoppingBag className="h-6 w-6" strokeWidth={1.2} color="black" />
+      <ShoppingBag className="h-6 w-6" strokeWidth={1.2} color={isTransparent ? "white" : "black"} />
       {cartItemsCount > 0 && (
         <span 
           ref={badgeRef}
-          className={`absolute -top-1 -right-1 bg-black text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center font-medium shadow-md border-[1.5px] border-white transition-transform duration-300 ${isBouncing ? "animate-badge-pop" : ""}`}
+          className={`absolute -top-1 -right-1 ${isTransparent ? 'bg-white text-black border-transparent' : 'bg-black text-white border-white'} text-[10px] rounded-full h-4 w-4 flex items-center justify-center font-bold shadow-md border-[1.5px] transition-transform duration-300 ${isBouncing ? "animate-badge-pop" : ""}`}
         >
           {cartItemsCount}
         </span>

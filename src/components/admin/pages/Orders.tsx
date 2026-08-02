@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Package, Eye, Clock, Truck, Check, X, RefreshCw, Search, DollarSign, ShoppingCart, User, Phone, MapPin, MessageCircle, StickyNote, Tag, CreditCard, Wallet, AlertCircle, CheckCircle2, Hourglass, SplitSquareHorizontal } from "lucide-react";
+import { Package, Eye, Clock, Truck, Check, X, RefreshCw, Search, DollarSign, ShoppingCart, User, Phone, MapPin, MessageCircle, StickyNote, Tag, CreditCard, Wallet, AlertCircle, CheckCircle2, Hourglass, SplitSquareHorizontal, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 
@@ -58,6 +58,7 @@ const OrdersPage = () => {
   const orders = ordersData || [];
 
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [updatingStatus, setUpdatingStatus] = useState<Order["status"] | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
@@ -132,12 +133,36 @@ const OrdersPage = () => {
   };
 
   const handleStatusChange = async (orderId: string, newStatus: Order["status"]) => {
+    // Ignore repeat taps while a change is in flight, otherwise two requests
+    // race and the last one to land wins regardless of what was clicked last.
+    if (updatingStatus) return;
+
+    const previous = selectedOrder?.status;
+    if (previous === newStatus) return;
+
+    setUpdatingStatus(newStatus);
+
+    // The dialog renders from `selectedOrder`, which is a snapshot taken when
+    // the row was clicked — invalidating the query alone refreshes the table
+    // behind the dialog but leaves this copy stale, so the chip never moves.
+    setSelectedOrder((current) =>
+      current && current.id === orderId ? { ...current, status: newStatus } : current
+    );
+
     try {
       await orderService.updateStatus(orderId, newStatus);
       queryClient.invalidateQueries({ queryKey: ['orders-data'] });
-      toast.success("Order status updated");
+      toast.success(`Status updated to ${STATUS_CONFIG[newStatus].label}`);
     } catch (error) {
+      // Roll back — showing a status the database rejected is worse than a delay.
+      setSelectedOrder((current) =>
+        current && current.id === orderId && previous
+          ? { ...current, status: previous }
+          : current
+      );
       toast.error("Failed to update status");
+    } finally {
+      setUpdatingStatus(null);
     }
   };
 
@@ -513,8 +538,12 @@ const OrdersPage = () => {
                       {(Object.entries(STATUS_CONFIG) as [Order["status"], typeof STATUS_CONFIG[keyof typeof STATUS_CONFIG]][]).map(([key, config]) => {
                         const Icon = config.icon;
                         const isActive = selectedOrder.status === key;
-                        
-                        // Color mapping for filled chips
+                        const isPending = updatingStatus === key;
+                        const isBusy = updatingStatus !== null;
+
+                        // Colours live here but hover, focus and disabled states
+                        // are in admin.css — inline styles can't express them,
+                        // which is why these chips gave no feedback at all.
                         const chipStyles: Record<string, { bg: string; text: string; border: string }> = {
                           pending:   { bg: '#fef3c7', text: '#92400e', border: '#fcd34d' },
                           confirmed: { bg: '#dbeafe', text: '#1e40af', border: '#93c5fd' },
@@ -527,20 +556,29 @@ const OrdersPage = () => {
                         return (
                           <button
                             key={key}
+                            type="button"
                             onClick={() => handleStatusChange(selectedOrder.id, key)}
-                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all duration-200"
-                            style={isActive ? {
-                              background: style.bg,
-                              color: style.text,
-                              border: `1.5px solid ${style.border}`,
-                              boxShadow: `0 2px 8px ${style.bg}`,
-                            } : {
-                              background: '#fff',
-                              color: '#94a3b8',
-                              border: '1.5px solid #e2e8f0',
-                            }}
+                            disabled={isBusy || isActive}
+                            aria-pressed={isActive}
+                            title={
+                              isActive
+                                ? `Already ${config.label}`
+                                : `Mark as ${config.label}`
+                            }
+                            className="status-chip"
+                            data-active={isActive}
+                            data-pending={isPending}
+                            style={{
+                              '--chip-bg': style.bg,
+                              '--chip-text': style.text,
+                              '--chip-border': style.border,
+                            } as React.CSSProperties}
                           >
-                            <Icon className="w-3.5 h-3.5" />
+                            {isPending ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <Icon className="w-3.5 h-3.5" />
+                            )}
                             {config.label}
                           </button>
                         );

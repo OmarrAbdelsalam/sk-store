@@ -1,10 +1,13 @@
 // معلومات الاتصال والعنوان
 export const CONTACT_INFO = {
-  phone: "01501881005",
-  phoneFormatted: "+20 150 188 1005",
-  phoneInternational: "+20-150-188-1005",
-  whatsapp: "201501881005",
-  whatsappLink: "https://wa.me/201501881005",
+  // Single contact number for the whole store — storefront, footer,
+  // order-success and admin follow-ups all read from here.
+  phone: "01016887251",
+  phoneFormatted: "+20 10 1688 7251",
+  phoneInternational: "+20-10-1688-7251",
+  whatsapp: "201016887251",
+  whatsappLink: "https://wa.me/201016887251",
+
   email: "info@skbags.com",
   
   locations: {

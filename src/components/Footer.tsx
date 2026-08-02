@@ -7,6 +7,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { CONTACT_INFO } from "@/lib/constants";
 
 const Footer = () => {
   const t = useTranslations();
@@ -84,7 +85,7 @@ const Footer = () => {
               <div className="group">
                 <button 
                   className={`text-gray-200 hover:text-white transition-all duration-300 ${locale === 'ar' ? 'group-hover:-translate-x-2 text-right' : 'group-hover:translate-x-2 text-left'}`}
-                  onClick={() => window.open("https://wa.me/+201501881005", "_blank")}
+                  onClick={() => window.open(CONTACT_INFO.whatsappLink, "_blank")}
                 >
                   {t('Footer.whatsapp')}
                 </button>

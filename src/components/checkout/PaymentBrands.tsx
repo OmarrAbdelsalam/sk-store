@@ -16,11 +16,21 @@ import { useId, useState } from "react";
 
 type BrandProps = { className?: string };
 
-function Badge({ children, label }: { children: React.ReactNode; label: string }) {
+function Badge({
+  children,
+  label,
+  className,
+}: {
+  children: React.ReactNode;
+  label: string;
+  className?: string;
+}) {
   return (
     <span
       title={label}
-      className="inline-flex items-center justify-center h-7 min-w-[42px] px-2 rounded-md border border-gray-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.05)] select-none"
+      className={`inline-flex items-center justify-center h-7 min-w-[42px] px-2 rounded-md border border-gray-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.05)] select-none ${
+        className || ""
+      }`}
     >
       {children}
     </span>
@@ -32,15 +42,19 @@ function BrandMark({
   slug,
   label,
   children,
+  badgeClassName,
+  imgClassName,
 }: {
   slug: string;
   label: string;
   children: React.ReactNode;
+  badgeClassName?: string;
+  imgClassName?: string;
 }) {
   const [failed, setFailed] = useState(false);
 
   return (
-    <Badge label={label}>
+    <Badge label={label} className={badgeClassName}>
       {failed ? (
         children
       ) : (
@@ -50,7 +64,7 @@ function BrandMark({
         <img
           src={`/payment/${slug}.svg`}
           alt={label}
-          className="h-4 w-auto max-w-[46px] object-contain"
+          className={imgClassName || "h-4 w-auto max-w-[46px] object-contain"}
           decoding="async"
           onError={() => setFailed(true)}
         />
@@ -113,17 +127,22 @@ export function InstaPayMark() {
 }
 
 export function WalletsMark({ isAr = false }: BrandProps & { isAr?: boolean }) {
-  const label = isAr ? "محافظ إلكترونية" : "Mobile wallets";
+  const label = isAr ? "محافظ إلكترونية (فودافون كاش، أورنج، اتصالات، وي)" : "Mobile wallets (Vodafone Cash, Orange, Etisalat, WE)";
 
   return (
-    <BrandMark slug="wallets" label={label}>
-      <span className="inline-flex items-center gap-1 leading-none">
-        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 text-gray-600" fill="none" aria-hidden="true">
+    <BrandMark
+      slug="wallets"
+      label={label}
+      badgeClassName="px-2.5 min-w-[96px]"
+      imgClassName="h-5 w-auto max-w-[115px] object-contain"
+    >
+      <span className="inline-flex items-center gap-1.5 leading-none">
+        <svg viewBox="0 0 24 24" className="h-4 w-4 text-gray-600" fill="none" aria-hidden="true">
           <rect x="2.5" y="5.5" width="19" height="13" rx="2.5" stroke="currentColor" strokeWidth="1.8" />
           <path d="M16 12h3.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
         </svg>
-        <span className="text-[10px] font-bold text-gray-700">
-          {isAr ? "محافظ" : "Wallets"}
+        <span className="text-[11px] font-bold text-gray-700">
+          {isAr ? "المحافظ الإلكترونية" : "Wallets"}
         </span>
       </span>
     </BrandMark>
@@ -152,7 +171,6 @@ export function AcceptedPaymentBrands({ isAr = false }: { isAr?: boolean }) {
       <MastercardMark />
       <MeezaMark />
       <WalletsMark isAr={isAr} />
-      <InstaPayMark />
       <FawryMark />
     </div>
   );

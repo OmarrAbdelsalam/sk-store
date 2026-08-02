@@ -6,6 +6,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Check, Package, ArrowRight, Loader2, Copy, Banknote, Store, Clock, XCircle, RefreshCw } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
 import type { PaymentStatus } from "@/lib/easykash";
+import { CONTACT_INFO } from "@/lib/constants";
 
 /** The callback races the customer's browser back from the gateway, so give it
  *  a few seconds to land before deciding the payment didn't go through. */
@@ -484,7 +485,7 @@ function OrderSuccessContent() {
               {t("needHelpBody")}
             </p>
             <button
-              onClick={() => window.open("https://wa.me/+201501881005", "_blank")}
+              onClick={() => window.open(CONTACT_INFO.whatsappLink, "_blank")}
               className="h-12 px-8 rounded-full bg-[#25D366] text-white text-xs font-bold tracking-widest uppercase
                 transition-all duration-300 hover:bg-[#1EBE5D] hover:-translate-y-1 shadow-md hover:shadow-lg inline-flex items-center justify-center gap-2"
             >
@@ -581,7 +582,7 @@ function PaymentFailed({
 
           <div className="pt-4">
             <button
-              onClick={() => window.open("https://wa.me/+201501881005", "_blank")}
+              onClick={() => window.open(CONTACT_INFO.whatsappLink, "_blank")}
               className="text-xs tracking-widest uppercase text-muted-foreground underline underline-offset-4 hover:text-foreground transition-colors"
             >
               {isAr ? "تواصل معنا على واتساب" : "Contact us on WhatsApp"}

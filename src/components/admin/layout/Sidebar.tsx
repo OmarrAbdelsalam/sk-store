@@ -10,6 +10,7 @@ import {
   Home,
   Tag,
   BarChart3,
+  ShoppingCart,
   X,
   Palette
 } from "lucide-react";
@@ -39,6 +40,7 @@ export function AppSidebar({ isOpen, onClose }: AppSidebarProps) {
     { title: "Categories", url: "/admin/categories", icon: FolderTree },
     { title: "Colors", url: "/admin/colors", icon: Palette },
     { title: "Analytics", url: "/admin/analytics", icon: BarChart3 },
+    { title: "Abandoned Carts", url: "/admin/abandoned", icon: ShoppingCart },
   ];
 
   const siteSettingsNav = [
@@ -53,7 +55,7 @@ export function AppSidebar({ isOpen, onClose }: AppSidebarProps) {
       <div className="sidebar-logo">
         <div className="relative w-10 h-10 shrink-0">
           <Image
-            src="/SK_Logo.svg"
+            src="/sk.png"
             alt="SK Bags Logo"
             fill
             className="object-contain"

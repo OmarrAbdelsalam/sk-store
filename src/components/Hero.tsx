@@ -38,7 +38,7 @@ export default async function Hero() {
   };
 
   return (
-    <section className="w-full bg-white overflow-hidden">
+    <section className="w-full bg-white overflow-hidden lg:-mt-20">
       <HeroCarousel slides={[slide1]} />
     </section>
   );

@@ -61,7 +61,7 @@ export default function HeroCarousel({ slides }: { slides: SlideData[] }) {
     >
       <CarouselContent className="h-full ml-0">
         {slides.map((slide, index) => (
-          <CarouselItem key={index} className="pl-0 basis-full h-[calc(100svh-101px)] lg:h-[85vh] lg:min-h-[600px]">
+          <CarouselItem key={index} className="pl-0 basis-full h-[calc(100svh-101px)] lg:h-screen lg:min-h-[700px]">
             <div className="relative h-full w-full overflow-hidden bg-[#f9f9f9]">
               {/* Mobile/Tablet Layout */}
               <div className="lg:hidden relative h-full w-full">
@@ -99,7 +99,7 @@ export default function HeroCarousel({ slides }: { slides: SlideData[] }) {
                   <div className="w-full flex flex-col items-center text-center space-y-5 animate-in slide-in-from-bottom-4 duration-700 fade-in">
                     
                     <div className="space-y-3">
-                      <h2 className="font-sans font-normal text-4xl sm:text-5xl text-white tracking-wider">
+                      <h2 className="font-sans font-medium text-3xl sm:text-4xl text-white tracking-[0.06em] uppercase">
                         {slide.title}
                       </h2>
                       {slide.description && (
@@ -109,10 +109,9 @@ export default function HeroCarousel({ slides }: { slides: SlideData[] }) {
                       )}
                     </div>
                     
-                    <Link href={slide.mobileButtonLink} className="mt-6 block w-[200px]">
+                    <Link href={slide.mobileButtonLink} className="mt-4 block">
                       <Button
-                        variant="outline"
-                        className="w-full h-12 bg-transparent text-white border-white/80 hover:bg-white hover:text-black rounded-none tracking-[0.2em] uppercase text-xs transition-all duration-500 font-medium"
+                        className="px-9 py-3.5 h-auto bg-[#C2A878] text-white hover:bg-[#b09665] rounded-full tracking-[0.2em] uppercase text-xs font-medium transition-all duration-300 shadow-[0_8px_20px_-4px_rgba(194,168,120,0.5)] hover:shadow-[0_12px_24px_-4px_rgba(194,168,120,0.65)] hover:-translate-y-0.5 border-none"
                       >
                         {slide.buttonText || "SHOP NOW"}
                       </Button>
@@ -137,20 +136,19 @@ export default function HeroCarousel({ slides }: { slides: SlideData[] }) {
                 <div className="absolute inset-0 bg-black/15" />
                 <div className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-black/50 via-black/20 to-transparent" />
 
-                {/* Text content overlay - center left */}
-                <div className="relative z-10 h-full flex flex-col items-start justify-center px-24 2xl:px-32">
+                {/* Text content overlay - center left with top clearance */}
+                <div className="relative z-10 h-full flex flex-col items-start justify-center px-24 2xl:px-32 pt-16">
                   <div className="max-w-2xl space-y-8 text-left animate-in slide-in-from-left-8 duration-1000 fade-in delay-150 fill-mode-both">
-                    <h1 className="font-sans text-6xl xl:text-7xl text-white font-normal leading-[1.1] tracking-wide">
+                    <h1 className="font-sans font-medium text-5xl xl:text-6xl 2xl:text-7xl text-white tracking-[0.06em] uppercase leading-[1.08]">
                       {slide.title}
                     </h1>
                     <p className="text-white/80 text-lg xl:text-xl font-light tracking-wide leading-relaxed max-w-lg">
                       {slide.description}
                     </p>
-                    <div className="pt-6">
+                    <div className="pt-4">
                       <Link href={slide.buttonLink}>
                         <Button 
-                          variant="outline"
-                          className="px-12 h-14 bg-white/5 backdrop-blur-sm text-white border-white/60 hover:bg-white hover:text-black hover:border-white rounded-none tracking-[0.25em] uppercase text-xs transition-all duration-500 font-medium"
+                          className="px-10 py-4 h-auto bg-[#C2A878] text-white hover:bg-[#b09665] rounded-full tracking-[0.2em] uppercase text-xs sm:text-sm font-medium transition-all duration-300 shadow-[0_8px_25px_-4px_rgba(194,168,120,0.5)] hover:shadow-[0_14px_28px_-4px_rgba(194,168,120,0.7)] hover:-translate-y-1 border-none"
                         >
                           {slide.buttonText || "SHOP NOW"}
                         </Button>

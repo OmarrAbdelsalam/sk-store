@@ -7,7 +7,9 @@ import {
   ReactNode,
   useCallback,
   useMemo,
+  useRef,
 } from "react";
+import { track, saveCartSnapshot, type CartSnapshotItem } from "@/lib/track";
 import {
   getLocalCart,
   addToLocalCart,
@@ -48,12 +50,66 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+/** Cart prices are stored as display strings ("1250 EGP"), not numbers. */
+function parsePrice(price: string | number): number {
+  if (typeof price === "number") return price;
+  return parseFloat(String(price).replace(/[^\d.]/g, "")) || 0;
+}
+
+function toSnapshotItems(items: CartItem[]): CartSnapshotItem[] {
+  return items.map((item) => ({
+    productId: item.productId,
+    name: item.name,
+    color: item.colorName,
+    quantity: item.quantity,
+    price: parsePrice(item.price),
+    image: item.image,
+  }));
+}
+
+const SNAPSHOT_DEBOUNCE_MS = 3000;
+
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<LocalCart | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Lets removeFromCart read the current items without taking `cart` as a
+  // dependency, which would change the callback identity on every cart edit.
+  const cartRef = useRef<LocalCart | null>(null);
+  cartRef.current = cart;
+
   // Active promotions for BOGO and free-shipping auto-apply
   const { data: activePromotions = [] } = useActivePromotions();
+
+  // ── Abandoned cart snapshot ──────────────────────────────────────────────
+  // The cart only ever existed in localStorage, so an abandoned one was
+  // invisible. Mirroring it server-side is what makes recovery possible at all.
+  // Debounced because quantity steppers fire in bursts.
+  const snapshotTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasSnapshot = useRef(false);
+  useEffect(() => {
+    if (isLoading || !cart) return;
+
+    // Don't create a row for every visitor who never added anything. Once a
+    // cart has existed we keep reporting it, including when it drops back to
+    // empty — that emptying is itself worth seeing.
+    if (cart.items.length === 0 && !hasSnapshot.current) return;
+    hasSnapshot.current = true;
+
+    if (snapshotTimer.current) clearTimeout(snapshotTimer.current);
+    snapshotTimer.current = setTimeout(() => {
+      saveCartSnapshot({
+        items: toSnapshotItems(cart.items),
+        subtotal: cart.subtotal,
+        promoCodeTried: cart.discountCode,
+        stage: "cart",
+      });
+    }, SNAPSHOT_DEBOUNCE_MS);
+
+    return () => {
+      if (snapshotTimer.current) clearTimeout(snapshotTimer.current);
+    };
+  }, [cart, isLoading]);
 
   // Load cart from localStorage on mount
   useEffect(() => {
@@ -170,6 +226,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
       try {
         const updatedCart = addToLocalCart({ ...product, quantity: quantityToAdd }, quantityToAdd);
         setCart(updatedCart);
+
+        // Tracked here rather than in the product page so every entry point —
+        // product detail, related products, anywhere else — is counted once.
+        track("add_to_cart", {
+          productId: product.productId,
+          productName: product.name,
+          colorName: product.colorName,
+          quantity: quantityToAdd,
+          value: parsePrice(product.price) * quantityToAdd,
+        });
         // Dispatch event after a short delay so CartButton animates
         // AFTER the Add to Cart button has visually changed to "Added"
         if (typeof window !== "undefined") {
@@ -186,8 +252,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const removeFromCart = useCallback((itemId: string) => {
     try {
+      // Read the item before it's gone — a removal is a price signal, and the
+      // report needs to know which product it was.
+      const removed = cartRef.current?.items.find((i) => i.id === itemId);
+
       const updatedCart = removeFromLocalCart(itemId);
       setCart(updatedCart);
+
+      if (removed) {
+        track("remove_from_cart", {
+          productId: removed.productId,
+          productName: removed.name,
+          colorName: removed.colorName,
+          quantity: removed.quantity,
+          value: parsePrice(removed.price) * removed.quantity,
+        });
+      }
     } catch (error) {
       console.error("Error removing from cart:", error);
     }

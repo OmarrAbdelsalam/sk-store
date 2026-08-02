@@ -6,7 +6,11 @@ import { useEffect, useState, useTransition } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useCategories } from "@/hooks/useCategories";
 
-export const DesktopMenu = () => {
+interface DesktopMenuProps {
+  isTransparent?: boolean;
+}
+
+export const DesktopMenu = ({ isTransparent = false }: DesktopMenuProps) => {
   const t = useTranslations();
   const locale = useLocale();
   const router = useRouter();
@@ -91,17 +95,28 @@ export const DesktopMenu = () => {
     return activeCategoryId === categoryId;
   };
 
+  const linkColorClass = (active: boolean) => {
+    if (isTransparent) {
+      return active 
+        ? 'text-white font-semibold drop-shadow-sm' 
+        : 'text-white/90 hover:text-white hover:bg-white/10';
+    }
+    return active 
+      ? 'text-black font-semibold' 
+      : 'text-black/60 hover:text-black hover:bg-transparent';
+  };
+
   return (
-    <nav className="flex items-center gap-2 md:gap-4">
+    <nav className="flex items-center gap-1 lg:gap-1.5 xl:gap-2.5 2xl:gap-3.5 flex-nowrap shrink min-w-0">
       <Button 
         variant="ghost" 
         onClick={goToAllProducts}
-        className={`text-base font-medium hover:bg-transparent hover:text-black transition-colors px-2 ${isActive(null) ? 'text-black' : 'text-black/60'}`}
+        className={`text-[13px] lg:text-[13px] xl:text-sm 2xl:text-base font-medium transition-colors px-1.5 lg:px-2 xl:px-2.5 2xl:px-3 whitespace-nowrap h-8 xl:h-9 ${linkColorClass(isActive(null))}`}
       >
         {t("Nav.allProducts")}
       </Button>
 
-      {(!mounted || loading) && <span className="text-sm text-muted-foreground px-2">…</span>}
+      {(!mounted || loading) && <span className={`text-sm px-2 ${isTransparent ? 'text-white/60' : 'text-muted-foreground'}`}>…</span>}
 
       {mounted && !loading && categories.length > 0 &&
         categories.map((category) => {
@@ -116,7 +131,7 @@ export const DesktopMenu = () => {
               key={category.key}
               variant="ghost"
               onClick={() => goToCategory(category.key, categoryName)}
-              className={`text-base font-medium hover:bg-transparent hover:text-black transition-colors px-2 ${isActiveCategory ? 'text-black' : 'text-black/60'}`}
+              className={`text-[13px] lg:text-[13px] xl:text-sm 2xl:text-base font-medium transition-colors px-1.5 lg:px-2 xl:px-2.5 2xl:px-3 whitespace-nowrap h-8 xl:h-9 ${linkColorClass(isActiveCategory)}`}
               disabled={isPending}
             >
               {categoryName}

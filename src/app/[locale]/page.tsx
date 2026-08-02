@@ -13,6 +13,7 @@ import ProductsCacheSeeder from "@/components/ProductsCacheSeeder";
 import { fetchProducts } from "@/api/products";
 import { generatePageMetadata } from "@/lib/metadata";
 import { withRetry } from "@/lib/retry";
+import { CONTACT_INFO } from "@/lib/constants";
 import type { Metadata } from "next";
 
 // Revalidate homepage every 60 seconds to pick up admin changes
@@ -86,7 +87,7 @@ export default async function Page({
             <li><a href="#products">Browse Products</a></li>
             <li><a href="/cart">Shopping Cart</a></li>
             <li><a href="/my-orders">Track Orders</a></li>
-            <li><a href="https://wa.me/201501881005" target="_blank" rel="noopener noreferrer">Contact Us on WhatsApp</a></li>
+            <li><a href={CONTACT_INFO.whatsappLink} target="_blank" rel="noopener noreferrer">Contact Us on WhatsApp</a></li>
           </ul>
         </nav>
       </div>

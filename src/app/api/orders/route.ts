@@ -16,6 +16,7 @@ export async function POST(request: NextRequest) {
       sessionId,
       customerName,
       phoneNumber,
+      email,
       paymentMethod,
       government,
       city,
@@ -26,10 +27,22 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     if (!customerName || !phoneNumber || !government) {
       return NextResponse.json(
-        { 
-          succeeded: false, 
-          message: "Missing required fields: customerName, phoneNumber, government" 
+        {
+          succeeded: false,
+          message: "Missing required fields: customerName, phoneNumber, government"
         },
+        { status: 400 }
+      );
+    }
+
+    // Email is required at checkout, so it is enforced here too — the form can
+    // be bypassed, and an order without it breaks the confirmation we promised
+    // the customer on that very screen.
+    const normalizedEmail =
+      typeof email === "string" ? email.trim().toLowerCase() : "";
+    if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(normalizedEmail)) {
+      return NextResponse.json(
+        { succeeded: false, message: "A valid email address is required" },
         { status: 400 }
       );
     }
@@ -97,6 +110,7 @@ export async function POST(request: NextRequest) {
       sessionId: sessionId || `web_${Date.now()}`,
       customerName,
       phoneNumber,
+      email: normalizedEmail,
       paymentMethod: paymentMethod || 'cash',
       paymentPlan,
       depositAmount,
@@ -119,6 +133,26 @@ export async function POST(request: NextRequest) {
 
     // Create order in database
     const order = await orderService.create(orderInput);
+
+    // Link the cart to the order it produced, but leave it in the recovery
+    // list: the order is still unpaid at this point, and someone who reached
+    // the gateway and left is exactly who we most want to follow up with.
+    // mark_cart_converted runs later, from the verified payment callback.
+    if (sessionId) {
+      const { error: cartLinkError } = await supabaseAdmin
+        .from("abandoned_carts")
+        .update({
+          order_id: order.id,
+          furthest_stage: "order_submitted",
+          last_activity_at: new Date().toISOString(),
+        })
+        .eq("session_id", sessionId);
+
+      if (cartLinkError) {
+        // Never fail a paid-for order over bookkeeping.
+        console.error("orders: cart link failed", cartLinkError.message);
+      }
+    }
 
     return NextResponse.json({
       succeeded: true,

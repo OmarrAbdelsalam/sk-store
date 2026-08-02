@@ -6,12 +6,17 @@ import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import React, { useState, useCallback, useRef, useEffect } from "react";
 
+import { CONTACT_INFO } from "@/lib/constants";
+import { track } from "@/lib/track";
+
 interface AddToCartSectionProps {
   totalPrice: number;
   onAddToCart: () => void | Promise<void>;
   onBuyNow?: () => void;
   disabled?: boolean;
   inlineRef?: React.RefObject<HTMLDivElement | null>;
+  productId?: string;
+  productName?: string;
 }
 
 type ButtonState = "idle" | "loading" | "added";
@@ -22,6 +27,8 @@ const AddToCartSection = React.memo(({
   onBuyNow,
   disabled = false,
   inlineRef,
+  productId,
+  productName,
 }: AddToCartSectionProps) => {
   const t = useTranslations("AddToCart");
   const locale = useLocale();
@@ -89,6 +96,27 @@ const AddToCartSection = React.memo(({
     }
   }, [buttonState, onAddToCart]);
 
+  // Carry the product into the chat so the sales team knows what the question
+  // is about without having to ask.
+  const whatsappHref = React.useMemo(() => {
+    const base = `https://wa.me/${CONTACT_INFO.whatsapp}`;
+    if (!productName) return base;
+    const message = isAr
+      ? `مرحباً، عايزة أسأل عن: ${productName}`
+      : `Hi, I'd like to ask about: ${productName}`;
+    return `${base}?text=${encodeURIComponent(message)}`;
+  }, [productName, isAr]);
+
+  // A product with lots of views and lots of WhatsApp questions but few orders
+  // is telling us the page didn't answer something.
+  const handleWhatsappClick = useCallback(() => {
+    track("whatsapp_click", {
+      productId,
+      productName,
+      value: totalPrice,
+    });
+  }, [productId, productName, totalPrice]);
+
   const getButtonContent = () => {
     switch (buttonState) {
       case "loading":
@@ -148,7 +176,8 @@ const AddToCartSection = React.memo(({
       {/* Mobile WhatsApp and inline Add to Cart - not sticky, in normal flow */}
       <div className="lg:hidden mt-4 flex flex-col gap-3 pb-4" dir={dir}>
         <a
-          href="https://wa.me/201234567890"
+          href={whatsappHref}
+          onClick={handleWhatsappClick}
           target="_blank"
           rel="noopener noreferrer"
           className="block"
@@ -189,7 +218,8 @@ const AddToCartSection = React.memo(({
 
         {/* Contact Seller */}
         <a
-          href="https://wa.me/201234567890"
+          href={whatsappHref}
+          onClick={handleWhatsappClick}
           target="_blank"
           rel="noopener noreferrer"
           className="block mt-3"

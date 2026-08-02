@@ -16,8 +16,8 @@ export const siteOgImage = "https://shahdkarem-bags.vercel.app/opengraph-image";
 export const siteLogo = `${siteUrl}/SK_Logo.svg`;
 
 export const siteContact = {
-  phone: "01501881005",
-  phoneInternational: "+20-150-188-1005",
-  whatsapp: "201501881005",
+  phone: "01016887251",
+  phoneInternational: "+20-10-1688-7251",
+  whatsapp: "201016887251",
   email: "info@skbags.com",
 };

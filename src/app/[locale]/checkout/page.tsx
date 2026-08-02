@@ -11,6 +11,7 @@ import { getOrCreateSessionId } from "@/lib/session";
 import { useLocale, useTranslations } from "next-intl";
 import { getShippingPrice, type CheckoutFormData } from "@/lib/checkout-utils";
 import { API_ROUTES } from "@/lib/api-routes";
+import { track, saveCartSnapshot, flushEvents } from "@/lib/track";
 
 export default function Checkout() {
   const router = useRouter();
@@ -147,6 +148,7 @@ export default function Checkout() {
         sessionId,
         customerName: formData.name,
         phoneNumber: formData.phone,
+        email: formData.email,
         government: formData.governorate,
         city: formData.city,
         detailedAddress: formData.detailedAddress,
@@ -271,6 +273,16 @@ export default function Checkout() {
       // The cart stays put until /order-success confirms the payment server-side —
       // if the customer cancels or the card is declined they come back to a full cart.
       setOrderCompleted(true);
+
+      // Last thing we can observe before the customer leaves for the gateway.
+      // Anyone who stops here is an unpaid order with a known phone and email —
+      // the most recoverable group there is.
+      track("payment_started", {
+        orderId: orderData.data?.id,
+        value: total,
+      });
+      saveCartSnapshot({ stage: "payment_started" });
+      flushEvents();
 
       // Full same-tab redirect: popup blockers kill window.open here (this runs
       // after an await, so it's no longer a trusted user gesture), and 3-D Secure

@@ -167,6 +167,7 @@ export function getShippingPrice(governorate: string, city: string): number {
 export type CheckoutFormData = {
   name: string;
   phone: string;
+  email: string;
   governorate: string;
   city: string;
   detailedAddress: string;
@@ -176,8 +177,20 @@ export type CheckoutFormData = {
 export const emptyFormData: CheckoutFormData = {
   name: "",
   phone: "",
+  email: "",
   governorate: "",
   city: "",
   detailedAddress: "",
   notes: ""
 };
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i;
+
+/**
+ * Deliberately permissive — it only rejects what is certainly not an address.
+ * A stricter pattern rejects valid real-world addresses, and the cost of a
+ * wrongly blocked checkout is far higher than the cost of a bad address.
+ */
+export function isValidEmail(value: string): boolean {
+  return EMAIL_RE.test(value.trim());
+}

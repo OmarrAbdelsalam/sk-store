@@ -21,7 +21,11 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export const SearchAndFilters = () => {
+interface SearchAndFiltersProps {
+  isTransparent?: boolean;
+}
+
+export const SearchAndFilters = ({ isTransparent = false }: SearchAndFiltersProps) => {
   const t = useTranslations("SearchFilters");
   const locale = useLocale();
   const router = useRouter();
@@ -134,8 +138,13 @@ export const SearchAndFilters = () => {
   // Don't render Sheet until mounted to avoid hydration mismatch
   if (!mounted) {
     return (
-      <Button variant="ghost" size="sm" className="hover:bg-transparent hover:opacity-70 transition-opacity px-2" aria-label={t("openFilters")}>
-        <Search className="h-6 w-6" strokeWidth={1.2} color="black" />
+      <Button 
+        variant="ghost" 
+        size="sm" 
+        className={`hover:bg-transparent transition-all px-2 ${isTransparent ? 'text-white hover:text-white/80 hover:bg-white/10' : 'hover:opacity-70'}`} 
+        aria-label={t("openFilters")}
+      >
+        <Search className="h-6 w-6" strokeWidth={1.2} color={isTransparent ? "white" : "black"} />
       </Button>
     );
   }
@@ -143,8 +152,13 @@ export const SearchAndFilters = () => {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="sm" className="hover:bg-transparent hover:opacity-70 transition-opacity px-2" aria-label={t("openFilters")}>
-          <Search className="h-6 w-6" strokeWidth={1.2} color="black" />
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className={`hover:bg-transparent transition-all px-2 ${isTransparent ? 'text-white hover:text-white/80 hover:bg-white/10' : 'hover:opacity-70'}`} 
+          aria-label={t("openFilters")}
+        >
+          <Search className="h-6 w-6" strokeWidth={1.2} color={isTransparent ? "white" : "black"} />
         </Button>
       </SheetTrigger>
 

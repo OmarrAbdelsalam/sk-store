@@ -68,6 +68,7 @@ export type CreateOrderInput = {
   sessionId: string;
   customerName: string;
   phoneNumber: string;
+  email?: string;
   paymentMethod?: 'cash' | 'visa' | 'easykash';
   paymentPlan?: 'full' | 'deposit';
   depositAmount?: number;
@@ -139,6 +140,7 @@ export const createOrderService = (db: SupabaseLike) => ({
         status: 'pending',
         customer_name: input.customerName,
         phone_number: input.phoneNumber,
+        email: input.email || null,
         payment_method: input.paymentMethod || 'cash',
         payment_status: paymentStatus,
         payment_plan: input.paymentPlan || 'full',

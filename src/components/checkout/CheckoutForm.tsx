@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, memo } from "react";
+import { useState, useCallback, useMemo, memo, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +10,9 @@ import {
   egyptGovernoratesEn,
   type CheckoutFormData,
   emptyFormData,
+  isValidEmail,
 } from "@/lib/checkout-utils";
+import { track, saveCartSnapshot } from "@/lib/track";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import {
@@ -20,6 +22,7 @@ import {
   CreditCard,
   User,
   Phone,
+  Mail,
   MapPin,
   Zap,
   SplitSquareHorizontal,
@@ -104,8 +107,57 @@ const CheckoutForm = memo(
     const [paymentPlan, setPaymentPlan] = useState<PaymentPlan>("full");
     const [governorateOpen, setGovernorateOpen] = useState(false);
     const [phoneError, setPhoneError] = useState(false);
+    const [emailError, setEmailError] = useState(false);
     const [isRedirecting, setIsRedirecting] = useState(false);
     const [paymentError, setPaymentError] = useState<string | null>(null);
+
+    // ── Abandoned checkout capture ───────────────────────────────────────────
+    // Everything typed here is saved before the order is submitted, so someone
+    // who leaves at the payment step is still reachable. Sent on blur only —
+    // per keystroke would be noise, and the server drops half-typed values.
+    const formRef = useRef(formData);
+    formRef.current = formData;
+    const announcedContact = useRef(false);
+
+    useEffect(() => {
+      track("begin_checkout", { value: totalPrice });
+      saveCartSnapshot({ stage: "checkout_viewed" });
+      // Intentionally once per mount: this is the "reached checkout" funnel step,
+      // not a price-change event.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const captureProgress = useCallback(() => {
+      const f = formRef.current;
+      const hasPhone = (f.phone || "").replace(/\D/g, "").length >= 10;
+      const hasEmail = isValidEmail(f.email || "");
+      const hasContact = hasPhone || hasEmail;
+
+      const stage = f.governorate
+        ? "address_entered"
+        : hasContact
+          ? "contact_entered"
+          : "checkout_viewed";
+
+      saveCartSnapshot({
+        customerName: f.name,
+        phone: f.phone,
+        email: f.email,
+        government: f.governorate,
+        city: f.city,
+        address: f.detailedAddress,
+        stage,
+      });
+
+      // The moment they become reachable — the step that decides whether an
+      // abandoned checkout is recoverable or just a statistic.
+      if (hasContact && !announcedContact.current) {
+        announcedContact.current = true;
+        track("contact_info_entered", {
+          props: { has_phone: hasPhone, has_email: hasEmail },
+        });
+      }
+    }, []);
 
     // Money is always shown to two decimals with grouping. `toLocaleString()`
     // with no options renders 687.5 as "687.5", which reads like a typo in the
@@ -158,7 +210,20 @@ const CheckoutForm = memo(
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
       setPaymentError(null);
+
+      if (!isValidEmail(formData.email || "")) {
+        setEmailError(true);
+        setPaymentError(
+          isAr
+            ? "من فضلك أدخلي بريد إلكتروني صحيح."
+            : "Please enter a valid email address."
+        );
+        window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+        return;
+      }
+
       setIsRedirecting(true);
+      saveCartSnapshot({ stage: "order_submitted" });
 
       try {
         // First save the order, get a customerReference back
@@ -206,6 +271,7 @@ const CheckoutForm = memo(
                 id="name"
                 value={formData.name || ""}
                 onChange={(e) => handleInputChange("name", e.target.value)}
+                onBlur={captureProgress}
                 className="h-12 rounded-xl border border-[#c8bdb0]/70 bg-white/80 focus-visible:ring-1 focus-visible:ring-foreground focus-visible:border-foreground text-sm shadow-sm transition-all"
                 placeholder={isAr ? "أدخل اسمك الكامل" : "Enter your full name"}
                 required
@@ -228,6 +294,7 @@ const CheckoutForm = memo(
                   inputMode="tel"
                   value={formData.phone || ""}
                   onChange={(e) => handlePhoneChange(e.target.value)}
+                  onBlur={captureProgress}
                   className={cn(
                     "h-12 rounded-xl border border-[#c8bdb0]/70 bg-white/80 focus-visible:ring-1 focus-visible:ring-foreground focus-visible:border-foreground text-sm shadow-sm transition-all",
                     phoneError && "border-red-500 focus-visible:ring-red-500"
@@ -243,7 +310,65 @@ const CheckoutForm = memo(
                 </p>
               )}
             </div>
+
+            {/* Email */}
+            <div>
+              <Label
+                htmlFor="email"
+                className="text-xs font-medium tracking-wider uppercase text-foreground/70 mb-2 block"
+              >
+                {isAr ? "البريد الإلكتروني" : "Email"}{" "}
+                <span className="text-red-500">*</span>
+              </Label>
+              <div className="relative">
+                <Input
+                  id="email"
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  dir="ltr"
+                  value={formData.email || ""}
+                  onChange={(e) => {
+                    handleInputChange("email", e.target.value);
+                    if (emailError) setEmailError(false);
+                  }}
+                  onBlur={() => {
+                    const value = (formRef.current.email || "").trim();
+                    setEmailError(value.length > 0 && !isValidEmail(value));
+                    captureProgress();
+                  }}
+                  className={cn(
+                    "h-12 rounded-xl border border-[#c8bdb0]/70 bg-white/80 focus-visible:ring-1 focus-visible:ring-foreground focus-visible:border-foreground text-sm shadow-sm transition-all text-start",
+                    emailError && "border-red-500 focus-visible:ring-red-500"
+                  )}
+                  placeholder="name@example.com"
+                  required
+                />
+                <Mail className="absolute top-1/2 -translate-y-1/2 end-3 w-4 h-4 text-muted-foreground/50 pointer-events-none" />
+              </div>
+              {emailError ? (
+                <p className="text-xs text-red-500 mt-1.5">
+                  {isAr
+                    ? "اكتبي بريد إلكتروني صحيح، مثال: name@example.com"
+                    : "Enter a valid email, e.g. name@example.com"}
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground mt-1.5">
+                  {isAr
+                    ? "هنبعتلك تأكيد الطلب عليه"
+                    : "We'll send your order confirmation here"}
+                </p>
+              )}
+            </div>
           </div>
+
+          {/* Required by Egypt's data protection law once we store what was
+              typed before submit — and it is also just the honest thing to say. */}
+          <p className="text-[11px] leading-relaxed text-muted-foreground/80 mt-4">
+            {isAr
+              ? "بنحفظ بياناتك عشان نقدر نساعدك تكمل طلبك لو حصلت مشكلة."
+              : "We save your details so we can help you complete your order if something goes wrong."}
+          </p>
         </div>
 
         <div className="h-px bg-[#d4c9bc]" />
@@ -309,6 +434,9 @@ const CheckoutForm = memo(
                                   : currentValue
                               );
                               setGovernorateOpen(false);
+                              // formRef still holds the pre-select value on this
+                              // tick, so let state settle before snapshotting.
+                              setTimeout(captureProgress, 0);
                             }}
                           >
                             <Check
@@ -344,6 +472,7 @@ const CheckoutForm = memo(
                   }
                   value={formData.city || ""}
                   onChange={(e) => handleInputChange("city", e.target.value)}
+                  onBlur={captureProgress}
                   className="h-12 rounded-xl border border-[#c8bdb0]/70 bg-white/80 focus-visible:ring-1 focus-visible:ring-foreground focus-visible:border-foreground text-sm shadow-sm transition-all"
                   required
                 />
@@ -370,6 +499,7 @@ const CheckoutForm = memo(
                 onChange={(e) =>
                   handleInputChange("detailedAddress", e.target.value)
                 }
+                onBlur={captureProgress}
                 className="min-h-[100px] p-4 rounded-2xl border border-[#c8bdb0]/70 bg-white/80 focus-visible:ring-1 focus-visible:ring-foreground focus-visible:border-foreground text-sm resize-none shadow-sm transition-all"
                 required
               />

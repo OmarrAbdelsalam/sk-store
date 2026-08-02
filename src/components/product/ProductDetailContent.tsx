@@ -454,6 +454,14 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
               onBuyNow={handleBuyNow}
               disabled={addDisabled}
               inlineRef={addToCartSentinelRef}
+              productId={product ? String(product.id) : undefined}
+              productName={
+                product
+                  ? (isAr
+                      ? product.nameAr || product.nameEn
+                      : product.nameEn || product.nameAr) || undefined
+                  : undefined
+              }
             />
           </div>
         </div>

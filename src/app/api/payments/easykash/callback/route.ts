@@ -6,6 +6,50 @@ import { mapEasykashStatus } from "@/lib/easykash";
 const EASYKASH_HMAC_SECRET = process.env.EASYKASH_HMAC_SECRET;
 
 /**
+ * Write one purchase event per line item and close out the abandoned cart.
+ *
+ * Runs only after the HMAC check has passed, so these are the one set of
+ * numbers in the reports that cannot be forged from a browser. Everything here
+ * is best-effort — the payment is already recorded, and no reporting failure
+ * may turn a successful callback into a retry.
+ */
+async function recordPurchase(orderId: string, sessionId: string | null) {
+  try {
+    const { data: items } = await supabase
+      .from("order_items")
+      .select("product_id, product_name, color_name, quantity, total_price")
+      .eq("order_id", orderId);
+
+    if (items?.length && sessionId) {
+      await supabase.from("analytics_events").insert(
+        items.map((item: any) => ({
+          session_id: sessionId,
+          event_name: "purchase",
+          product_id: item.product_id,
+          product_name: item.product_name,
+          color_name: item.color_name,
+          quantity: item.quantity,
+          value: item.total_price,
+          order_id: orderId,
+        }))
+      );
+    }
+
+    if (sessionId) {
+      // A cart that was chased and then paid is "recovered"; one that converted
+      // on its own is "converted". The distinction is what proves whether the
+      // follow-up is worth the effort.
+      await supabase.rpc("mark_cart_converted", {
+        p_session_id: sessionId,
+        p_order_id: orderId,
+      });
+    }
+  } catch (error: any) {
+    console.error("recordPurchase failed:", error?.message);
+  }
+}
+
+/**
  * EasyKash Callback endpoint.
  *
  * EasyKash sends a POST after every successful payment with:
@@ -122,14 +166,16 @@ export async function POST(request: NextRequest) {
     // rather than the error to decide whether to fall back.
     let matched = 0;
     let updateError: any = null;
+    let matchedOrder: { id: string; session_id: string | null } | null = null;
 
     if (customerReference) {
       const { data, error } = await supabase
         .from("orders")
         .update(updateFields)
         .eq("easykash_customer_ref", String(customerReference))
-        .select("id");
+        .select("id, session_id");
       matched = data?.length || 0;
+      matchedOrder = data?.[0] ?? null;
       updateError = error;
     }
 
@@ -138,9 +184,17 @@ export async function POST(request: NextRequest) {
         .from("orders")
         .update(updateFields)
         .eq("easykash_ref", easykashRef)
-        .select("id");
+        .select("id, session_id");
       matched = data?.length || 0;
+      matchedOrder = data?.[0] ?? null;
       updateError = error || updateError;
+    }
+
+    // Purchase is recorded here rather than in the browser: this is the only
+    // point where the payment is HMAC-verified, and the customer's tab is on
+    // the gateway's domain by now and may never come back.
+    if (matchedOrder && paymentStatus === "paid") {
+      await recordPurchase(matchedOrder.id, matchedOrder.session_id);
     }
 
     if (updateError) {
