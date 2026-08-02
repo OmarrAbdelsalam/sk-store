@@ -62,20 +62,106 @@ export const egyptGovernoratesEn = [
 // For backward compatibility
 export const egyptGovernorates = egyptGovernoratesAr;
 
-const shippingRates: Record<string, number> = {
-  "qalyubia,menoufia,gharbia,dakahlia,kafr,sharqia,beheira,damietta,cairo,giza,alexandria,القليوبية,المنوفية,الغربية,الدقهلية,الشرقية,البحيرة,دمياط,القاهرة,الجيزة,الإسكندرية": 75,
-  "suez,ismailia,port,السويس,الإسماعيلية,بورسعيد": 85,
-  "beni,fayoum,minya,assiut,sohag,qena,بني,الفيوم,المنيا,أسيوط,سوهاج,قنا": 85,
-  "luxor,aswan,الأقصر,اسوان,أسوان": 100,
-  "matrouh,sinai,valley,red,مطروح,سيناء,الوادي,البحر": 150
-};
+/**
+ * Courier tariff (El-Tayar express).
+ *
+ * Anything not listed by the courier ships at the default rate — Giza, Red Sea,
+ * New Valley, Matrouh and Sinai fall here.
+ */
+export const DEFAULT_SHIPPING_PRICE = 100;
+
+const SHIPPING_TARIFF: {
+  price: number;
+  governorates: string[];
+  /** Extra spellings, e.g. a city given instead of its governorate. */
+  aliases?: string[];
+}[] = [
+  {
+    price: 85,
+    governorates: ["Dakahlia", "Gharbia", "Kafr El-Sheikh"],
+    // Mansoura is Dakahlia's capital and gets typed in place of it often enough
+    // to be worth matching.
+    aliases: ["المنصورة", "Mansoura", "El Mansoura"],
+  },
+  {
+    price: 100,
+    governorates: [
+      "Cairo",
+      "Alexandria",
+      "Qalyubia",
+      "Beheira",
+      "Sharqia",
+      "Menoufia",
+      "Ismailia",
+      "Suez",
+      "Port Said",
+      "Damietta",
+    ],
+  },
+  {
+    price: 130,
+    governorates: [
+      "Fayoum",
+      "Beni Suef",
+      "Minya",
+      "Assiut",
+      "Sohag",
+      "Qena",
+      "Luxor",
+      "Aswan",
+    ],
+  },
+];
+
+/**
+ * Arabic is written inconsistently — أ/إ/آ for ا, ة for ه, ى for ي — and a
+ * mismatch here silently falls through to the default rate, so every spelling
+ * has to collapse to the same key.
+ */
+function normalize(value: string): string {
+  return (value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[ً-ْـ]/g, "") // diacritics + tatweel
+    .replace(/[أإآ]/g, "ا")
+    .replace(/ى/g, "ي")
+    .replace(/ة/g, "ه")
+    .replace(/\s+/g, " ");
+}
+
+// Built once: every Arabic and English spelling mapped to its price.
+const SHIPPING_BY_NAME: Map<string, number> = (() => {
+  const map = new Map<string, number>();
+
+  for (const { price, governorates, aliases } of SHIPPING_TARIFF) {
+    for (const nameEn of governorates) {
+      map.set(normalize(nameEn), price);
+      const index = egyptGovernoratesEn.indexOf(nameEn);
+      if (index !== -1) {
+        map.set(normalize(egyptGovernoratesAr[index]), price);
+      }
+    }
+    for (const alias of aliases || []) {
+      map.set(normalize(alias), price);
+    }
+  }
+
+  return map;
+})();
 
 export function getShippingPrice(governorate: string, city: string): number {
-  const v = (governorate || city || "").toLowerCase();
-  for (const [keys, price] of Object.entries(shippingRates)) {
-    if (keys.split(',').some(k => v.includes(k))) return price;
+  const value = normalize(governorate || city || "");
+  if (!value) return DEFAULT_SHIPPING_PRICE;
+
+  const exact = SHIPPING_BY_NAME.get(value);
+  if (exact !== undefined) return exact;
+
+  // The value may carry extra words ("محافظة الغربية", "Cairo Governorate").
+  for (const [name, price] of SHIPPING_BY_NAME) {
+    if (value.includes(name)) return price;
   }
-  return 90;
+
+  return DEFAULT_SHIPPING_PRICE;
 }
 
 export type CheckoutFormData = {

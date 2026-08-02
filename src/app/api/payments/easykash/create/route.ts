@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     // callback marks whatever was paid as settled.
     const { data: order, error: orderError } = await supabaseAdmin
       .from("orders")
-      .select("id, customer_name, phone_number, total, payment_plan, deposit_amount, payment_status")
+      .select("id, customer_name, phone_number, total, shipping_cost, payment_plan, deposit_amount, payment_status")
       .eq("easykash_customer_ref", String(customerReference))
       .maybeSingle();
 
@@ -75,11 +75,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Deposit = the split already computed and stored when the order was created.
+    // Recomputed from the stored money columns rather than trusting a single
+    // cached figure. Shipping is never charged online under either plan — the
+    // courier collects it — so the charge is a share of the goods value only.
+    const goodsTotal = Math.max(0, orderTotal - (Number(order.shipping_cost) || 0));
     const chargeAmount =
       order.payment_plan === "deposit"
-        ? Number(order.deposit_amount) || Math.round(orderTotal * 50) / 100
-        : orderTotal;
+        ? Math.round(goodsTotal * 50) / 100
+        : goodsTotal;
+
+    if (chargeAmount <= 0) {
+      return NextResponse.json(
+        { succeeded: false, message: "Nothing to charge for this order" },
+        { status: 400 }
+      );
+    }
 
     const name = order.customer_name;
     const mobile = order.phone_number;
@@ -133,10 +143,9 @@ export async function POST(request: NextRequest) {
         // The hosted payment page URL — redirect the user here
         paymentUrl: data.redirectUrl,
         chargeAmount,
-        remainingAmount:
-          order.payment_plan === "deposit"
-            ? Math.round((orderTotal - chargeAmount) * 100) / 100
-            : 0,
+        // Always includes shipping, and under a deposit plan the other half of
+        // the goods as well.
+        remainingAmount: Math.round((orderTotal - chargeAmount) * 100) / 100,
         paymentType: order.payment_plan || "full",
       },
     });

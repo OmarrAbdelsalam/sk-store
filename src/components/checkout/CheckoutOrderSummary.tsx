@@ -4,6 +4,7 @@ import { CreditCard } from "lucide-react";
 import { memo } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import PromoCodeInput from "./PromoCodeInput";
+import { cn } from "@/lib/utils";
 import Image from "next/image";
 
 interface CartItem {
@@ -61,6 +62,12 @@ const CheckoutOrderSummary = memo(({
     ? discount.finalTotal + shippingPrice - bogoDiscount
     : totalPrice + shippingPrice - (discount?.amount || 0) - bogoDiscount;
 
+  // Shipping is settled with the courier, never online — so the figure shown as
+  // the total is the goods value, which is exactly what the pay button charges.
+  // Showing a total that included shipping made the button look like it was
+  // undercharging.
+  const payableNow = Math.max(0, finalTotal - shippingPrice);
+
   return (
     <div className="sticky top-24" dir={dir}>
       <div className="bg-[#F0EBE3]/50 rounded-[32px] p-6 sm:p-8 border border-[#d4c9bc] shadow-sm">
@@ -117,18 +124,25 @@ const CheckoutOrderSummary = memo(({
             </div>
 
             {/* Shipping */}
-            <div className="flex items-center justify-between">
-              <span className="text-xs tracking-wider uppercase text-muted-foreground">{t("shipping")}</span>
-              {freeShippingApplied ? (
-                <span className="text-xs font-semibold text-emerald-700 tracking-wider uppercase">
-                  {isAr ? "مجاني" : "FREE"}
-                </span>
-              ) : shippingPrice > 0 ? (
-                <span className="text-sm font-medium">{shippingPrice} {t("currency")}</span>
-              ) : (
-                <span className="text-xs text-muted-foreground">
-                  {t("shippingNote")}
-                </span>
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs tracking-wider uppercase text-muted-foreground">{t("shipping")}</span>
+                {freeShippingApplied ? (
+                  <span className="text-xs font-semibold text-emerald-700 tracking-wider uppercase">
+                    {isAr ? "مجاني" : "FREE"}
+                  </span>
+                ) : shippingPrice > 0 ? (
+                  <span className="text-sm font-medium">{shippingPrice} {t("currency")}</span>
+                ) : (
+                  <span className="text-xs text-muted-foreground">
+                    {t("shippingNote")}
+                  </span>
+                )}
+              </div>
+              {!freeShippingApplied && shippingPrice > 0 && (
+                <p dir="rtl" className={cn("text-[11px] text-muted-foreground mt-1", isAr ? "text-right" : "text-left")}>
+                  قيمة الشحن تُدفع عند الاستلام
+                </p>
               )}
             </div>
 
@@ -162,7 +176,7 @@ const CheckoutOrderSummary = memo(({
                 <span className="text-sm font-medium tracking-wider uppercase">{t("total")}</span>
                 <div className="text-end">
                   <span className="text-xl sm:text-2xl font-light tracking-wider">
-                    {finalTotal.toFixed(2)}
+                    {payableNow.toFixed(2)}
                   </span>
                   <span className="text-xs text-muted-foreground ml-1.5 tracking-wider uppercase">{t("currency")}</span>
                 </div>

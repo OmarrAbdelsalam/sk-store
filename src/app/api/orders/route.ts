@@ -69,15 +69,22 @@ export async function POST(request: NextRequest) {
       bogoDiscount,
     } = priced;
 
-    // Payment plan fields — the deposit is half the server-computed total, not
-    // whatever split the client proposed.
+    // Payment plan — computed from the server's own numbers, not the client's.
+    // Shipping is never charged online under either plan; it is collected on
+    // delivery. So the online charge is a share of the goods value only:
+    // the full goods value, or half of it for a deposit. This must match the
+    // rule in CheckoutForm exactly, or the customer is charged an amount other
+    // than the one the button promised.
     const paymentPlan = body.paymentPlan === 'deposit' ? 'deposit' : 'full';
-    const depositAmount =
+    const goodsTotal = Math.max(0, total - shippingCost);
+    const onlineCharge =
       paymentPlan === 'deposit'
-        ? Math.round(total * 50) / 100
-        : total;
-    const remainingAmount =
-      paymentPlan === 'deposit' ? Math.round((total - depositAmount) * 100) / 100 : 0;
+        ? Math.round(goodsTotal * 50) / 100
+        : goodsTotal;
+    // deposit_amount holds what is taken online; remaining_amount is what the
+    // courier collects, which always includes shipping.
+    const depositAmount = onlineCharge;
+    const remainingAmount = Math.round((total - onlineCharge) * 100) / 100;
 
     // Note: no EasyKash fields are read from the body. Payment state is written
     // only by the HMAC-verified gateway callback and the status route; accepting

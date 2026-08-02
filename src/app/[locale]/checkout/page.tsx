@@ -376,6 +376,7 @@ export default function Checkout() {
               isProcessing={isProcessing}
               totalPrice={computedTotal}
               totalAmount={nf.format(computedTotal)}
+              shippingCost={shippingPrice}
               onGovernorateChange={setSelectedGovernorate}
               onPhoneChange={setPhoneNumber}
             />

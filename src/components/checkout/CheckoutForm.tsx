@@ -23,6 +23,10 @@ import {
   MapPin,
   Zap,
   SplitSquareHorizontal,
+  ShieldCheck,
+  CheckCircle2,
+  Lock,
+  Sparkles,
 } from "lucide-react";
 import {
   Command,
@@ -37,8 +41,11 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { AcceptedPaymentBrands } from "@/components/checkout/PaymentBrands";
 
 export type PaymentPlan = "full" | "deposit";
+
+const PAYMENT_PLANS: PaymentPlan[] = ["full", "deposit"];
 
 export type CheckoutSubmitData = CheckoutFormData & {
   paymentPlan: PaymentPlan;
@@ -53,6 +60,8 @@ type Props = {
   totalPrice: number;
   /** Formatted string for display */
   totalAmount: string;
+  /** Shipping portion of totalPrice — excluded from the deposit */
+  shippingCost: number;
   onGovernorateChange?: (governorate: string) => void;
   onPhoneChange?: (phone: string) => void;
 };
@@ -68,6 +77,7 @@ const CheckoutForm = memo(
     isProcessing,
     totalPrice,
     totalAmount,
+    shippingCost,
     onGovernorateChange,
     onPhoneChange,
   }: Props) => {
@@ -97,9 +107,24 @@ const CheckoutForm = memo(
     const [isRedirecting, setIsRedirecting] = useState(false);
     const [paymentError, setPaymentError] = useState<string | null>(null);
 
-    // Deposit = 50% upfront
-    const depositAmount = parseFloat((totalPrice * 0.5).toFixed(2));
-    const remainingAmount = totalPrice - depositAmount;
+    // Money is always shown to two decimals with grouping. `toLocaleString()`
+    // with no options renders 687.5 as "687.5", which reads like a typo in the
+    // one place on the page where the customer is deciding whether to trust us.
+    const money = useMemo(() => {
+      const nf = new Intl.NumberFormat(locale, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+      return (value: number) => nf.format(value);
+    }, [locale]);
+
+    // Shipping is never charged online — it is collected on delivery under both
+    // plans. So everything paid up front is a share of the goods value only.
+    const goodsTotal = Math.max(0, totalPrice - shippingCost);
+    const depositAmount = parseFloat((goodsTotal * 0.5).toFixed(2));
+    /** What this plan actually charges now. */
+    const onlineCharge = paymentPlan === "deposit" ? depositAmount : goodsTotal;
+    const remainingAmount = parseFloat((totalPrice - onlineCharge).toFixed(2));
 
     const handleInputChange = useCallback(
       (field: string, value: string) => {
@@ -150,14 +175,11 @@ const CheckoutForm = memo(
       }
     };
 
-    const chargeLabel =
-      paymentPlan === "deposit"
-        ? isAr
-          ? `دفع الآن ${depositAmount.toLocaleString()} جنيه (50٪ مقدم)`
-          : `Pay now ${depositAmount.toLocaleString()} EGP (50% deposit)`
-        : isAr
-        ? `ادفع ${totalAmount} جنيه`
-        : `Pay ${totalAmount} EGP`;
+    // The button always states the amount about to be charged — which is the
+    // deposit, not the order total, when that plan is selected.
+    const chargeLabel = isAr
+      ? `ادفع الآن • ${money(onlineCharge)} ج.م`
+      : `Pay Now • ${money(onlineCharge)} EGP`;
 
     return (
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -378,108 +400,105 @@ const CheckoutForm = memo(
 
         <div className="h-px bg-[#d4c9bc]" />
 
-        {/* ── Payment Plan ──────────────────────────────── */}
-        <div>
-          <div className="flex items-center gap-2 mb-4">
-            <CreditCard className="w-4 h-4 text-muted-foreground" />
-            <h3 className="text-xs font-medium tracking-widest uppercase text-muted-foreground">
-              {isAr ? "خطة الدفع" : "Payment Plan"}
-            </h3>
-          </div>
+        {/* ── Payment Method Selection ─────────────────────── */}
+        <div className="space-y-3 pt-1">
+          <h3 className="text-sm font-bold text-gray-900">
+            {isAr ? "طريقة الدفع" : "Payment Method"}
+          </h3>
 
-          <div className="grid grid-cols-2 gap-3">
-            {/* Full Payment */}
-            <button
-              type="button"
-              onClick={() => setPaymentPlan("full")}
-              className={cn(
-                "flex flex-col items-start gap-2 p-4 border rounded-2xl transition-all duration-300 text-start",
-                paymentPlan === "full"
-                  ? "border-gray-900 bg-white shadow-md ring-1 ring-gray-900/10"
-                  : "border-[#c8bdb0]/70 bg-white/60 hover:border-foreground/40 hover:bg-white"
-              )}
-            >
-              <div className="flex items-center gap-2">
-                <Zap
+          {/* A real radiogroup: arrow keys move between options and Space
+              selects, which a div with onClick never supported. */}
+          <div
+            role="radiogroup"
+            aria-label={isAr ? "طريقة الدفع" : "Payment method"}
+            className="rounded-xl border border-gray-300 bg-white overflow-hidden divide-y divide-gray-200"
+          >
+            {PAYMENT_PLANS.map((plan) => {
+              const selected = paymentPlan === plan;
+              const isFull = plan === "full";
+
+              return (
+                <button
+                  key={plan}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  onClick={() => setPaymentPlan(plan)}
+                  onKeyDown={(e) => {
+                    if (e.key === "ArrowDown" || e.key === "ArrowRight") {
+                      e.preventDefault();
+                      setPaymentPlan("deposit");
+                    } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
+                      e.preventDefault();
+                      setPaymentPlan("full");
+                    }
+                  }}
                   className={cn(
-                    "w-4 h-4",
-                    paymentPlan === "full"
-                      ? "text-gray-900"
-                      : "text-muted-foreground"
-                  )}
-                />
-                <span
-                  className={cn(
-                    "text-xs font-bold tracking-wider uppercase",
-                    paymentPlan === "full"
-                      ? "text-gray-900"
-                      : "text-muted-foreground"
+                    "w-full flex items-start gap-3 p-4 text-start transition-colors",
+                    "focus:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-inset",
+                    selected ? "bg-[#fcfaf7]" : "bg-white hover:bg-gray-50/70"
                   )}
                 >
-                  {isAr ? "الدفع الكامل" : "Full Payment"}
-                </span>
-              </div>
-              <p className="text-[11px] text-muted-foreground leading-tight">
-                {isAr
-                  ? `ادفع كامل المبلغ ${totalAmount} جنيه الآن`
-                  : `Pay full ${totalAmount} EGP now`}
-              </p>
-            </button>
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      "w-[18px] h-[18px] mt-0.5 rounded-full border flex items-center justify-center transition-all shrink-0",
+                      selected ? "border-black bg-black" : "border-gray-300 bg-white"
+                    )}
+                  >
+                    {selected && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                  </span>
 
-            {/* Deposit */}
-            <button
-              type="button"
-              onClick={() => setPaymentPlan("deposit")}
-              className={cn(
-                "flex flex-col items-start gap-2 p-4 border rounded-2xl transition-all duration-300 text-start",
-                paymentPlan === "deposit"
-                  ? "border-gray-900 bg-white shadow-md ring-1 ring-gray-900/10"
-                  : "border-[#c8bdb0]/70 bg-white/60 hover:border-foreground/40 hover:bg-white"
-              )}
-            >
-              <div className="flex items-center gap-2">
-                <SplitSquareHorizontal
-                  className={cn(
-                    "w-4 h-4",
-                    paymentPlan === "deposit"
-                      ? "text-gray-900"
-                      : "text-muted-foreground"
-                  )}
-                />
-                <span
-                  className={cn(
-                    "text-xs font-bold tracking-wider uppercase",
-                    paymentPlan === "deposit"
-                      ? "text-gray-900"
-                      : "text-muted-foreground"
-                  )}
-                >
-                  {isAr ? "دفعة أولى" : "Deposit"}
-                </span>
-              </div>
-              <p className="text-[11px] text-muted-foreground leading-tight">
-                {isAr
-                  ? `ادفع ${depositAmount.toLocaleString()} جنيه الآن و${remainingAmount.toLocaleString()} عند الاستلام`
-                  : `Pay ${depositAmount.toLocaleString()} EGP now + ${remainingAmount.toLocaleString()} on delivery`}
-              </p>
-            </button>
+                  <span className="flex-1 min-w-0">
+                    <span className="text-sm font-bold text-gray-900 block">
+                      {isFull
+                        ? isAr
+                          ? "دفع كامل أونلاين"
+                          : "Pay in full"
+                        : isAr
+                        ? "دفع 50% مقدم"
+                        : "Pay 50% deposit"}
+                    </span>
+                    {/* Always Arabic: the buyers are Egyptian even when they're
+                        browsing the English store, and this line is where the
+                        money terms are explained. dir is set explicitly so the
+                        numbers sit correctly inside the Arabic text on the LTR
+                        page, with alignment forced to follow the page. */}
+                    <span
+                      dir="rtl"
+                      className={cn(
+                        "text-xs text-muted-foreground block mt-0.5",
+                        isAr ? "text-right" : "text-left"
+                      )}
+                    >
+                      {isFull
+                        ? "ادفع كامل قيمة الطلب الآن — طلبك يتجهز ويوصلك أسرع"
+                        : `ادفع ${money(depositAmount)} ج.م الآن، والباقي عند الاستلام`}
+                    </span>
+                  </span>
+
+                  <span className="text-sm font-bold text-gray-900 shrink-0 tabular-nums">
+                    {money(isFull ? goodsTotal : depositAmount)}
+                    <span className="text-[10px] font-medium text-muted-foreground ms-1">
+                      {isAr ? "ج.م" : "EGP"}
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
-          {/* Deposit info banner */}
-          {paymentPlan === "deposit" && (
-            <div className="mt-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 leading-relaxed">
+          {/* One row for every method the gateway accepts — both plans support
+              all of them, so listing them per option was misleading. */}
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+            <AcceptedPaymentBrands isAr={isAr} />
+            <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <Lock className="w-3 h-3 shrink-0" />
               {isAr
-                ? `ستدفع ${depositAmount.toLocaleString()} جنيه الآن عبر بوابة الدفع، والمبلغ المتبقي ${remainingAmount.toLocaleString()} جنيه عند استلام طلبك.`
-                : `You'll pay ${depositAmount.toLocaleString()} EGP now via the payment gateway, and the remaining ${remainingAmount.toLocaleString()} EGP when your order is delivered.`}
-            </div>
-          )}
-
-          {/* Accepted methods note */}
-          <p className="mt-3 text-[11px] text-muted-foreground text-center">
-            {isAr
-              ? "مقبول: بطاقات ائتمان · محافظ إلكترونية · فوري · أمان · ميزة"
-              : "Accepted: Credit/Debit Cards · E-Wallets · Fawry · Aman · Meeza"}
-          </p>
+                ? "الدفع عبر EasyKash — بيانات بطاقتك لا تمر على متجرنا"
+                : "Secured by EasyKash — your card details never touch our store"}
+            </span>
+          </div>
         </div>
 
         {/* Error */}

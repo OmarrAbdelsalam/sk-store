@@ -1,0 +1,6 @@
+<svg width="72" height="22" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 22" role="img" aria-label="Fawry">
+  <rect x="0" y="1" width="72" height="20" rx="4" fill="#FFD100"/>
+  <text x="36" y="16" text-anchor="middle" fill="#0A2A6B"
+        font-family="'Segoe UI',Helvetica,Arial,sans-serif"
+        font-size="13" font-weight="800" letter-spacing="-0.2">fawry</text>
+</svg>

@@ -1,0 +1,7 @@
+<svg width="76" height="22" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 76 22" role="img" aria-label="Mobile wallets">
+  <rect x="2" y="5" width="17" height="12" rx="2.5" fill="none" stroke="#4B5563" stroke-width="1.8"/>
+  <path d="M14.5 11H18" stroke="#4B5563" stroke-width="1.8" stroke-linecap="round"/>
+  <text x="24" y="15.5" fill="#374151"
+        font-family="'Segoe UI',Helvetica,Arial,sans-serif"
+        font-size="11" font-weight="700">Wallets</text>
+</svg>
