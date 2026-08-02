@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { orderService } from "@/services/orders";
+import { createOrderService } from "@/services/orders";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
+
+// Scoped to a single session id below; runs server-side so the anon key never
+// needs read access to the orders table.
+const orderService = createOrderService(supabaseAdmin);
 
 export async function GET(
   request: NextRequest,

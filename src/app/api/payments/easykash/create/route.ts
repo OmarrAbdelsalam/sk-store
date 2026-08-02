@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 const EASYKASH_API_KEY = process.env.EASYKASH_API_KEY;
 const EASYKASH_DIRECT_URL = "https://back.easykash.net/api/directpayv1/pay";
@@ -16,22 +17,11 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    const {
-      name,
-      email,
-      mobile,
-      amount,
-      customerReference,
-      locale = "en",
-      paymentType = "full", // "full" | "deposit"
-    } = body;
+    const { customerReference, locale = "en" } = body;
 
-    if (!mobile || !name || !amount || !customerReference) {
+    if (!customerReference) {
       return NextResponse.json(
-        {
-          succeeded: false,
-          message: "Missing required fields: name, mobile, amount, customerReference",
-        },
+        { succeeded: false, message: "Missing required field: customerReference" },
         { status: 400 }
       );
     }
@@ -44,21 +34,63 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const numericAmount = parseFloat(String(amount));
-    if (isNaN(numericAmount) || numericAmount <= 0) {
+    // ── Amount and buyer come from the stored order, never the request ───────
+    // This is what the customer is actually charged. Reading it from the request
+    // body meant a tampered call could pay 1 EGP for a 5000 EGP order — the
+    // callback marks whatever was paid as settled.
+    const { data: order, error: orderError } = await supabaseAdmin
+      .from("orders")
+      .select("id, customer_name, phone_number, total, payment_plan, deposit_amount, payment_status")
+      .eq("easykash_customer_ref", String(customerReference))
+      .maybeSingle();
+
+    if (orderError) {
+      console.error("Failed to load order for payment:", orderError);
       return NextResponse.json(
-        { succeeded: false, message: "Invalid amount" },
+        { succeeded: false, message: "Could not load order" },
+        { status: 500 }
+      );
+    }
+
+    if (!order) {
+      return NextResponse.json(
+        { succeeded: false, message: "Order not found" },
+        { status: 404 }
+      );
+    }
+
+    // Refuse to open a second payment for something already settled.
+    if (order.payment_status === "paid" || order.payment_status === "refunded") {
+      return NextResponse.json(
+        { succeeded: false, message: "This order has already been paid" },
+        { status: 409 }
+      );
+    }
+
+    const orderTotal = Number(order.total);
+    if (!Number.isFinite(orderTotal) || orderTotal <= 0) {
+      return NextResponse.json(
+        { succeeded: false, message: "Invalid order total" },
         { status: 400 }
       );
     }
 
-    // Deposit = 50% of total, rest is paid on delivery
+    // Deposit = the split already computed and stored when the order was created.
     const chargeAmount =
-      paymentType === "deposit"
-        ? parseFloat((numericAmount * 0.5).toFixed(2))
-        : numericAmount;
+      order.payment_plan === "deposit"
+        ? Number(order.deposit_amount) || Math.round(orderTotal * 50) / 100
+        : orderTotal;
 
-    const redirectUrl = `${SITE_URL}/${locale}/order-success?ref=${customerReference}&paymentType=${paymentType}`;
+    const name = order.customer_name;
+    const mobile = order.phone_number;
+    const email = `${mobile}@skbags.com`;
+
+    // Deliberately query-string free: EasyKash appends its own params
+    // (status, providerRefNum, customerReference, voucher) to this URL, and a
+    // gateway that concatenates with "?" instead of "&" would mangle anything
+    // we put here. customerReference comes back on its own, and paymentType is
+    // already stored on the order as payment_plan.
+    const redirectUrl = `${SITE_URL}/${locale}/order-success`;
 
     const payload = {
       amount: chargeAmount,
@@ -67,7 +99,7 @@ export async function POST(request: NextRequest) {
       paymentOptions: [1, 2, 4, 5, 6],
       cashExpiry: 48,
       name,
-      email: email || `${mobile}@skbags.com`,
+      email,
       mobile: String(mobile),
       redirectUrl,
       customerReference: Number(customerReference),
@@ -102,10 +134,10 @@ export async function POST(request: NextRequest) {
         paymentUrl: data.redirectUrl,
         chargeAmount,
         remainingAmount:
-          paymentType === "deposit"
-            ? parseFloat((numericAmount * 0.5).toFixed(2))
+          order.payment_plan === "deposit"
+            ? Math.round((orderTotal - chargeAmount) * 100) / 100
             : 0,
-        paymentType,
+        paymentType: order.payment_plan || "full",
       },
     });
   } catch (error: any) {

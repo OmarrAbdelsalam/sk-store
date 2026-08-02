@@ -129,7 +129,7 @@ export default function HeroCarousel({ slides }: { slides: SlideData[] }) {
                   alt={slide.title}
                   fill
                   priority={index === 0}
-                  className="object-cover object-center scale-100 group-hover:scale-105 transition-transform duration-[10s] ease-out"
+                  className="object-cover object-center"
                   sizes="100vw"
                 />
 

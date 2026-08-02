@@ -146,6 +146,7 @@ const CheckoutForm = memo(
             (isAr ? "حدث خطأ. حاول مرة أخرى." : "Something went wrong. Try again.")
         );
         setIsRedirecting(false);
+        window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
       }
     };
 

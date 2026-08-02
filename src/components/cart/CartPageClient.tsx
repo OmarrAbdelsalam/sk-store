@@ -186,7 +186,10 @@ export default function CartPageClient() {
           className="w-full h-10 rounded-full bg-black hover:bg-black text-white text-xs font-medium tracking-widest uppercase
             transition-all duration-300 hover:scale-[1.02] shadow-md border border-white/10
             inline-flex items-center justify-center gap-2"
-          onClick={() => router.push(`/${locale}/checkout`)}
+          onClick={() => {
+            window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+            router.push(`/${locale}/checkout`);
+          }}
         >
           {isAr ? 'إتمام الشراء' : 'PROCEED TO CHECKOUT'}
         </button>

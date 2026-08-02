@@ -34,11 +34,17 @@ const Login = ({ redirectTo }: LoginProps) => {
   }, [searchParams, redirectTo]);
 
   useEffect(() => {
-    const token = localStorage.getItem("access_token");
-    const expiresAt = localStorage.getItem("token_expires_at");
-    if (token && expiresAt && Date.now() < parseInt(expiresAt)) {
-      window.location.href = finalRedirect;
-    }
+    // Skip the form only for a session Supabase itself confirms — a leftover
+    // localStorage timestamp is not evidence of anything.
+    let cancelled = false;
+    supabase.auth.getUser().then(({ data, error }) => {
+      if (!cancelled && data?.user && !error) {
+        window.location.href = finalRedirect;
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [finalRedirect]);
 
   const handleSubmit = async (e: React.FormEvent) => {

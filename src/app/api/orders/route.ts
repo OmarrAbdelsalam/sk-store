@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { orderService, CreateOrderInput } from "@/services/orders";
+import { createOrderService, CreateOrderInput } from "@/services/orders";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { priceOrder, PricingError } from "@/lib/server-pricing";
+
+// Checkout is unauthenticated by design, so orders are written with the
+// service-role key after this route has validated the request — the anon key is
+// denied all access to the orders table.
+const orderService = createOrderService(supabaseAdmin);
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,27 +34,56 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get cart items from request body or use default values
-    const items = body.items || [];
-    const subtotal = body.subtotal || 0;
-    const shippingCost = body.shippingCost || 50;
-    const discountAmount = body.discountAmount || 0;
-    const discountCode = body.discountCode;
-    const total = body.total || (subtotal + shippingCost - discountAmount);
-    const appliedPromotions = body.appliedPromotions || [];
-    const bogoDiscount = body.bogoDiscount || 0;
+    // ── Pricing ─────────────────────────────────────────────────────────────
+    // Everything about money is recomputed from the database. The request body
+    // only says *what* the customer wants and *where* it's going; the prices,
+    // shipping, discounts and total it claims are discarded. Trusting them let
+    // a tampered request order anything for any amount.
+    let priced;
+    try {
+      priced = await priceOrder({
+        items: body.items || [],
+        governorate: government,
+        city,
+        discountCode: body.discountCode,
+        sessionId,
+        phoneNumber,
+      });
+    } catch (err: any) {
+      if (err instanceof PricingError) {
+        return NextResponse.json(
+          { succeeded: false, message: err.message },
+          { status: 400 }
+        );
+      }
+      throw err;
+    }
 
-    // Payment plan fields
-    const paymentPlan = body.paymentPlan || 'full';
-    const depositAmount = body.depositAmount || undefined;
-    const remainingAmount = body.remainingAmount || undefined;
+    const {
+      subtotal,
+      shippingCost,
+      discountAmount,
+      discountCode,
+      total,
+      appliedPromotions,
+      bogoDiscount,
+    } = priced;
 
-    // EasyKash payment data (if present)
-    const easykashRef = body.easykashRef || undefined;
-    const easykashVoucher = body.easykashVoucher || undefined;
-    const easykashProvider = body.easykashProvider || undefined;
-    const easykashExpiry = body.easykashExpiry || undefined;
-    const easykashCustomerRef = body.easykashCustomerRef || undefined;
+    // Payment plan fields — the deposit is half the server-computed total, not
+    // whatever split the client proposed.
+    const paymentPlan = body.paymentPlan === 'deposit' ? 'deposit' : 'full';
+    const depositAmount =
+      paymentPlan === 'deposit'
+        ? Math.round(total * 50) / 100
+        : total;
+    const remainingAmount =
+      paymentPlan === 'deposit' ? Math.round((total - depositAmount) * 100) / 100 : 0;
+
+    // Note: no EasyKash fields are read from the body. Payment state is written
+    // only by the HMAC-verified gateway callback and the status route; accepting
+    // it here would let a caller declare its own order paid. The order is
+    // therefore always created unpaid, and easykash_customer_ref is allocated by
+    // the database sequence.
 
     // Create order input
     const orderInput: CreateOrderInput = {
@@ -62,18 +98,9 @@ export async function POST(request: NextRequest) {
       city,
       detailedAddress,
       notes,
-      items: items.map((item: any) => ({
-        productId: item.productId || undefined,
-        productName: item.name || item.productName || '',
-        productNameAr: item.nameAr || item.productNameAr || undefined,
-        productImage: item.image || item.productImage || undefined,
-        colorId: item.colorId || undefined,
-        colorName: item.colorName || undefined,
-        sizeId: item.sizeId || undefined,
-        sizeName: item.sizeName || undefined,
-        quantity: item.quantity || 1,
-        unitPrice: parseFloat(String(item.price || '0').replace(/[^0-9.]/g, '')) || 0,
-      })),
+      // Names and unit prices come from the products table via priceOrder, so
+      // the stored line items match what was actually charged.
+      items: priced.items,
       subtotal,
       shippingCost,
       discountAmount,
@@ -81,11 +108,6 @@ export async function POST(request: NextRequest) {
       total,
       appliedPromotions,
       bogoDiscount,
-      easykashRef,
-      easykashVoucher,
-      easykashProvider,
-      easykashExpiry,
-      easykashCustomerRef,
     };
 
     // Create order in database
@@ -100,6 +122,9 @@ export async function POST(request: NextRequest) {
         status: order.status,
         total: order.total,
         createdAt: order.created_at,
+        // Allocated by the database sequence — the caller needs it to open the
+        // payment, and it's already persisted, so there's nothing to save back.
+        easykashCustomerRef: order.easykash_customer_ref,
       },
     });
   } catch (error: any) {
@@ -119,21 +144,23 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const sessionId = searchParams.get("sessionId");
 
-    if (sessionId) {
-      const orders = await orderService.getBySessionId(sessionId);
-      return NextResponse.json({
-        succeeded: true,
-        data: orders,
-      });
+    // This route runs with the service-role key, so it must never serve a query
+    // the caller hasn't proved they're entitled to. A session id scopes the
+    // result to that one browser's orders; without it there is nothing to scope
+    // by, and the previous "return everything" branch handed the full customer
+    // list — names, phones, addresses — to anyone who called it.
+    if (!sessionId) {
+      return NextResponse.json(
+        { succeeded: false, message: "sessionId is required" },
+        { status: 400 }
+      );
     }
 
-    // Return all orders (for admin)
-    const orders = await orderService.getAll();
+    const orders = await orderService.getBySessionId(sessionId);
     return NextResponse.json({
       succeeded: true,
       data: orders,
     });
-
   } catch (error: any) {
     console.error("Error fetching orders:", error);
     return NextResponse.json(

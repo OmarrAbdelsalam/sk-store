@@ -110,14 +110,28 @@ const generateOrderNumber = (): string => {
   return `SK-${timestamp}-${random}`;
 };
 
-export const orderService = {
+type SupabaseLike = typeof supabase;
+
+/**
+ * Orders live behind row level security, so which key runs the query decides
+ * what it can see. The browser gets the anon key and is allowed nothing unless
+ * signed in as an admin; trusted server routes pass the service-role client.
+ */
+export const createOrderService = (db: SupabaseLike) => ({
   async create(input: CreateOrderInput): Promise<Order> {
     const orderNumber = generateOrderNumber();
-    
+
     const paymentStatus = input.easykashRef ? 'pending' : 'unpaid';
-    
+
+    // easykash_customer_ref defaults to a sequence value in the database, and an
+    // explicit null would override that default — so the key is only included
+    // when a reference was actually supplied.
+    const customerRefField = input.easykashCustomerRef
+      ? { easykash_customer_ref: input.easykashCustomerRef }
+      : {};
+
     // 1. Create order
-    const { data: order, error: orderError } = await supabase
+    const { data: order, error: orderError } = await db
       .from("orders")
       .insert({
         order_number: orderNumber,
@@ -134,7 +148,7 @@ export const orderService = {
         easykash_voucher: input.easykashVoucher || null,
         easykash_provider: input.easykashProvider || null,
         easykash_expiry: input.easykashExpiry || null,
-        easykash_customer_ref: input.easykashCustomerRef || null,
+        ...customerRefField,
         government: input.government,
         city: input.city,
         detailed_address: input.detailedAddress,
@@ -168,7 +182,7 @@ export const orderService = {
         total_price: item.unitPrice * item.quantity,
       }));
 
-      const { error: itemsError } = await supabase
+      const { error: itemsError } = await db
         .from("order_items")
         .insert(orderItems);
 
@@ -181,7 +195,9 @@ export const orderService = {
     if (input.appliedPromotions?.length) {
       const promoCodeEntry = input.appliedPromotions.find(p => p.type === 'promo_code');
       if (promoCodeEntry) {
-        promotionService.incrementUsage(promoCodeEntry.promotionId)
+        // Same client as the order write, so a server-side checkout increments
+        // with the service-role key instead of being blocked by RLS.
+        promotionService.incrementUsage(promoCodeEntry.promotionId, db)
           .catch(err => console.error('Failed to increment promo code usage:', err));
       }
     }
@@ -190,7 +206,7 @@ export const orderService = {
   },
 
   async getById(id: string): Promise<Order | null> {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("orders")
       .select(`
         *,
@@ -204,7 +220,7 @@ export const orderService = {
   },
 
   async getByOrderNumber(orderNumber: string): Promise<Order | null> {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("orders")
       .select(`
         *,
@@ -218,7 +234,7 @@ export const orderService = {
   },
 
   async getBySessionId(sessionId: string): Promise<Order[]> {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("orders")
       .select(`
         *,
@@ -232,7 +248,7 @@ export const orderService = {
   },
 
   async getAll(): Promise<Order[]> {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("orders")
       .select(`
         *,
@@ -245,7 +261,7 @@ export const orderService = {
   },
 
   async updateStatus(id: string, status: Order['status']): Promise<Order> {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("orders")
       .update({ 
         status, 
@@ -260,7 +276,7 @@ export const orderService = {
   },
 
   async markAsRead(id: string): Promise<void> {
-    const { error } = await supabase
+    const { error } = await db
       .from("orders")
       .update({ is_read: true })
       .eq("id", id);
@@ -268,10 +284,18 @@ export const orderService = {
   },
 
   async markAllRead(): Promise<void> {
-    const { error } = await supabase
+    const { error } = await db
       .from("orders")
       .update({ is_read: true })
       .eq("is_read", false);
     if (error) throw error;
   },
-};
+});
+
+/**
+ * Browser-side instance. Every call carries the anon key — or the signed-in
+ * admin's token once they log in — so row level security decides what comes
+ * back. Server routes should build their own with the service-role client
+ * instead of reaching for this one.
+ */
+export const orderService = createOrderService(supabase);

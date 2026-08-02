@@ -81,6 +81,56 @@ const OrdersPage = () => {
     return result;
   }, [orders, searchQuery, statusFilter]);
 
+  const [refreshingPayment, setRefreshingPayment] = useState(false);
+
+  /**
+   * Re-checks a payment against EasyKash. The callback is a single HTTP POST,
+   * so a paid order can be left showing as unpaid if that request was ever
+   * lost — this asks the gateway directly instead of waiting for a retry that
+   * may never come.
+   */
+  const handleRefreshPayment = async (order: Order) => {
+    if (!order.easykash_customer_ref) {
+      toast.error("This order has no EasyKash reference to check");
+      return;
+    }
+
+    setRefreshingPayment(true);
+    try {
+      const res = await fetch(
+        `/api/payments/easykash/status?ref=${encodeURIComponent(order.easykash_customer_ref)}`,
+        { cache: "no-store" }
+      );
+      const json = await res.json();
+
+      if (!res.ok || !json.succeeded) {
+        throw new Error(json.message || "Could not reach the payment gateway");
+      }
+
+      const previous = order.payment_status || "unpaid";
+      const next = json.data.paymentStatus as string;
+
+      setSelectedOrder((current) =>
+        current && current.id === order.id ? { ...current, ...json.data.order } : current
+      );
+      queryClient.invalidateQueries({ queryKey: ["orders-data"] });
+
+      if (next === previous) {
+        toast.info(`No change — still ${PAYMENT_STATUS_CONFIG[next]?.label || next}`);
+      } else {
+        toast.success(
+          `Payment updated: ${PAYMENT_STATUS_CONFIG[previous]?.label || previous} → ${
+            PAYMENT_STATUS_CONFIG[next]?.label || next
+          }`
+        );
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to refresh payment status");
+    } finally {
+      setRefreshingPayment(false);
+    }
+  };
+
   const handleStatusChange = async (orderId: string, newStatus: Order["status"]) => {
     try {
       await orderService.updateStatus(orderId, newStatus);
@@ -587,6 +637,21 @@ const OrdersPage = () => {
                           </div>
                         );
                       })()}
+
+                      {/* Ask EasyKash directly — for when a customer says they
+                          paid but the order still shows otherwise. */}
+                      {selectedOrder.easykash_customer_ref && (
+                        <button
+                          onClick={() => handleRefreshPayment(selectedOrder)}
+                          disabled={refreshingPayment}
+                          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-gray-200
+                            text-xs font-semibold text-gray-600 hover:bg-gray-50 hover:text-gray-900
+                            disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          <RefreshCw className={`w-3.5 h-3.5 ${refreshingPayment ? "animate-spin" : ""}`} />
+                          {refreshingPayment ? "Checking with EasyKash..." : "Re-check payment status"}
+                        </button>
+                      )}
 
                       {/* Payment method used */}
                       {selectedOrder.easykash_payment_method && (

@@ -287,8 +287,14 @@ export const promotionService = {
 
   // ── Storefront ───────────────────────────────
 
-  async validatePromoCode(code: string, cartSubtotal: number, context?: { sessionId?: string; phoneNumber?: string }): Promise<ValidationResult> {
-    const { data, error } = await supabase
+  /**
+   * `db` must be the service-role client when called server-side: the
+   * first-order and one-use-per-phone checks read the orders table, which row
+   * level security hides from the anon key. With the anon client those counts
+   * come back as 0 and both limits silently stop being enforced.
+   */
+  async validatePromoCode(code: string, cartSubtotal: number, context?: { sessionId?: string; phoneNumber?: string }, db = supabase): Promise<ValidationResult> {
+    const { data, error } = await db
       .from("promo_codes")
       .select("*")
       .eq("code", code.toUpperCase())
@@ -333,7 +339,7 @@ export const promotionService = {
       if (context.phoneNumber) conditions.push(`phone_number.eq.${context.phoneNumber}`);
 
       if (conditions.length > 0) {
-        const { count } = await supabase
+        const { count } = await db
           .from("orders")
           .select("id", { count: "exact", head: true })
           .or(conditions.join(","));
@@ -350,7 +356,7 @@ export const promotionService = {
 
     // ── One Use Per Phone ────────────────────────────────────────────────
     if (promo.one_use_per_phone && context?.phoneNumber) {
-      const { count } = await supabase
+      const { count } = await db
         .from("orders")
         .select("id", { count: "exact", head: true })
         .eq("phone_number", context.phoneNumber)
@@ -383,10 +389,10 @@ export const promotionService = {
     };
   },
 
-  async getActiveQuickPromotions(): Promise<QuickPromotion[]> {
+  async getActiveQuickPromotions(db = supabase): Promise<QuickPromotion[]> {
     const now = new Date().toISOString();
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("quick_promotions")
       .select("*")
       .eq("is_active", 1)
@@ -398,9 +404,15 @@ export const promotionService = {
     return data as QuickPromotion[];
   },
 
-  async incrementUsage(promoCodeId: string): Promise<void> {
+  /**
+   * `db` defaults to the anon client, which row level security allows to read
+   * promo codes but never to write them. Callers doing this as part of a
+   * server-side checkout must pass the service-role client, or the update is
+   * silently rejected and usage limits stop being enforced.
+   */
+  async incrementUsage(promoCodeId: string, db = supabase): Promise<void> {
     // Read current count then increment (safe for low-concurrency storefront)
-    const { data: current, error: fetchError } = await supabase
+    const { data: current, error: fetchError } = await db
       .from("promo_codes")
       .select("usage_count")
       .eq("id", promoCodeId)
@@ -410,7 +422,7 @@ export const promotionService = {
       throw new PromotionServiceError("Failed to fetch promo code for usage increment", fetchError);
     }
 
-    const { error } = await supabase
+    const { error } = await db
       .from("promo_codes")
       .update({
         usage_count: (current.usage_count || 0) + 1,

@@ -253,7 +253,7 @@ const ClientProductGrid = ({ initialProducts }: ClientProductGridProps) => {
   }
 
   return (
-    <section className="pb-8 bg-background">
+    <section id="products" className="pb-8 bg-background">
       <div className="container mx-auto px-5">
         {/* Breadcrumb - Desktop only */}
         <nav className="hidden md:flex items-center gap-2 text-sm mb-6">

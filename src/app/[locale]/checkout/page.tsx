@@ -19,7 +19,7 @@ export default function Checkout() {
   const dir = locale === "ar" ? "rtl" : "ltr";
   const isAr = locale === "ar";
 
-  const { items, getTotalPrice, clearCart, bogoDiscount, freeShippingApplied, appliedPromotions } = useCart();
+  const { items, getTotalPrice, bogoDiscount, freeShippingApplied, appliedPromotions } = useCart();
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderCompleted, setOrderCompleted] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
@@ -37,6 +37,7 @@ export default function Checkout() {
 
   useEffect(() => {
     setMounted(true);
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     if (typeof window !== "undefined") {
       try {
         const saved = localStorage.getItem("checkout_form_data");
@@ -68,6 +69,20 @@ export default function Checkout() {
     router.prefetch(`/${locale}/order-success`);
   }, [locale, router]);
 
+  // Coming back from the gateway restores this page from the bfcache with its
+  // state intact, which would leave the customer staring at the "Redirecting…"
+  // spinner forever. `persisted` marks exactly that restore.
+  useEffect(() => {
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        setIsProcessing(false);
+        setOrderCompleted(false);
+      }
+    };
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, []);
+
   const nf = useMemo(
     () =>
       new Intl.NumberFormat(locale, {
@@ -93,6 +108,7 @@ export default function Checkout() {
    * 5. Callback webhook updates payment_status when payment completes
    */
   const handleSubmit = async (formData: CheckoutSubmitData) => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     setIsProcessing(true);
     setOrderError(null);
 
@@ -177,16 +193,19 @@ export default function Checkout() {
         );
       }
 
-      const orderId = orderData.data?.id;
       const orderNumber = orderData.data?.orderNumber || orderData.data?.order_number;
 
-      // Build a stable numeric customerReference from the order number
-      // e.g. "SK-ABC123-XYZ" → strip non-digits → take last 9 digits as number
-      // This is stored back in easykash_customer_ref so callback can find the order
-      const rawRef = (orderNumber || orderId || String(Date.now()))
-        .replace(/\D/g, "")
-        .slice(-9);
-      const customerRef = parseInt(rawRef, 10) || Date.now() % 1000000000;
+      // Allocated by a database sequence when the order was inserted, so it's
+      // unique and already stored — the callback can always find its way back.
+      const customerRef = orderData.data?.easykashCustomerRef;
+
+      if (!customerRef) {
+        throw new Error(
+          isAr
+            ? "تعذر إنشاء مرجع الدفع"
+            : "Could not create a payment reference"
+        );
+      }
 
       // Save summary for order-success page
       try {
@@ -224,30 +243,16 @@ export default function Checkout() {
         );
       } catch {}
 
-      // ── Step 2: Save customerRef to the order in DB ─────────────────────
-      // So the callback can look it up via easykash_customer_ref
-      if (orderId) {
-        try {
-          await fetch(`/api/orders/${orderId}/payment-ref`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ easykashCustomerRef: String(customerRef) }),
-          });
-        } catch {} // non-blocking — order is already saved
-      }
-
-      // ── Step 3: Create EasyKash Direct Payment link ─────────────────────
+      // ── Step 2: Create EasyKash Direct Payment link ─────────────────────
       const payRes = await fetch("/api/payments/easykash/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        // The reference is all the server needs — it reads the amount, buyer and
+        // payment plan from the order it already stored. Sending an amount from
+        // here would just be a number the server ignores.
         body: JSON.stringify({
-          name: formData.name,
-          mobile: formData.phone,
-          email: `${formData.phone}@skbags.com`,
-          amount: total,
           customerReference: customerRef,
           locale,
-          paymentType: paymentPlan,
         }),
       });
 
@@ -262,11 +267,14 @@ export default function Checkout() {
         );
       }
 
-      // ── Step 3: Clear cart and redirect to EasyKash hosted page ────────
-      clearCart();
+      // ── Step 4: Redirect to EasyKash hosted page ───────────────────────
+      // The cart stays put until /order-success confirms the payment server-side —
+      // if the customer cancels or the card is declined they come back to a full cart.
       setOrderCompleted(true);
 
-      // Redirect to EasyKash's hosted payment page
+      // Full same-tab redirect: popup blockers kill window.open here (this runs
+      // after an await, so it's no longer a trusted user gesture), and 3-D Secure
+      // redirect chains break out of iframes anyway.
       window.location.href = payData.data.paymentUrl;
     } catch (error: any) {
       const message =
@@ -278,6 +286,7 @@ export default function Checkout() {
       console.error("Checkout error:", message);
       setOrderError(message);
       setIsProcessing(false);
+      window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
     }
   };
 

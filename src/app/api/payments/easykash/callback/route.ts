@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
-import { supabase } from "@/lib/supabaseClient";
+import { supabaseAdmin as supabase } from "@/lib/supabaseAdmin";
+import { mapEasykashStatus } from "@/lib/easykash";
 
 const EASYKASH_HMAC_SECRET = process.env.EASYKASH_HMAC_SECRET;
 
@@ -14,6 +15,10 @@ const EASYKASH_HMAC_SECRET = process.env.EASYKASH_HMAC_SECRET;
  *   status, voucher, easykashRef, VoucherData,
  *   customerReference, signatureHash
  * }
+ *
+ * Per the docs this fires on successful payments only — `status` is always
+ * "PAID". Failures and expiries never reach here, which is why the order-success
+ * page reconciles through the inquire API instead of waiting on this.
  *
  * HMAC verification (SHA-512):
  *   Concatenate in order: ProductCode + Amount + ProductType + PaymentMethod
@@ -32,7 +37,18 @@ export async function POST(request: NextRequest) {
     }
 
     // ── HMAC Verification ──────────────────────────────────────────────────
-    if (EASYKASH_HMAC_SECRET) {
+    // This endpoint marks orders as paid, so an unverifiable request must be
+    // rejected. Skipping verification when the secret is unset would let anyone
+    // who knows the URL mark any order paid.
+    if (!EASYKASH_HMAC_SECRET) {
+      console.error("EASYKASH_HMAC_SECRET is not configured — rejecting callback");
+      return NextResponse.json(
+        { error: "Callback verification unavailable" },
+        { status: 503 }
+      );
+    }
+
+    {
       const {
         ProductCode,
         Amount,
@@ -65,13 +81,20 @@ export async function POST(request: NextRequest) {
         .update(dataStr)
         .digest("hex");
 
-      if (calculatedSig !== signatureHash) {
+      const signatureBuffer = Buffer.from(String(signatureHash), "utf8");
+      const calculatedBuffer = Buffer.from(calculatedSig, "utf8");
+
+      if (
+        signatureBuffer.length !== calculatedBuffer.length ||
+        !crypto.timingSafeEqual(signatureBuffer, calculatedBuffer)
+      ) {
         console.warn("EasyKash callback: invalid signature");
         return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
       }
     }
 
-    const { easykashRef, status, customerReference, Amount, PaymentMethod } = payload;
+    const { easykashRef, status, customerReference, PaymentMethod, voucher, VoucherData } =
+      payload;
 
     if (!easykashRef && !customerReference) {
       return NextResponse.json(
@@ -89,28 +112,43 @@ export async function POST(request: NextRequest) {
       updated_at: new Date().toISOString(),
     };
     if (easykashRef) updateFields.easykash_ref = easykashRef;
+    // Cash payments (Fawry/Aman) carry the code the buyer pays with — without
+    // storing it the voucher card on the success page has nothing to show.
+    if (voucher) updateFields.easykash_voucher = String(voucher);
+    if (VoucherData) updateFields.easykash_provider = String(VoucherData);
 
-    // Try to find by customerReference first (our order's internal ref), then easykashRef
+    // Match on customerReference (our own ref) first, then easykashRef. A filter
+    // that matches nothing is not a Postgres error, so check the affected rows
+    // rather than the error to decide whether to fall back.
+    let matched = 0;
     let updateError: any = null;
 
     if (customerReference) {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("orders")
         .update(updateFields)
-        .eq("easykash_customer_ref", String(customerReference));
+        .eq("easykash_customer_ref", String(customerReference))
+        .select("id");
+      matched = data?.length || 0;
       updateError = error;
     }
 
-    if (updateError && easykashRef) {
-      const { error } = await supabase
+    if (matched === 0 && easykashRef) {
+      const { data, error } = await supabase
         .from("orders")
         .update(updateFields)
-        .eq("easykash_ref", easykashRef);
-      updateError = error;
+        .eq("easykash_ref", easykashRef)
+        .select("id");
+      matched = data?.length || 0;
+      updateError = error || updateError;
     }
 
     if (updateError) {
       console.error("Supabase update error (callback):", updateError);
+    } else if (matched === 0) {
+      console.error(
+        `EasyKash callback matched no order: customerRef=${customerReference}, ref=${easykashRef}`
+      );
     }
 
     console.log(
@@ -121,27 +159,5 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error("EasyKash callback error:", error);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
-  }
-}
-
-function mapEasykashStatus(status: string | undefined): string {
-  switch ((status || "").toUpperCase()) {
-    case "PAID":
-      return "paid";
-    case "NEW":
-    case "PENDING":
-      return "pending";
-    case "EXPIRED":
-      return "expired";
-    case "FAILED":
-    case "CANCELLED":
-    case "CANCELED":
-      return "failed";
-    case "REFUNDED":
-      return "refunded";
-    case "DELIVERED":
-      return "delivered";
-    default:
-      return "pending";
   }
 }

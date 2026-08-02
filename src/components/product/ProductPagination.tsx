@@ -70,7 +70,16 @@ export default function ProductPagination({
   const goTo = (page: number) => {
     if (disabled) return;
     const clamped = Math.min(Math.max(page, 1), totalPages);
-    if (clamped !== safeCurrent) onPageChange(clamped);
+    if (clamped !== safeCurrent) {
+      onPageChange(clamped);
+      const target = document.getElementById("products") || document.querySelector("main");
+      if (target) {
+        const top = target.getBoundingClientRect().top + window.scrollY - 80;
+        window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+      } else {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    }
   };
 
   // ✅ ممكن نرجع null بعد hooks عادي
