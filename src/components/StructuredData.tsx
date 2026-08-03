@@ -25,7 +25,6 @@ export function OrganizationSchema({ locale = "ar" }: OrganizationSchemaProps) {
     logo: siteLogo,
     description: locale === "ar" ? siteDescriptionAr : siteDescriptionEn,
     telephone: siteContact.phoneInternational,
-    email: siteContact.email,
     areaServed: {
       "@type": "Country",
       name: locale === "ar" ? "مصر" : "Egypt",
@@ -170,7 +169,7 @@ export function FAQSchema({ locale = "ar" }: FAQSchemaProps) {
     },
     {
       question: "كيف يمكنني التواصل معكم؟",
-      answer: `يمكنك التواصل معنا عبر الواتساب على رقم ${siteContact.phone} أو عبر البريد الإلكتروني ${siteContact.email}.`,
+      answer: `يمكنك التواصل معنا عبر الواتساب على رقم ${siteContact.phone}.`,
     },
     {
       question: "هل المنتجات أصلية؟",
@@ -195,7 +194,7 @@ export function FAQSchema({ locale = "ar" }: FAQSchemaProps) {
     },
     {
       question: "How can I contact you?",
-      answer: `You can contact us via WhatsApp at ${siteContact.phone} or by email at ${siteContact.email}.`,
+      answer: `You can contact us via WhatsApp at ${siteContact.phone}.`,
     },
     {
       question: "Are the products original?",

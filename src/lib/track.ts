@@ -131,6 +131,14 @@ export type CartSnapshotItem = {
   productId: string;
   name: string;
   color?: string;
+  /**
+   * Carried so a cart restored from a reminder email rebuilds the exact
+   * variant. Without them the colour survives only as a label, and the order
+   * that follows has a null colour_id for fulfilment to work around.
+   */
+  colorId?: string;
+  sizeId?: string;
+  sizeName?: string;
   quantity: number;
   price: number;
   image?: string;

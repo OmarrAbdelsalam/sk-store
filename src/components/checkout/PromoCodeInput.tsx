@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,6 +44,60 @@ export default function PromoCodeInput({
   const [isApplying, setIsApplying] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  /**
+   * A code that arrived by email is applied without being typed.
+   *
+   * CartRestorer parks it in localStorage when the customer follows the link
+   * from a cart reminder; by the time they reach checkout the basket has
+   * settled, which is what validation needs. Cleared on the first attempt
+   * either way, so a code that turns out to be expired isn't retried forever.
+   */
+  const autoApplied = useRef(false);
+  useEffect(() => {
+    if (autoApplied.current || appliedDiscount || disabled) return;
+
+    let pending: string | null = null;
+    try {
+      pending = localStorage.getItem("pending_promo_code");
+    } catch {
+      return;
+    }
+    if (!pending) return;
+
+    autoApplied.current = true;
+    try {
+      localStorage.removeItem("pending_promo_code");
+    } catch {}
+
+    (async () => {
+      setIsApplying(true);
+      try {
+        const sessionId = getOrCreateSessionId();
+        const result = await applyDiscount(sessionId, pending!.trim(), phoneNumber);
+        if (result.succeeded) {
+          onDiscountApplied({
+            amount: result.discountValue || 0,
+            percentage: result.discountPercentage || 0,
+            code: pending!.trim(),
+            originalTotal: result.originalTotal || 0,
+            finalTotal: result.finalTotal || 0,
+          });
+        } else {
+          // Show it in the field rather than silently dropping it — the
+          // customer was promised this code in an email.
+          setPromoCode(pending!.trim());
+          setErrorMessage(result.message);
+        }
+      } catch {
+        setPromoCode(pending!.trim());
+      } finally {
+        setIsApplying(false);
+      }
+    })();
+    // Runs once on mount; re-running on every prop change would re-apply.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleApplyPromoCode = async () => {
     if (!promoCode.trim()) {

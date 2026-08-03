@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin as supabase } from "@/lib/supabaseAdmin";
 import { mapEasykashStatus } from "@/lib/easykash";
 import { inquireEasykash, easykashUpdateFields } from "@/lib/easykash-api";
+import { sendOrderConfirmation } from "@/lib/order-emails";
 
 /**
  * Authoritative payment status for an order.
@@ -85,6 +86,12 @@ export async function GET(request: NextRequest) {
 
         if (updateError) {
           console.error("Supabase update error (status reconcile):", updateError);
+        } else if (mapped === "paid") {
+          // This poll is sometimes the first place a payment is seen — the
+          // callback can be missed or delayed. Claiming is atomic, so the
+          // usual case (callback already sent it) costs one no-op UPDATE and
+          // the customer never gets a second copy.
+          await sendOrderConfirmation(order.id);
         }
       }
     }

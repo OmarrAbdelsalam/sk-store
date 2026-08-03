@@ -8,15 +8,56 @@ import { priceOrder, PricingError } from "@/lib/server-pricing";
 // denied all access to the orders table.
 const orderService = createOrderService(supabaseAdmin);
 
+/** The success payload, built from a stored order rather than a fresh insert. */
+function orderResponse(order: any, replayed = false) {
+  return NextResponse.json({
+    succeeded: true,
+    message: replayed ? "Order already created" : "Order created successfully",
+    data: {
+      id: order.id,
+      orderNumber: order.order_number,
+      status: order.status,
+      total: order.total,
+      createdAt: order.created_at,
+      // Allocated by the database sequence — the caller needs it to open the
+      // payment, and it's already persisted, so there's nothing to save back.
+      easykashCustomerRef: order.easykash_customer_ref,
+    },
+  });
+}
+
+const REPLAY_COLUMNS =
+  "id, order_number, status, total, created_at, easykash_customer_ref";
+
+async function findByIdempotencyKey(key: string) {
+  const { data } = await supabaseAdmin
+    .from("orders")
+    .select(REPLAY_COLUMNS)
+    .eq("idempotency_key", key)
+    .maybeSingle();
+  return data;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+
+    // The checkout has always sent this header; nothing used to read it, so a
+    // double tap on "Pay" — or a retry after a dropped connection — created a
+    // second order for the same cart. Replaying the first one is the whole fix.
+    const idempotencyKey = request.headers.get("idempotency-key")?.trim() || null;
+
+    if (idempotencyKey) {
+      const existing = await findByIdempotencyKey(idempotencyKey);
+      if (existing) return orderResponse(existing, true);
+    }
     
     const {
       sessionId,
       customerName,
       phoneNumber,
       email,
+      locale,
       paymentMethod,
       government,
       city,
@@ -111,6 +152,10 @@ export async function POST(request: NextRequest) {
       customerName,
       phoneNumber,
       email: normalizedEmail,
+      // Constrained to the two locales the column allows — an unexpected value
+      // would fail the insert and take a real order down with it.
+      locale: locale === 'en' ? 'en' : 'ar',
+      idempotencyKey,
       paymentMethod: paymentMethod || 'cash',
       paymentPlan,
       depositAmount,
@@ -132,7 +177,19 @@ export async function POST(request: NextRequest) {
     };
 
     // Create order in database
-    const order = await orderService.create(orderInput);
+    let order;
+    try {
+      order = await orderService.create(orderInput);
+    } catch (err: any) {
+      // Two requests carrying the same key can both get past the pre-check
+      // above. The unique index settles it, and the loser returns the order
+      // the winner just created rather than an error the customer can't act on.
+      if (err?.code === "23505" && idempotencyKey) {
+        const existing = await findByIdempotencyKey(idempotencyKey);
+        if (existing) return orderResponse(existing, true);
+      }
+      throw err;
+    }
 
     // Link the cart to the order it produced, but leave it in the recovery
     // list: the order is still unpaid at this point, and someone who reached
@@ -154,20 +211,27 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({
-      succeeded: true,
-      message: "Order created successfully",
-      data: {
-        id: order.id,
-        orderNumber: order.order_number,
-        status: order.status,
-        total: order.total,
-        createdAt: order.created_at,
-        // Allocated by the database sequence — the caller needs it to open the
-        // payment, and it's already persisted, so there's nothing to save back.
-        easykashCustomerRef: order.easykash_customer_ref,
-      },
-    });
+    // The customer just placed a new order, so whatever they left behind on
+    // another device — or in an earlier session — is no longer a lead worth
+    // chasing. Retiring those carts is what keeps the recovery list showing
+    // people who actually walked away, and stops staff following up with
+    // someone who came back on their own.
+    // phone_norm is written by a BEFORE INSERT trigger, so the inserted row
+    // already carries it — no need to normalise the number a second time here.
+    const phoneNorm = (order as any).phone_norm as string | null;
+    if (phoneNorm) {
+      const { error: retireError } = await supabaseAdmin.rpc("retire_customer_carts", {
+        p_phone_norm: phoneNorm,
+        p_order_id: order.id,
+        // The session as stored on the order, not the raw request field —
+        // checkout falls back to a generated id, and passing the raw value
+        // would retire the very cart this order came from.
+        p_keep_session: order.session_id || null,
+      });
+      if (retireError) console.error("orders: cart retire failed", retireError.message);
+    }
+
+    return orderResponse(order);
   } catch (error: any) {
     console.error("Error creating order:", error);
     return NextResponse.json(

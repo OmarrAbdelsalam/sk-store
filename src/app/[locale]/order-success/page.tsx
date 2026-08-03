@@ -205,11 +205,21 @@ function OrderSuccessContent() {
     // serverAnswered guards the fallback: if the status endpoint was never
     // reachable we hold at "pending" without knowing anything, and emptying the
     // cart on a guess would strand a customer whose payment actually failed.
+    // "pending" covers two opposite situations, and only one of them means the
+    // customer is done with the cart:
+    //   - a cash voucher was issued (Fawry/Aman) — they hold a code and owe us
+    //     money, so the cart's job is over
+    //   - the payment page was opened and abandoned — EasyKash reports the
+    //     transaction as NEW, which maps to "pending" too
+    // Emptying the cart on the second case is what wipes a customer's basket
+    // for doing nothing wrong. The voucher is the only thing that tells them
+    // apart.
+    const hasVoucher = Boolean(orderData?.easykashVoucher);
     const settled =
       serverAnswered &&
       (paymentStatus === "paid" ||
-        paymentStatus === "pending" ||
-        paymentStatus === "delivered");
+        paymentStatus === "delivered" ||
+        (paymentStatus === "pending" && hasVoucher));
 
     if (settled && !cartCleared.current) {
       cartCleared.current = true;
@@ -218,7 +228,7 @@ function OrderSuccessContent() {
         localStorage.removeItem("last_order_data");
       } catch {}
     }
-  }, [paymentStatus, serverAnswered, clearCart]);
+  }, [paymentStatus, serverAnswered, orderData?.easykashVoucher, clearCart]);
 
   const recheckPayment = useCallback(async () => {
     if (!paymentRef.current || isRechecking) return;

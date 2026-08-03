@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import CartPageClient from "@/components/cart/CartPageClient";
+import CartRestorer from "@/components/cart/CartRestorer";
 import { generatePageMetadata } from "@/lib/metadata";
 import type { Metadata } from "next";
 
@@ -25,6 +26,11 @@ export async function generateMetadata({
 export default function CartPage() {
   return (
     <div className="min-h-screen bg-background">
+      {/* Rebuilds the basket when someone arrives from a reminder email.
+          Inside Suspense because it reads search params. */}
+      <Suspense fallback={null}>
+        <CartRestorer />
+      </Suspense>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
         <Suspense fallback={
           <div className="space-y-6">

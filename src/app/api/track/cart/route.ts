@@ -88,6 +88,10 @@ export async function POST(request: NextRequest) {
         productId: asUuid(i?.productId),
         name: asText(i?.name, 200),
         color: asText(i?.color, 100),
+        // Variant ids, so a restored cart rebuilds what was actually chosen.
+        colorId: asUuid(i?.colorId),
+        sizeId: asUuid(i?.sizeId),
+        sizeName: asText(i?.sizeName, 100),
         quantity: Number(i?.quantity) || 1,
         price: asMoney(i?.price) ?? 0,
         image: asText(i?.image, 500),

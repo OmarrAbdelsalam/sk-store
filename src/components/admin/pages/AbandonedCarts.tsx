@@ -6,6 +6,7 @@ import {
   ShoppingCart,
   RefreshCw,
   MessageCircle,
+  Mail,
   Package,
   Wallet,
   UserCheck,
@@ -13,9 +14,17 @@ import {
   TrendingDown,
 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabaseClient";
 
 import { PageHeader, Card } from "@/components/admin/common";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import RecoveryEmailPanel from "@/components/admin/RecoveryEmailPanel";
 import {
   abandonedCartsService,
   buildRecoveryLink,
@@ -59,6 +68,74 @@ const AbandonedCartsPage = () => {
   const [tab, setTab] = useState<Tab>("carts");
   const [days, setDays] = useState(30);
   const [onlyContactable, setOnlyContactable] = useState(false);
+  // The cart whose reminder dialog is open. Null closes it.
+  const [recoveryCart, setRecoveryCart] = useState<AbandonedCart | null>(null);
+  // Carts picked for a batch send. Session ids, because that is the key the
+  // API works in.
+  const [selected, setSelected] = useState<string[]>([]);
+  const [bulkPercent, setBulkPercent] = useState(0);
+  const [bulkSending, setBulkSending] = useState(false);
+
+  const toggleSelected = (sessionId: string) =>
+    setSelected((current) =>
+      current.includes(sessionId)
+        ? current.filter((id) => id !== sessionId)
+        : [...current, sessionId]
+    );
+
+  /**
+   * Sends the reminder to everything ticked.
+   *
+   * The server still checks each cart on its own, so a selection that includes
+   * customers who already bought simply skips them — which is why the result
+   * reports sent and skipped separately rather than claiming success.
+   */
+  const handleBulkSend = async () => {
+    if (!selected.length) return;
+    const confirmed = window.confirm(
+      `Send the cart reminder to ${selected.length} customer(s)` +
+        (bulkPercent > 0 ? ` with a ${bulkPercent}% code each` : "") +
+        "?\n\nAnyone who already bought or was contacted recently is skipped automatically."
+    );
+    if (!confirmed) return;
+
+    setBulkSending(true);
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      const response = await fetch("/api/admin/carts/bulk-recovery", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.session?.access_token || ""}`,
+        },
+        body: JSON.stringify({ sessionIds: selected, discountPercent: bulkPercent }),
+      });
+      const data = await response.json();
+
+      if (!data?.succeeded) {
+        toast.error(data?.message || "Couldn't send.");
+        return;
+      }
+
+      if (data.sent) {
+        toast.success(
+          `Sent ${data.sent}${data.skipped ? ` · skipped ${data.skipped}` : ""}`
+        );
+      } else {
+        // A batch where nothing went out is the case most likely to look
+        // broken, so the first reason is shown rather than a bare zero.
+        const firstReason = (data.results || []).find((r: any) => !r.sent)?.message;
+        toast.info(`Nothing sent — ${firstReason || "all were skipped"}`);
+      }
+
+      setSelected([]);
+      queryClient.invalidateQueries({ queryKey: ["abandoned-carts"] });
+    } catch {
+      toast.error("Couldn't reach the server.");
+    } finally {
+      setBulkSending(false);
+    }
+  };
 
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ["abandoned-carts", days, onlyContactable],
@@ -76,6 +153,11 @@ const AbandonedCartsPage = () => {
   const summary = data?.summary;
   const carts = useMemo(() => data?.list ?? [], [data]);
   const products = useMemo(() => data?.products ?? [], [data]);
+
+  const selectableIds = useMemo(
+    () => carts.filter((cart) => cart.email).map((cart) => cart.sessionId),
+    [carts]
+  );
 
   const handleContact = async (cart: AbandonedCart) => {
     window.open(buildRecoveryLink(cart), "_blank", "noopener,noreferrer");
@@ -256,6 +338,59 @@ const AbandonedCartsPage = () => {
             </label>
           </div>
 
+          {/* Only appears once something is ticked — an always-visible batch
+              bar is a permanent invitation to email everybody. */}
+          <div
+            className={selected.length ? "border-b border-gray-100 bg-amber-50/60 px-6 py-3" : "hidden"}
+          >
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-sm font-semibold text-gray-800">
+                {selected.length} selected
+              </span>
+
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-gray-500">Code:</span>
+                {[0, 5, 10, 15, 20].map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setBulkPercent(value)}
+                    className={`rounded-lg border px-2.5 py-1 text-xs font-semibold transition-colors ${
+                      bulkPercent === value
+                        ? "border-gray-900 bg-gray-900 text-white"
+                        : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                    }`}
+                  >
+                    {value === 0 ? "None" : `${value}%`}
+                  </button>
+                ))}
+              </div>
+
+              <Button
+                size="sm"
+                onClick={handleBulkSend}
+                disabled={bulkSending}
+                className="rounded-lg bg-gray-900 text-white hover:bg-black"
+              >
+                <Mail className="w-3.5 h-3.5 me-1.5" />
+                {bulkSending ? "Sending…" : `Email ${selected.length}`}
+              </Button>
+
+              <button
+                type="button"
+                onClick={() => setSelected([])}
+                className="text-xs text-gray-500 underline underline-offset-2"
+              >
+                Clear
+              </button>
+
+              <span className="w-full text-[11px] text-gray-500">
+                Anyone who already bought, or was emailed in the last 72 hours, is skipped
+                automatically.
+              </span>
+            </div>
+          </div>
+
           {isLoading ? (
             <div className="p-6 space-y-3">
               {[1, 2, 3, 4, 5].map((i) => (
@@ -272,6 +407,23 @@ const AbandonedCartsPage = () => {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-100 text-left text-xs uppercase tracking-wider text-gray-500">
+                    <th className="px-3 py-3 font-medium w-10">
+                      <input
+                        type="checkbox"
+                        aria-label="Select all contactable carts"
+                        className="h-4 w-4 rounded border-gray-300"
+                        // Only carts with an email can be emailed, so "all"
+                        // means all of those — ticking rows that can never be
+                        // sent would just produce skips.
+                        checked={
+                          selectableIds.length > 0 &&
+                          selected.length === selectableIds.length
+                        }
+                        onChange={(event) =>
+                          setSelected(event.target.checked ? selectableIds : [])
+                        }
+                      />
+                    </th>
                     <th className="px-6 py-3 font-medium">Customer</th>
                     <th className="px-6 py-3 font-medium">Items</th>
                     <th className="px-6 py-3 font-medium">Value</th>
@@ -289,6 +441,17 @@ const AbandonedCartsPage = () => {
                         key={cart.sessionId}
                         className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors"
                       >
+                        <td className="px-3 py-4">
+                          {cart.email ? (
+                            <input
+                              type="checkbox"
+                              checked={selected.includes(cart.sessionId)}
+                              onChange={() => toggleSelected(cart.sessionId)}
+                              aria-label={`Select ${cart.customerName || "cart"}`}
+                              className="h-4 w-4 rounded border-gray-300"
+                            />
+                          ) : null}
+                        </td>
                         <td className="px-6 py-4">
                           <div className="font-medium text-gray-900">
                             {cart.customerName || (
@@ -344,14 +507,19 @@ const AbandonedCartsPage = () => {
                               <MessageCircle className="w-3.5 h-3.5" />
                               WhatsApp
                             </Button>
-                          ) : cart.email ? (
-                            <a
-                              href={`mailto:${cart.email}`}
-                              className="text-xs text-blue-600 hover:underline"
+                          ) : null}
+                          {cart.email ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setRecoveryCart(cart)}
+                              className="rounded-lg gap-1.5 ms-2"
                             >
-                              Email
-                            </a>
-                          ) : (
+                              <Mail className="w-3.5 h-3.5" />
+                              Remind
+                            </Button>
+                          ) : null}
+                          {!cart.phone && !cart.email && (
                             <span className="text-xs text-gray-300">—</span>
                           )}
                         </td>
@@ -455,6 +623,36 @@ const AbandonedCartsPage = () => {
           )}
         </Card>
       )}
+
+      {/* Chasing a cart is a different job from chasing an order — there is no
+          price to cut and no payment to reopen, so the panel talks to the cart
+          endpoint and offers a single-use code instead. */}
+      <Dialog
+        open={!!recoveryCart}
+        onOpenChange={(open) => !open && setRecoveryCart(null)}
+      >
+        <DialogContent className="sm:max-w-md rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-base">
+              Remind {recoveryCart?.customerName || "this customer"}
+            </DialogTitle>
+          </DialogHeader>
+          {recoveryCart && (
+            <>
+              <p className="text-xs text-gray-500 -mt-2">
+                {recoveryCart.email} &middot; {recoveryCart.itemCount} item(s)
+              </p>
+              <RecoveryEmailPanel
+                sessionId={recoveryCart.sessionId}
+                title="Cart reminder"
+                onSent={() => {
+                  queryClient.invalidateQueries({ queryKey: ["abandoned-carts"] });
+                }}
+              />
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

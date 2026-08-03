@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin as supabase } from "@/lib/supabaseAdmin";
 import { mapEasykashStatus } from "@/lib/easykash";
 import { inquireEasykash, easykashUpdateFields } from "@/lib/easykash-api";
+import { sendOrderConfirmation } from "@/lib/order-emails";
 
 const CRON_SECRET = process.env.CRON_SECRET;
 
@@ -59,6 +60,7 @@ export async function GET(request: NextRequest) {
 
     const changes: Array<{ orderNumber: string; from: string; to: string }> = [];
     let unresolved = 0;
+    let confirmationsSent = 0;
 
     for (let i = 0; i < orders.length; i += CONCURRENCY) {
       const batch = orders.slice(i, i + CONCURRENCY);
@@ -79,40 +81,55 @@ export async function GET(request: NextRequest) {
 
           // Skip the write when nothing moved, so `updated_at` keeps meaning
           // "when this order last actually changed".
-          if (mapped === order.payment_status && Object.keys(extraFields).length === 0) {
-            return;
+          const hasChange =
+            mapped !== order.payment_status || Object.keys(extraFields).length > 0;
+
+          if (hasChange) {
+            const { error: updateError } = await supabase
+              .from("orders")
+              .update({
+                ...extraFields,
+                payment_status: mapped,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", order.id);
+
+            if (updateError) {
+              console.error(
+                `Reconcile update failed for ${order.order_number}:`,
+                updateError
+              );
+              return;
+            }
+
+            if (mapped !== order.payment_status) {
+              changes.push({
+                orderNumber: order.order_number,
+                from: order.payment_status,
+                to: mapped,
+              });
+            }
           }
 
-          const { error: updateError } = await supabase
-            .from("orders")
-            .update({
-              ...extraFields,
-              payment_status: mapped,
-              updated_at: new Date().toISOString(),
-            })
-            .eq("id", order.id);
-
-          if (updateError) {
-            console.error(
-              `Reconcile update failed for ${order.order_number}:`,
-              updateError
-            );
-            return;
-          }
-
-          if (mapped !== order.payment_status) {
-            changes.push({
-              orderNumber: order.order_number,
-              from: order.payment_status,
-              to: mapped,
-            });
+          // ── Confirmation email ───────────────────────────────────────────
+          // Normally the callback already sent this and the claim is taken;
+          // this is the safety net for the callback that never arrived. It is
+          // idempotent at the database level, so the pass can run as often as
+          // you like without a customer hearing from us twice.
+          //
+          // The "complete your payment" follow-up is deliberately NOT sent from
+          // here — an admin decides that one, per order, in the panel.
+          if (mapped === "paid") {
+            const outcome = await sendOrderConfirmation(order.id);
+            if (outcome.sent) confirmationsSent++;
           }
         })
       );
     }
 
     console.log(
-      `EasyKash reconcile: checked ${orders.length}, changed ${changes.length}, unresolved ${unresolved}`
+      `EasyKash reconcile: checked ${orders.length}, changed ${changes.length}, ` +
+        `unresolved ${unresolved}, confirmation emails ${confirmationsSent}`
     );
 
     return NextResponse.json({
@@ -120,6 +137,7 @@ export async function GET(request: NextRequest) {
       checked: orders.length,
       updated: changes.length,
       unresolved,
+      confirmationEmails: confirmationsSent,
       changes,
     });
   } catch (error: any) {

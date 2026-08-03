@@ -2,6 +2,7 @@
 
 import { Link, usePathname } from "@/i18n/navigation";
 import {
+  Mail,
   LayoutDashboard,
   LogOut,
   ShoppingBag,
@@ -41,6 +42,7 @@ export function AppSidebar({ isOpen, onClose }: AppSidebarProps) {
     { title: "Colors", url: "/admin/colors", icon: Palette },
     { title: "Analytics", url: "/admin/analytics", icon: BarChart3 },
     { title: "Abandoned Carts", url: "/admin/abandoned", icon: ShoppingCart },
+    { title: "Email Log", url: "/admin/email-log", icon: Mail },
   ];
 
   const siteSettingsNav = [

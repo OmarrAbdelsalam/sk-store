@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { supabaseAdmin as supabase } from "@/lib/supabaseAdmin";
 import { mapEasykashStatus } from "@/lib/easykash";
+import { sendOrderConfirmation } from "@/lib/order-emails";
 
 const EASYKASH_HMAC_SECRET = process.env.EASYKASH_HMAC_SECRET;
 
@@ -20,6 +21,31 @@ async function recordPurchase(orderId: string, sessionId: string | null) {
       .select("product_id, product_name, color_name, quantity, total_price")
       .eq("order_id", orderId);
 
+    // Line items are written at checkout and never touched again, so their
+    // prices are what the customer was quoted — not what they were charged.
+    // A promo code, or a discount an admin granted with a recovery email,
+    // lives on the order, and reporting the raw line totals would overstate
+    // revenue by exactly the amount that was given away.
+    const { data: order } = await supabase
+      .from("orders")
+      .select("total, shipping_cost")
+      .eq("id", orderId)
+      .maybeSingle();
+
+    const lineTotal = (items || []).reduce(
+      (sum: number, item: any) => sum + Number(item.total_price || 0),
+      0
+    );
+    // Shipping isn't product revenue, so it comes out before the comparison.
+    const goodsCharged = Math.max(
+      0,
+      Number(order?.total || 0) - Number(order?.shipping_cost || 0)
+    );
+    // Spread the difference across the lines in proportion to their price, so
+    // per-product revenue stays comparable between discounted and full-price
+    // orders. Falls back to 1 when there is nothing to scale against.
+    const factor = lineTotal > 0 && goodsCharged > 0 ? goodsCharged / lineTotal : 1;
+
     if (items?.length && sessionId) {
       await supabase.from("analytics_events").insert(
         items.map((item: any) => ({
@@ -29,7 +55,7 @@ async function recordPurchase(orderId: string, sessionId: string | null) {
           product_name: item.product_name,
           color_name: item.color_name,
           quantity: item.quantity,
-          value: item.total_price,
+          value: Math.round(Number(item.total_price || 0) * factor * 100) / 100,
           order_id: orderId,
         }))
       );
@@ -139,6 +165,10 @@ export async function POST(request: NextRequest) {
 
     const { easykashRef, status, customerReference, PaymentMethod, voucher, VoucherData } =
       payload;
+    // What the gateway says was actually handed over. Stored because it can
+    // legitimately differ from what the order now says it costs: a discount
+    // applied after the payment page was opened doesn't reach that page.
+    const amountPaid = Number(payload.Amount);
 
     if (!easykashRef && !customerReference) {
       return NextResponse.json(
@@ -160,6 +190,9 @@ export async function POST(request: NextRequest) {
     // storing it the voucher card on the success page has nothing to show.
     if (voucher) updateFields.easykash_voucher = String(voucher);
     if (VoucherData) updateFields.easykash_provider = String(VoucherData);
+    if (Number.isFinite(amountPaid) && amountPaid > 0) {
+      updateFields.easykash_amount_paid = amountPaid;
+    }
 
     // Match on customerReference (our own ref) first, then easykashRef. A filter
     // that matches nothing is not a Postgres error, so check the affected rows
@@ -195,6 +228,14 @@ export async function POST(request: NextRequest) {
     // the gateway's domain by now and may never come back.
     if (matchedOrder && paymentStatus === "paid") {
       await recordPurchase(matchedOrder.id, matchedOrder.session_id);
+
+      // The confirmation the customer was promised on the checkout screen.
+      // Awaited so it goes out before the function is frozen — a serverless
+      // runtime stops executing the moment the response is returned — but it
+      // can only ever report failure, never throw. EasyKash retries a callback
+      // that doesn't return 200, and a retry would mark this order paid a
+      // second time over an email that didn't send.
+      await sendOrderConfirmation(matchedOrder.id);
     }
 
     if (updateError) {

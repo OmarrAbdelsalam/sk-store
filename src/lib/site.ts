@@ -15,9 +15,11 @@ export const siteDescriptionEn =
 export const siteOgImage = "https://shahdkarem-bags.vercel.app/opengraph-image";
 export const siteLogo = `${siteUrl}/SK_Logo.svg`;
 
+// No public email address on purpose: customer contact runs through WhatsApp,
+// and the order mailbox is send-only. Publishing an address nobody reads is
+// worse than publishing none.
 export const siteContact = {
   phone: "01016887251",
   phoneInternational: "+20-10-1688-7251",
   whatsapp: "201016887251",
-  email: "info@skbags.com",
 };

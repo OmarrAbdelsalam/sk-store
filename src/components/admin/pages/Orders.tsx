@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Package, Eye, Clock, Truck, Check, X, RefreshCw, Search, DollarSign, ShoppingCart, User, Phone, MapPin, MessageCircle, StickyNote, Tag, CreditCard, Wallet, AlertCircle, CheckCircle2, Hourglass, SplitSquareHorizontal, Loader2 } from "lucide-react";
+import { Mail, Package, Eye, Clock, Truck, Check, X, RefreshCw, Search, DollarSign, ShoppingCart, User, Phone, MapPin, MessageCircle, StickyNote, Tag, CreditCard, Wallet, AlertCircle, CheckCircle2, Hourglass, SplitSquareHorizontal, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 
@@ -23,6 +23,8 @@ import {
 } from "@/components/ui/select";
 
 import { orderService, Order } from "@/services/orders";
+import { supabase } from "@/lib/supabaseClient";
+import RecoveryEmailPanel from "@/components/admin/RecoveryEmailPanel";
 
 const STATUS_CONFIG = {
   pending: { label: "Pending", color: "bg-yellow-100 text-yellow-800", icon: Clock },
@@ -61,6 +63,10 @@ const OrdersPage = () => {
   const [updatingStatus, setUpdatingStatus] = useState<Order["status"] | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  // Chasing an unpaid order starts with finding it. Filtering by fulfilment
+  // status alone can't: "pending" covers paid-and-not-yet-shipped as well as
+  // never-paid-at-all.
+  const [paymentFilter, setPaymentFilter] = useState<string>("all");
 
   const filteredOrders = useMemo(() => {
     let result = orders;
@@ -79,10 +85,63 @@ const OrdersPage = () => {
       result = result.filter((order) => order.status === statusFilter);
     }
 
+    if (paymentFilter === "outstanding") {
+      // The working set for follow-ups: everything that never settled.
+      result = result.filter((order) =>
+        ["unpaid", "pending", "expired", "failed"].includes(
+          String(order.payment_status || "unpaid")
+        )
+      );
+    } else if (paymentFilter !== "all") {
+      result = result.filter(
+        (order) => String(order.payment_status || "unpaid") === paymentFilter
+      );
+    }
+
     return result;
-  }, [orders, searchQuery, statusFilter]);
+  }, [orders, searchQuery, statusFilter, paymentFilter]);
 
   const [refreshingPayment, setRefreshingPayment] = useState(false);
+
+  /**
+   * Which of the visible orders can actually be chased.
+   *
+   * Asked in one request for the whole page. Without it the only way to find
+   * the three chaseable orders among fifty unpaid ones is to open all fifty
+   * dialogs — and the rules span each customer's other orders, so no amount of
+   * looking at a row tells you the answer.
+   */
+  const outstandingIds = useMemo(
+    () =>
+      filteredOrders
+        .filter(
+          (order) =>
+            !["paid", "delivered", "refunded"].includes(
+              String(order.payment_status || "unpaid")
+            )
+        )
+        .map((order) => order.id),
+    [filteredOrders]
+  );
+
+  const { data: eligibility } = useQuery({
+    queryKey: ["recovery-eligibility", outstandingIds],
+    enabled: outstandingIds.length > 0,
+    staleTime: 60 * 1000,
+    queryFn: async (): Promise<Record<string, { canSend: boolean; code: string; message: string }>> => {
+      const { data } = await supabase.auth.getSession();
+      const response = await fetch("/api/admin/orders/recovery-eligibility", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${data.session?.access_token || ""}`,
+        },
+        body: JSON.stringify({ orderIds: outstandingIds }),
+      });
+      const json = await response.json();
+      return json?.results || {};
+    },
+  });
 
   /**
    * Re-checks a payment against EasyKash. The callback is a single HTTP POST,
@@ -272,6 +331,22 @@ const OrdersPage = () => {
               <SelectItem value="cancelled">Cancelled</SelectItem>
             </SelectContent>
           </Select>
+          <Select value={paymentFilter} onValueChange={setPaymentFilter}>
+            <SelectTrigger className="w-full md:w-48 rounded-xl">
+              <SelectValue placeholder="Filter by payment" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Payments</SelectItem>
+              {/* First entry on purpose — it's the one anyone opens this filter for. */}
+              <SelectItem value="outstanding">Not paid yet</SelectItem>
+              <SelectItem value="unpaid">Unpaid</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="paid">Paid</SelectItem>
+              <SelectItem value="expired">Expired</SelectItem>
+              <SelectItem value="failed">Failed</SelectItem>
+              <SelectItem value="refunded">Refunded</SelectItem>
+            </SelectContent>
+          </Select>
           <Button variant="outline" onClick={() => refetch()} className="rounded-xl">
             <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
@@ -367,10 +442,38 @@ const OrdersPage = () => {
                         </div>
                       </td>
                       <td>
-                        <span className={`status-badge ${statusInfo.color}`}>
-                          <StatusIcon className="w-3.5 h-3.5" />
-                          {statusInfo.label}
-                        </span>
+                        <div className="flex flex-col items-start gap-1">
+                          <span className={`status-badge ${statusInfo.color}`}>
+                            <StatusIcon className="w-3.5 h-3.5" />
+                            {statusInfo.label}
+                          </span>
+                          {/* Without this the only way to tell a chased order
+                              from an unchased one is to open every dialog in
+                              the list, one at a time. */}
+                          {order.recovery_email_sent_at && (
+                            <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-700">
+                              <Mail className="w-3 h-3" />
+                              reminded
+                              {order.recovery_discount_percent
+                                ? ` · ${order.recovery_discount_percent}%`
+                                : ""}
+                            </span>
+                          )}
+                          {/* Only worth showing where it changes what you do:
+                              an order that can be chased right now. The reason
+                              a blocked one is blocked belongs in the dialog,
+                              not repeated on every row. */}
+                          {!order.recovery_email_sent_at &&
+                            eligibility?.[order.id]?.canSend && (
+                              <span
+                                className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700"
+                                title="This customer can be sent a follow-up now"
+                              >
+                                <Mail className="w-3 h-3" />
+                                can chase
+                              </span>
+                            )}
+                        </div>
                       </td>
                       <td>
                         <span className={`status-badge ${payInfo.color}`}>
@@ -691,6 +794,18 @@ const OrdersPage = () => {
                         </button>
                       )}
 
+                      {/* Chase an unpaid order. The panel works out on its own
+                          whether that's allowed — the rules span this
+                          customer's other orders, not just this row. */}
+                      {!["paid", "delivered", "refunded"].includes(
+                        String(selectedOrder.payment_status)
+                      ) && (
+                        <RecoveryEmailPanel
+                          orderId={selectedOrder.id}
+                          onSent={() => refetch()}
+                        />
+                      )}
+
                       {/* Payment method used */}
                       {selectedOrder.easykash_payment_method && (
                         <div className="flex items-center justify-between">
@@ -809,6 +924,43 @@ const OrdersPage = () => {
                         <span className="font-medium text-emerald-600">-{formatCurrency(selectedOrder.discount_amount)}</span>
                       </div>
                     )}
+                    {/* Without this line the totals look wrong: the item prices
+                        and subtotal are untouched, but the total has dropped. */}
+                    {selectedOrder.recovery_discount_amount ? (
+                      <div className="flex justify-between text-sm">
+                        <span className="flex items-center gap-1 text-amber-600">
+                          <Mail className="w-3.5 h-3.5" />
+                          Recovery discount ({selectedOrder.recovery_discount_percent}%)
+                        </span>
+                        <span className="font-medium text-amber-600">
+                          -{formatCurrency(selectedOrder.recovery_discount_amount)}
+                        </span>
+                      </div>
+                    ) : null}
+                    {/* An EasyKash payment page keeps the amount it was opened
+                        with. If the order was discounted after that page was
+                        already open, the customer pays the old price and only
+                        this line will ever say so. */}
+                    {(() => {
+                      const paid = Number(selectedOrder.easykash_amount_paid || 0);
+                      const expected = Number(selectedOrder.deposit_amount || 0);
+                      if (!paid || !expected || Math.abs(paid - expected) <= 1) return null;
+                      const over = paid > expected;
+                      return (
+                        <div className={`flex items-start gap-2 rounded-lg px-3 py-2 text-xs ${
+                          over ? "bg-red-50 text-red-700" : "bg-amber-50 text-amber-700"
+                        }`}>
+                          <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                          <span>
+                            {over ? "Overpaid" : "Underpaid"} by{" "}
+                            <strong>{formatCurrency(Math.abs(paid - expected))}</strong> — the
+                            gateway took {formatCurrency(paid)} but this order expects{" "}
+                            {formatCurrency(expected)}.
+                            {over ? " They may be owed a refund." : ""}
+                          </span>
+                        </div>
+                      );
+                    })()}
                     {selectedOrder.payment_plan === 'deposit' && (
                       <>
                         <div className="border-t border-gray-200 pt-2 flex justify-between text-sm">

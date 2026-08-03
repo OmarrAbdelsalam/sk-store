@@ -149,6 +149,9 @@ export default function Checkout() {
         customerName: formData.name,
         phoneNumber: formData.phone,
         email: formData.email,
+        // Stored on the order so the confirmation and follow-up emails go out
+        // in the language the customer actually shopped in.
+        locale,
         government: formData.governorate,
         city: formData.city,
         detailedAddress: formData.detailedAddress,

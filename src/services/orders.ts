@@ -25,6 +25,14 @@ export type Order = {
   easykash_expiry?: string;
   easykash_payment_method?: string;
   easykash_customer_ref?: string;
+  /** What the gateway says was actually handed over — may differ from `total`. */
+  easykash_amount_paid?: number;
+
+  // Recovery follow-up
+  recovery_email_sent_at?: string;
+  recovery_discount_amount?: number;
+  recovery_discount_percent?: number;
+  recovery_original_total?: number;
   
   // Shipping address
   government: string;
@@ -69,6 +77,10 @@ export type CreateOrderInput = {
   customerName: string;
   phoneNumber: string;
   email?: string;
+  /** Language the customer checked out in — decides which version of the site emails link to. */
+  locale?: 'ar' | 'en';
+  /** Client-generated key that makes a retried submit return the first order instead of a second one. */
+  idempotencyKey?: string | null;
   paymentMethod?: 'cash' | 'visa' | 'easykash';
   paymentPlan?: 'full' | 'deposit';
   depositAmount?: number;
@@ -141,6 +153,8 @@ export const createOrderService = (db: SupabaseLike) => ({
         customer_name: input.customerName,
         phone_number: input.phoneNumber,
         email: input.email || null,
+        locale: input.locale || null,
+        idempotency_key: input.idempotencyKey || null,
         payment_method: input.paymentMethod || 'cash',
         payment_status: paymentStatus,
         payment_plan: input.paymentPlan || 'full',
