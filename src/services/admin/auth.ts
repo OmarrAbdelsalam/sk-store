@@ -1,3 +1,5 @@
+import { supabase } from "@/lib/supabaseClient";
+
 // Mock admin authentication service for frontend-only store
 
 interface TokenData {
@@ -40,7 +42,7 @@ export const setTokens = (data: TokenData) => {
 };
 
 // Clear all auth data
-export const clearAuth = () => {
+export const clearAuth = async () => {
   if (typeof window === 'undefined') return;
   localStorage.removeItem("access_token");
   localStorage.removeItem("refresh_token");
@@ -48,6 +50,12 @@ export const clearAuth = () => {
   localStorage.removeItem("user");
   // Clear cookie as well
   document.cookie = "access_token=; Max-Age=0; Path=/; SameSite=Lax";
+  
+  try {
+    await supabase.auth.signOut();
+  } catch (e) {
+    console.error("Error signing out from Supabase:", e);
+  }
 };
 
 // Check if token is expired or about to expire (within 5 minutes)

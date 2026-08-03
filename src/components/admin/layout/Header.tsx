@@ -21,8 +21,8 @@ interface HeaderProps {
 const Header = ({ onMenuToggle }: HeaderProps) => {
   const router = useRouter();
 
-  const handleLogout = () => {
-    clearAuth();
+  const handleLogout = async () => {
+    await clearAuth();
     router.push("/admin/login");
   };
 

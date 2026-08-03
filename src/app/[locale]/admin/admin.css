@@ -149,7 +149,7 @@
 .stat-card:hover,
 .stat-card.highlight {
   transform: translateY(-4px);
-  background: linear-gradient(135deg, var(--accent-secondary), var(--accent-primary));
+  background: linear-gradient(135deg, var(--accent-secondary), #A38A62);
   border-color: rgba(194, 168, 120, 0.5);
   box-shadow: 0 12px 24px rgba(194, 168, 120, 0.25);
 }
