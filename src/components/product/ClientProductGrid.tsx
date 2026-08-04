@@ -210,7 +210,7 @@ const ClientProductGrid = ({ initialProducts }: ClientProductGridProps) => {
   const handleCategoryClick = useCallback((cat: CategoryOption | null) => {
     if (!cat) {
       setActiveFilter("All");
-      router.push(`/${locale}/products`, { scroll: false });
+      router.push(`/products`, { scroll: false });
       return;
     }
     const slug = (cat.englishName || "").toLowerCase().replace(/\s+/g, "-");
@@ -218,7 +218,7 @@ const ClientProductGrid = ({ initialProducts }: ClientProductGridProps) => {
       sessionStorage.setItem(`category_${slug}`, String(cat.key));
     }
     setActiveFilter(String(cat.key));
-    router.push(`/${locale}/products?category=${slug}`, { scroll: false });
+    router.push(`/products?category=${slug}`, { scroll: false });
   }, [locale, router]);
 
   // Get active category name for breadcrumb

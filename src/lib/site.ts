@@ -1,5 +1,20 @@
+/**
+ * The live storefront.
+ *
+ * Hardcoded rather than read from the environment, because everything the
+ * customer is sent — the link back from the payment gateway, the order email,
+ * the cart recovery link — is built from it, and a missing NEXT_PUBLIC_SITE_URL
+ * on the host silently turned every one of those into `http://localhost:3000`.
+ * A deploy is not the place to discover that.
+ */
+export const PRODUCTION_SITE_URL = "https://sk-bags.com";
+
+// Only development reads the environment, so a local server still links to
+// itself. Production always addresses the real domain.
 export const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "http://localhost:3000";
+  process.env.NODE_ENV === "development"
+    ? process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "http://localhost:3000"
+    : PRODUCTION_SITE_URL;
 
 export const siteBrand = "SK Bags";
 

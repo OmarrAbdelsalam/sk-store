@@ -23,7 +23,7 @@ const Footer = () => {
   const goToCategory = (id: string, name: string) => {
     const slug = name.toLowerCase().replace(/\s+/g, '-');
     sessionStorage.setItem(`category_${slug}`, id);
-    router.push(`/${locale}?category=${encodeURIComponent(slug)}`);
+    router.push(`/?category=${encodeURIComponent(slug)}`);
   };
 
   return (
@@ -70,7 +70,7 @@ const Footer = () => {
               <div className="group">
                 <button 
                   className={`text-gray-200 hover:text-white transition-all duration-300 ${locale === 'ar' ? 'group-hover:-translate-x-2 text-right' : 'group-hover:translate-x-2 text-left'}`}
-                  onClick={() => router.push(`/${locale}/my-orders`)}
+                  onClick={() => router.push(`/my-orders`)}
                 >
                   {t('Footer.myOrders')}
                 </button>

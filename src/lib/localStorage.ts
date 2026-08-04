@@ -16,6 +16,11 @@ export interface CartItem {
   nameAr?: string;
   nameEn?: string;
   price: string; // Changed from number to string to match UI expectations
+  /** The product's compare-at price, kept so the cart can show what the item
+   *  cost before the discount — the same struck-through figure the product page
+   *  shows. Absent on items added before this was stored, and on products that
+   *  simply aren't discounted. */
+  beforePrice?: string | number;
   image: string;
   quantity: number;
   colorId?: string;

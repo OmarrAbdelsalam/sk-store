@@ -100,7 +100,7 @@ export function buildCartWhatsAppMessage(input: {
 }): WhatsAppMessage {
   const name = firstName(input.customerName);
   const products = nameList(input.productNames || []);
-  const url = input.cartUrl || `${siteUrl}/ar/cart`;
+  const url = input.cartUrl || `${siteUrl}/cart`;
 
   const lines = [
     name ? `أهلاً ${name} 👋` : "أهلاً 👋",

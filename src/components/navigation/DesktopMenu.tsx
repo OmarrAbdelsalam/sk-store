@@ -36,15 +36,15 @@ export const DesktopMenu = ({ isTransparent = false }: DesktopMenuProps) => {
         // Add null check before calling toLowerCase
         if (categoryName) {
           const slug = categoryName.toLowerCase().replace(/\s+/g, '-');
-          router.prefetch(`/${locale}?category=${encodeURIComponent(slug)}`);
+          router.prefetch(`/?category=${encodeURIComponent(slug)}`);
         }
       });
-      router.prefetch(`/${locale}`);
+      router.prefetch("/");
       
       // Prefetch common product pages (first few products)
       setTimeout(() => {
         for (let i = 1; i <= 10; i++) {
-          router.prefetch(`/${locale}/${i}`);
+          router.prefetch(`/${i}`);
         }
       }, 2000);
     }
@@ -68,7 +68,7 @@ export const DesktopMenu = ({ isTransparent = false }: DesktopMenuProps) => {
     }
     setActiveCategoryId(null);
     startTransition(() => {
-      router.push(`/${locale}/products`, { scroll: true });
+      router.push(`/products`, { scroll: true });
     });
   };
   
@@ -81,7 +81,7 @@ export const DesktopMenu = ({ isTransparent = false }: DesktopMenuProps) => {
       sessionStorage.setItem(`category_${slug}`, id);
     }
     startTransition(() => {
-      router.push(`/${locale}/products?category=${encodeURIComponent(slug)}`, { scroll: true });
+      router.push(`/products?category=${encodeURIComponent(slug)}`, { scroll: true });
     });
   };
 

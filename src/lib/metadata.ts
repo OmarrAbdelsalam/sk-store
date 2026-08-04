@@ -100,7 +100,9 @@ export function generateDefaultMetadata(locale = "ar"): Metadata {
   const isAr = locale === "ar";
   const localizedTitle = `${siteBrand} | ${isAr ? siteTaglineAr : siteTaglineEn}`;
   const localizedDescription = isAr ? siteDescriptionAr : siteDescriptionEn;
-  const localizedUrl = `${siteUrl}/${locale}`;
+  // Unprefixed — the site serves one language from bare paths, so /en is a
+  // redirect and /ar is a 404. Neither belongs in a canonical tag.
+  const localizedUrl = siteUrl;
 
   return {
     ...defaultMetadata,
@@ -111,10 +113,6 @@ export function generateDefaultMetadata(locale = "ar"): Metadata {
     description: localizedDescription,
     alternates: {
       canonical: localizedUrl,
-      languages: {
-        ar: `${siteUrl}/ar`,
-        en: `${siteUrl}/en`,
-      },
     },
     openGraph: {
       ...defaultMetadata.openGraph,
@@ -147,8 +145,7 @@ export function generatePageMetadata({
   locale?: string;
 }): Metadata {
   const normalizedPath = path === "" || path === "/" ? "" : path.startsWith("/") ? path : `/${path}`;
-  const localePath = locale ? `/${locale}${normalizedPath}` : normalizedPath || "/";
-  const url = `${siteUrl}${localePath}`;
+  const url = `${siteUrl}${normalizedPath}`;
   const ogImage = image ? (image.startsWith("http") ? image : `${siteUrl}${image}`) : siteOgImage;
   const resolvedDescription =
     description || (locale === "en" ? siteDescriptionEn : siteDescriptionAr);
@@ -159,10 +156,6 @@ export function generatePageMetadata({
     description: resolvedDescription,
     alternates: {
       canonical: url,
-      languages: {
-        ar: `${siteUrl}/ar${normalizedPath}`,
-        en: `${siteUrl}/en${normalizedPath}`,
-      },
     },
     openGraph: {
       title,

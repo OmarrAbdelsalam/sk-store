@@ -32,7 +32,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
       if (!authenticated) {
         const currentPath = pathname || '/admin';
-        window.location.href = `/en/admin/login?from=${encodeURIComponent(currentPath)}`;
+        window.location.href = `/admin/login?from=${encodeURIComponent(currentPath)}`;
       }
     };
 
@@ -43,7 +43,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     const { data: listener } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_OUT' && !cancelled) {
         setIsAuthed(false);
-        window.location.href = '/en/admin/login';
+        window.location.href = '/admin/login';
       }
     });
 

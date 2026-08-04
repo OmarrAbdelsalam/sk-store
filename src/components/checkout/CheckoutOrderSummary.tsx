@@ -13,8 +13,17 @@ interface CartItem {
   nameAr?: string;
   nameEn?: string;
   price: string;
+  beforePrice?: string | number;
   quantity: number;
   image: string;
+}
+
+/** Only a compare-at price above what's being charged is a discount worth
+ *  showing — anything else would strike through a price that never applied. */
+function discountedFrom(price: string, beforePrice?: string | number) {
+  const priceValue = parseFloat(String(price).replace(/[^\d.]/g, "")) || 0;
+  const beforeValue = parseFloat(String(beforePrice ?? "").replace(/[^\d.]/g, "")) || 0;
+  return beforeValue > priceValue ? beforeValue : null;
 }
 interface CheckoutOrderSummaryProps {
   items: CartItem[];
@@ -99,7 +108,17 @@ const CheckoutOrderSummary = memo(({
                     {t("quantity")}: {item.quantity}
                   </p>
                 </div>
-                <p className="text-sm font-medium whitespace-nowrap self-center">{item.price}</p>
+                <div className="self-center text-end whitespace-nowrap">
+                  {(() => {
+                    const before = discountedFrom(item.price, item.beforePrice);
+                    return before ? (
+                      <p className="text-xs text-muted-foreground line-through">
+                        {before.toLocaleString()} {t("currency")}
+                      </p>
+                    ) : null;
+                  })()}
+                  <p className="text-sm font-medium">{item.price}</p>
+                </div>
               </div>
             ))}
           </div>

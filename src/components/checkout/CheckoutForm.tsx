@@ -648,7 +648,7 @@ const CheckoutForm = memo(
               "opacity-50 cursor-not-allowed hover:scale-100"
           )}
           disabled={isProcessing || isRedirecting}
-          onMouseEnter={() => router.prefetch(`/${locale}/order-success`)}
+          onMouseEnter={() => router.prefetch(`/order-success`)}
         >
           {isProcessing || isRedirecting ? (
             <span className="inline-flex items-center gap-2">

@@ -357,7 +357,7 @@ const ProductGrid = ({ isFullPage = false }: ProductGridProps) => {
               <span className="text-muted-foreground">/</span>
               {activeFilter !== "All" ? (
                 <>
-                  <Link href={`/${locale}/products`} className="text-muted-foreground hover:text-foreground transition-colors">
+                  <Link href={`/products`} className="text-muted-foreground hover:text-foreground transition-colors">
                     {locale === 'ar' ? 'المنتجات' : 'Products'}
                   </Link>
                   <span className="text-muted-foreground">/</span>
@@ -381,7 +381,7 @@ const ProductGrid = ({ isFullPage = false }: ProductGridProps) => {
                 <button
                   onClick={() => {
                     setActiveFilter("All");
-                    router.push(`/${locale}/products`);
+                    router.push(`/products`);
                   }}
                   className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${
                     activeFilter === "All"
@@ -398,7 +398,7 @@ const ProductGrid = ({ isFullPage = false }: ProductGridProps) => {
                       setActiveFilter(String(cat.key));
                       const slug = (cat.englishName || '').toLowerCase().replace(/\s+/g, '-');
                       sessionStorage.setItem(`category_${slug}`, String(cat.key));
-                      router.push(`/${locale}/products?category=${slug}`);
+                      router.push(`/products?category=${slug}`);
                     }}
                     className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${
                       String(activeFilter) === String(cat.key)
@@ -461,7 +461,7 @@ const ProductGrid = ({ isFullPage = false }: ProductGridProps) => {
             {!isFullPage && (
               <div className="text-center mt-12">
                 <Button 
-                  onClick={() => router.push(`/${locale}/products`)}
+                  onClick={() => router.push(`/products`)}
                   className="px-8 py-3 bg-black text-white hover:bg-[#C2A878] rounded-full tracking-[0.2em] font-sans font-medium uppercase text-xs transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1"
                 >
                   {t("ProductGrid.viewAll") || "View All"}

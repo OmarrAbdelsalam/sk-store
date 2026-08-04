@@ -20,7 +20,7 @@ const ProductNotFound = () => {
             Sorry, we couldn&apos;t find the product you&apos;re looking for
           </p>
           <Button 
-            onClick={() => router.push(`/${locale}`)}
+            onClick={() => router.push("/")}
             className="w-full"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />

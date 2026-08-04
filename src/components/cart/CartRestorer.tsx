@@ -58,7 +58,7 @@ export default function CartRestorer() {
       }
     }
 
-    const cleanUrl = () => router.replace(`/${locale}/cart`, { scroll: false });
+    const cleanUrl = () => router.replace(`/cart`, { scroll: false });
 
     if (!token) {
       if (code) toast.success("Your discount code will be applied at checkout");

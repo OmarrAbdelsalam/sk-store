@@ -14,7 +14,7 @@ export default function EmptyCart({ dir }: Props) {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center">
         <h1 className="text-2xl sm:text-3xl font-light tracking-wider uppercase mb-4">{t("emptyCartTitle")}</h1>
         <div className="h-px w-16 bg-foreground mx-auto mb-8" />
-        <Link href={`/${locale}`}>
+        <Link href={"/"}>
           <button className="h-12 px-10 bg-foreground text-background text-xs font-medium tracking-widest uppercase hover:bg-foreground/90 transition-colors">
             {t("goShopping")}
           </button>

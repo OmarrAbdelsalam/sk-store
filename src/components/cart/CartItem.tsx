@@ -15,6 +15,7 @@ interface CartItemProps {
     nameAr?: string;
     nameEn?: string;
     price: string;
+    beforePrice?: string | number;
     quantity: number;
     image: string;
     size?: string;
@@ -93,6 +94,7 @@ const CartItem = memo(({ item, onUpdateQuantity, onRemove, maxQuantity }: CartIt
                 <CartItemDetails
                   name={displayName}
                   price={item.price}
+                  beforePrice={item.beforePrice}
                   size={item.sizeName || item.size}
                   color={displayColor}
                   addOns={item.addOns}
@@ -144,6 +146,7 @@ const CartItem = memo(({ item, onUpdateQuantity, onRemove, maxQuantity }: CartIt
               <CartItemDetails
                 name={displayName}
                 price={item.price}
+                beforePrice={item.beforePrice}
                 size={item.sizeName || item.size}
                 color={displayColor}
                 addOns={item.addOns}

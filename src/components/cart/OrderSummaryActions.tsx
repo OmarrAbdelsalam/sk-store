@@ -15,7 +15,7 @@ const OrderSummaryActions = memo(({ onCheckoutClick }: { onCheckoutClick?: () =>
     try {
       if (onCheckoutClick) onCheckoutClick();
       window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-      router.push(`/${locale}/checkout`);
+      router.push(`/checkout`);
     } catch (error) {
       console.error("Error navigating to checkout:", error);
     } finally {

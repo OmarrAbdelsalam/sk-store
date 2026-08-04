@@ -332,6 +332,9 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
         nameAr: product.nameAr || "",
         nameEn: product.nameEn || "",
         price: `${Number(product.price ?? 0)} EGP`,
+        // Carried into the cart so the discount stays visible after the product
+        // page — same figure that's struck through above the price here.
+        beforePrice: product.beforePrice ?? undefined,
         image: mainImageUrl,
         colorId: selectedColorId || undefined,
         colorName: selectedColor ? (isAr ? (selectedColor.colorNameAr || selectedColor.colorNameEn || undefined) : (selectedColor.colorNameEn || selectedColor.colorNameAr || undefined)) : undefined,
@@ -354,7 +357,7 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
   const handleBuyNow = async () => {
     await handleAddToCart();
     if (!addDisabled) {
-      router.push(`/${locale}/cart`);
+      router.push(`/cart`);
     }
   };
 

@@ -96,6 +96,7 @@ export default function CartUpsell() {
       nameAr: product.nameAr,
       nameEn: product.nameEn,
       price: product.priceNum.toString(),
+      beforePrice: product.beforePrice ?? undefined,
       image: product.image,
       colorId: firstColor?.id || "",
       colorName: firstColor?.colorNameEn || "",
@@ -149,7 +150,7 @@ export default function CartUpsell() {
             <div
               key={product.id}
               className="flex-shrink-0 w-[140px] sm:w-[180px] cursor-pointer group/item"
-              onClick={() => router.push(`/${locale}/product/${product.id}`)}
+              onClick={() => router.push(`/product/${product.id}`)}
             >
               {/* Image */}
               <div className="relative aspect-[4/5] bg-[#f5f5f5] mb-3 overflow-hidden">

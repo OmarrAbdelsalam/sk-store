@@ -67,7 +67,7 @@ export default function Checkout() {
   }, [selectedGovernorate, freeShippingApplied]);
 
   useEffect(() => {
-    router.prefetch(`/${locale}/order-success`);
+    router.prefetch(`/order-success`);
   }, [locale, router]);
 
   // Coming back from the gateway restores this page from the bfcache with its
@@ -343,7 +343,7 @@ export default function Checkout() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
         {/* Back Button */}
         <button
-          onClick={() => router.push(`/${locale}/cart`)}
+          onClick={() => router.push(`/cart`)}
           className="hidden sm:inline-flex items-center gap-2 text-sm tracking-wider uppercase text-muted-foreground hover:text-foreground transition-colors mb-6"
           aria-label={t("backToCart")}
         >

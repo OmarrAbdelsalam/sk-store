@@ -95,7 +95,7 @@ export async function GET(request: NextRequest) {
   const results: Record<string, unknown> = {};
 
   if (kind === "both" || kind === "confirmation") {
-    const built = orderConfirmationEmail(SAMPLE, `${siteUrl}/en/order-success?ref=0`);
+    const built = orderConfirmationEmail(SAMPLE, `${siteUrl}/order-success?ref=0`);
     results.confirmation = await sendEmail({
       to,
       subject: `[TEST] ${built.subject}`,

@@ -128,10 +128,12 @@ export async function sendOrderConfirmation(orderId: string): Promise<OrderEmail
     // stays taken rather than making every sweep reconsider this row.
     if (!order.email) return { sent: false, reason: "no-address" };
 
-    const locale = resolveLocale(order.locale);
+    // The storefront runs on one language now (`localePrefix: 'never'`), so URLs
+    // carry no locale segment — a prefixed link is a redirect at best and a 404
+    // at worst, and this one is printed in an email we can't take back.
     const trackUrl = order.easykash_customer_ref
-      ? `${siteUrl}/${locale}/order-success?ref=${encodeURIComponent(String(order.easykash_customer_ref))}`
-      : `${siteUrl}/${locale}`;
+      ? `${siteUrl}/order-success?ref=${encodeURIComponent(String(order.easykash_customer_ref))}`
+      : siteUrl;
 
     const { subject, html, text } = orderConfirmationEmail(order, trackUrl);
 

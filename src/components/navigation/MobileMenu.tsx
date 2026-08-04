@@ -41,7 +41,7 @@ export const MobileMenu = () => {
 
   const goToAllProducts = () => {
     setOpen(false);
-    router.push(`/${locale}/products`);
+    router.push(`/products`);
   };
   
   const goToCategory = (id: string, name: string) => {
@@ -53,7 +53,7 @@ export const MobileMenu = () => {
       sessionStorage.setItem(`category_${slug}`, id);
     }
     setOpen(false);
-    router.push(`/${locale}/products?category=${encodeURIComponent(slug)}`);
+    router.push(`/products?category=${encodeURIComponent(slug)}`);
   };
 
   // Don't render Sheet until mounted to avoid hydration mismatch
@@ -82,7 +82,7 @@ export const MobileMenu = () => {
           {/* الرئيسية */}
           <div>
             <Link
-              href={`/${locale}`}
+              href={"/"}
               className="flex items-center py-3 text-lg font-normal text-foreground hover:text-primary transition-colors"
               aria-label={t("home")}
               onClick={() => setOpen(false)}
@@ -147,7 +147,7 @@ export const MobileMenu = () => {
             <p className="text-sm font-normal mb-3 text-muted-foreground uppercase tracking-wider">
               {t("shopping")}
             </p>
-            <Link href={`/${locale}/cart`} onClick={() => setOpen(false)}>
+            <Link href={`/cart`} onClick={() => setOpen(false)}>
               <Button variant="outline" className="w-full justify-start font-normal" aria-label={t("cart")}>
                 <ShoppingBag className="h-4 w-4 mr-2" />
                 {t("cart")}
@@ -170,7 +170,7 @@ export const MobileMenu = () => {
             <p className="text-sm font-normal mb-3 text-muted-foreground uppercase tracking-wider">
               {t("orders")}
             </p>
-            <Link href={`/${locale}/my-orders`} onClick={() => setOpen(false)}>
+            <Link href={`/my-orders`} onClick={() => setOpen(false)}>
               <Button variant="outline" className="w-full justify-start font-normal" aria-label={t("myOrders")}>
                 {t("myOrders")}
               </Button>

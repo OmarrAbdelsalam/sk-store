@@ -37,7 +37,7 @@ const Navigation = () => {
   const [isScrolled, setIsScrolled] = useState(false);
 
   // Transparent only on homepage at scroll point 0
-  const isHome = pathname === '/' || pathname === `/${locale}` || pathname === `/${locale}/`;
+  const isHome = pathname === '/';
   const isTransparent = isHome && !isScrolled;
 
   useEffect(() => {

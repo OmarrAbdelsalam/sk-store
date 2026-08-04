@@ -51,7 +51,7 @@ export const CartButton = ({ isMobile = false, className = "", isTransparent = f
   const cartItemsCount = mounted && cart ? cart.getTotalItems() : 0;
 
   const handleClick = () => {
-    router.push(`/${locale}/cart`);
+    router.push(`/cart`);
   };
 
   return (

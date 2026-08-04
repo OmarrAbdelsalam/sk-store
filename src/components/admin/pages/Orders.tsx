@@ -271,7 +271,17 @@ const OrdersPage = () => {
   const totalOrders = orders.length;
   const pendingOrders = orders.filter(o => o.status === 'pending').length;
   const completedOrders = orders.filter(o => o.status === 'delivered').length;
-  const totalRevenue = orders.reduce((sum, order) => sum + (order.status !== 'cancelled' ? order.total : 0), 0);
+  // Shipping is money that passes straight through to the courier, so counting
+  // it here inflates the figure by the delivery fee on every single order.
+  // The order rows still show the full amount the customer owes — this card is
+  // the one number that has to mean "what the shop actually earned".
+  const totalRevenue = orders.reduce(
+    (sum, order) =>
+      order.status !== 'cancelled'
+        ? sum + Math.max(0, order.total - (order.shipping_cost || 0))
+        : sum,
+    0
+  );
 
   return (
     <div className="space-y-6">
@@ -290,7 +300,7 @@ const OrdersPage = () => {
           isHighlight={true}
         />
         <StatCard
-          title="Total Revenue"
+          title="Revenue (excl. shipping)"
           value={formatCurrency(totalRevenue)}
           icon={DollarSign}
         />

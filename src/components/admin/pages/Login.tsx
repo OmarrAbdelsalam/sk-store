@@ -20,7 +20,7 @@ const Login = ({ redirectTo }: LoginProps) => {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [finalRedirect, setFinalRedirect] = useState(redirectTo || "/en/admin");
+  const [finalRedirect, setFinalRedirect] = useState(redirectTo || "/admin");
 
   useEffect(() => {
     const fromParam = searchParams.get('from');
@@ -29,7 +29,7 @@ const Login = ({ redirectTo }: LoginProps) => {
     } else if (redirectTo) {
       setFinalRedirect(redirectTo);
     } else {
-      setFinalRedirect("/en/admin");
+      setFinalRedirect("/admin");
     }
   }, [searchParams, redirectTo]);
 

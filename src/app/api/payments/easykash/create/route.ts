@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { siteUrl } from "@/lib/site";
 
 const EASYKASH_API_KEY = process.env.EASYKASH_API_KEY;
 const EASYKASH_DIRECT_URL = "https://back.easykash.net/api/directpayv1/pay";
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://skbags.com";
+// One source of truth for the address we hand to EasyKash. It used to fall back
+// to skbags.com — a parked domain nobody here owns — and on a host without
+// NEXT_PUBLIC_SITE_URL that is where paying customers were sent.
+const SITE_URL = siteUrl;
 
 /**
  * Creates an EasyKash Direct Payment link.
@@ -100,7 +104,10 @@ export async function POST(request: NextRequest) {
     // gateway that concatenates with "?" instead of "&" would mangle anything
     // we put here. customerReference comes back on its own, and paymentType is
     // already stored on the order as payment_plan.
-    const redirectUrl = `${SITE_URL}/${locale}/order-success`;
+    // No locale segment: routing is set to `localePrefix: 'never'`, so a
+    // prefixed URL is a 307 at best (/en/…) and a 404 at worst (/ar/…). The
+    // customer coming back from a payment is the last place to spend a redirect.
+    const redirectUrl = `${SITE_URL}/order-success`;
 
     const payload = {
       amount: chargeAmount,

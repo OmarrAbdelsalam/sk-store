@@ -54,7 +54,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   // Handle navigation
   const handleClick = React.useCallback(() => {
-    router.push(`/${locale}/product/${product.id}`);
+    router.push(`/product/${product.id}`);
   }, [router, locale, product.id]);
 
   const availableImages = React.useMemo(() => {

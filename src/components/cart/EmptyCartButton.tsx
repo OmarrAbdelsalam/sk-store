@@ -13,7 +13,7 @@ export default function EmptyCartButton() {
   return (
     <Button 
       size="lg" 
-      onClick={() => router.push(`/${locale}`)} 
+      onClick={() => router.push("/")} 
       aria-label={t("cta")}
       className="h-12 px-8 text-sm font-bold tracking-wider uppercase rounded-lg
         bg-black text-white hover:bg-gray-800 

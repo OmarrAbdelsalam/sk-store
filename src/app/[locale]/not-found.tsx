@@ -36,7 +36,7 @@ export default function NotFound() {
 
       {/* CTA */}
       <button
-        onClick={() => router.push(`/${locale}`)}
+        onClick={() => router.push("/")}
         className="inline-flex items-center gap-2.5 h-12 px-10 rounded-full bg-foreground text-background text-xs font-medium tracking-widest uppercase hover:bg-foreground/90 transition-all hover:scale-[1.02] shadow-md"
       >
         {isAr ? (

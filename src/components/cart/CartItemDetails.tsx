@@ -3,13 +3,24 @@ import { useTranslations } from "next-intl";
 interface CartItemDetailsProps {
   name: string;
   price: string;
+  /** Compare-at price, shown struck through beside the price. */
+  beforePrice?: string | number;
   size?: string;
   color?: string;
   addOns?: string[];
 }
 
-export default function CartItemDetails({ name, price, size, color, addOns }: CartItemDetailsProps) {
+export default function CartItemDetails({ name, price, beforePrice, size, color, addOns }: CartItemDetailsProps) {
   const t = useTranslations("CartItem");
+
+  // The stored value is a bare number on some items and a formatted string on
+  // others, and a compare-at price at or below what's actually charged is not a
+  // discount — showing it would strike through a number that never applied.
+  const priceValue = parseFloat(String(price).replace(/[^\d.]/g, "")) || 0;
+  const beforeValue = parseFloat(String(beforePrice ?? "").replace(/[^\d.]/g, "")) || 0;
+  const showBefore = beforeValue > priceValue;
+  // Whatever unit the price itself is written in, so the two figures match.
+  const currency = String(price).replace(/[\d.,\s]/g, "").trim() || "EGP";
 
   return (
     <div className="flex-1 min-w-0 space-y-1.5">
@@ -19,7 +30,14 @@ export default function CartItemDetails({ name, price, size, color, addOns }: Ca
       </h3>
       
       {/* Unit price */}
-      <p className="text-sm sm:text-base font-medium text-foreground">{price}</p>
+      <div className="flex items-center gap-2">
+        {showBefore && (
+          <p className="text-xs sm:text-sm text-muted-foreground line-through">
+            {beforeValue.toLocaleString()} {currency}
+          </p>
+        )}
+        <p className="text-sm sm:text-base font-medium text-foreground">{price}</p>
+      </div>
 
       {/* Specs */}
       <div className="flex flex-wrap justify-start gap-2">

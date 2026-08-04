@@ -405,13 +405,12 @@ export async function sendCartRecoveryEmail(
     }
   }
 
-  // Carts don't record which language the customer was browsing in, so links
-  // go to the Arabic storefront — the default for this market. The email
-  // itself is English either way.
+  // No locale segment: the storefront serves one language from unprefixed
+  // paths, and /ar/cart stopped resolving when that changed.
   //
   // `restore` rebuilds the basket on whatever device opens the link; `code`
   // is parked for checkout so the customer never types it.
-  const cartUrl = `${siteUrl}/ar/cart?restore=${token}${
+  const cartUrl = `${siteUrl}/cart?restore=${token}${
     promoCode ? `&code=${encodeURIComponent(promoCode)}` : ""
   }`;
 

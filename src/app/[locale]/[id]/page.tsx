@@ -29,8 +29,8 @@ export default function ProductDetailPage() {
   useEffect(() => {
     if (product) {
       // ✅ Prefetch فوراً بدون تأخير
-      router.prefetch(`/${locale}/cart`);
-      router.prefetch(`/${locale}/checkout`);
+      router.prefetch(`/cart`);
+      router.prefetch(`/checkout`);
     }
   }, [product, locale, router]);
 
@@ -60,8 +60,8 @@ export default function ProductDetailPage() {
 
         {/* Hidden prefetch links for cart and checkout */}
         <div className="hidden">
-          <link rel="prefetch" href={`/${locale}/cart`} />
-          <link rel="prefetch" href={`/${locale}/checkout`} />
+          <link rel="prefetch" href={`/cart`} />
+          <link rel="prefetch" href={`/checkout`} />
         </div>
       </div>
     </div>

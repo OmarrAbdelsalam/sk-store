@@ -188,7 +188,7 @@ export default function CartPageClient() {
             inline-flex items-center justify-center gap-2"
           onClick={() => {
             window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-            router.push(`/${locale}/checkout`);
+            router.push(`/checkout`);
           }}
         >
           {isAr ? 'إتمام الشراء' : 'PROCEED TO CHECKOUT'}

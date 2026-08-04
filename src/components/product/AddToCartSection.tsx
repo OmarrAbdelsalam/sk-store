@@ -71,7 +71,7 @@ const AddToCartSection = React.memo(({
 
   // Prefetch cart page on hover
   const handleCartHover = React.useCallback(() => {
-    router.prefetch(`/${locale}/cart`);
+    router.prefetch(`/cart`);
   }, [locale, router]);
 
   const handleAddToCart = useCallback(async () => {

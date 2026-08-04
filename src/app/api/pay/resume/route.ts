@@ -19,11 +19,13 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const token = url.searchParams.get("t") || "";
-  const home = (locale: string) => `${siteUrl}/${locale}`;
+  // Unprefixed: the storefront serves one language from bare paths, so a
+  // locale segment is a redirect at best and a dead link at worst.
+  const home = siteUrl;
 
   // A malformed token is never worth a database round trip.
   if (!UUID.test(token)) {
-    return NextResponse.redirect(home("ar"), { status: 302 });
+    return NextResponse.redirect(home, { status: 302 });
   }
 
   try {
@@ -35,18 +37,18 @@ export async function GET(request: NextRequest) {
 
     if (error) throw error;
 
+    // Still read from the order — the payment page itself is localised even
+    // though the storefront's URLs no longer are.
     const locale = order?.locale === "en" ? "en" : "ar";
 
     if (!order) {
-      return NextResponse.redirect(home(locale), { status: 302 });
+      return NextResponse.redirect(home, { status: 302 });
     }
 
     const ref = order.easykash_customer_ref
       ? encodeURIComponent(String(order.easykash_customer_ref))
       : "";
-    const orderPage = ref
-      ? `${siteUrl}/${locale}/order-success?ref=${ref}`
-      : home(locale);
+    const orderPage = ref ? `${siteUrl}/order-success?ref=${ref}` : home;
 
     // Settled for good — most likely the customer paid between the follow-up
     // and opening the link. Show them the order instead of charging them twice.
@@ -94,6 +96,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(payment.data.paymentUrl, { status: 302 });
   } catch (err: any) {
     console.error("Resume payment error:", err?.message);
-    return NextResponse.redirect(home("ar"), { status: 302 });
+    return NextResponse.redirect(home, { status: 302 });
   }
 }

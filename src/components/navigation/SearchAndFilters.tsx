@@ -121,7 +121,7 @@ export const SearchAndFilters = ({ isTransparent = false }: SearchAndFiltersProp
     params.delete("categoryId");
     params.delete("category");
 
-    router.push(`/${locale}/products?${params.toString()}`);
+    router.push(`/products?${params.toString()}`);
     setOpen(false);
   };
 
@@ -132,7 +132,7 @@ export const SearchAndFilters = ({ isTransparent = false }: SearchAndFiltersProp
     params.delete("colorName");
     params.delete("gender");
     params.delete("q");
-    router.push(`/${locale}/products?${params.toString()}`);
+    router.push(`/products?${params.toString()}`);
   };
 
   // Don't render Sheet until mounted to avoid hydration mismatch
