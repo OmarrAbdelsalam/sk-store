@@ -47,9 +47,14 @@ export const CONTACT_INFO = {
 
 // معلومات الشحن
 export const SHIPPING_INFO = {
+  // Made to order, not shipped from stock — the window covers the making, not
+  // just the courier. Keep in step with `shippingText`/`shippingInfoBody` in
+  // messages/*.json, the FAQ answers in StructuredData, and DELIVERY_WINDOW in
+  // email-templates: a customer who sees two different numbers believes the
+  // shorter one.
   deliveryTime: {
-    ar: "3-7 أيام عمل",
-    en: "3-7 business days",
+    ar: "7-10 أيام",
+    en: "7-10 days",
   },
   coverage: {
     ar: "جميع أنحاء مصر",

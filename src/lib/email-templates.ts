@@ -51,7 +51,6 @@ const GREEN = "#1B7F4B";
 const SERIF = "Georgia, 'Times New Roman', Times, serif";
 const SANS = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
 
-const LOGO_URL = `${siteUrl}/email/sk-logo.png`;
 const WHATSAPP_URL = `https://wa.me/${siteContact.whatsapp}`;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -142,11 +141,11 @@ function layout({
         <!-- Masthead -->
         <tr>
           <td align="center" style="padding:36px 32px 0 32px;">
-            <a href="${siteUrl}" style="text-decoration:none;">
-              <img src="${LOGO_URL}" width="132" height="116" alt="${escapeHtml(siteBrand)}"
-                   style="display:block;border:0;outline:none;width:132px;height:auto;max-width:132px;">
-            </a>
-            <div style="margin-top:16px;font-family:${SANS};font-size:10px;letter-spacing:0.34em;text-transform:uppercase;color:${MUTED};">Handmade in Egypt</div>
+            <!-- Wordmark as live text, not an image: every client blocks remote
+                 images by default, and a masthead nobody sees until they click
+                 "display images" is a masthead that isn't there. -->
+            <a href="${siteUrl}" style="display:inline-block;text-decoration:none;font-family:${SERIF};font-size:34px;line-height:1.1;letter-spacing:0.08em;color:${INK};">${escapeHtml(siteBrand)}</a>
+            <div style="margin-top:14px;font-family:${SANS};font-size:10px;letter-spacing:0.34em;text-transform:uppercase;color:${MUTED};">Handmade in Egypt</div>
           </td>
         </tr>
 
@@ -167,13 +166,20 @@ function layout({
 
         ${
           cta
-            ? `<!-- Primary action -->
+            ? `<!-- Primary action.
+                 Sized to its own text and centred, not stretched to the card's
+                 full width — a 536px-wide bar reads as a banner, and a banner is
+                 something people look at rather than click.
+                 The fill is declared twice, as a bgcolor attribute and as inline
+                 CSS, because clients strip one or the other; the border repeats
+                 it a third time so the shape still reads as a button even where
+                 both are dropped and the label would otherwise sit bare on white. -->
         <tr>
-          <td style="padding:26px 32px 0 32px;">
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+          <td align="center" style="padding:28px 32px 0 32px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;">
               <tr>
-                <td align="center" bgcolor="${INK}" style="border-radius:100px;">
-                  <a href="${cta.url}" style="display:block;padding:16px 28px;font-family:${SANS};font-size:15px;font-weight:700;letter-spacing:0.04em;color:#FFFFFF;text-decoration:none;border-radius:100px;">${escapeHtml(cta.label)}</a>
+                <td align="center" bgcolor="${INK}" style="background-color:${INK};border:1px solid ${INK};border-radius:100px;mso-padding-alt:17px 42px;">
+                  <a href="${cta.url}" style="display:inline-block;padding:17px 42px;font-family:${SANS};font-size:16px;font-weight:700;letter-spacing:0.03em;color:#FFFFFF !important;text-decoration:none !important;border-radius:100px;mso-text-raise:2px;">${escapeHtml(cta.label)}&nbsp;&rarr;</a>
                 </td>
               </tr>
             </table>
@@ -246,6 +252,27 @@ function card(inner: string, background = SOFT): string {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:18px;background:${background};border:1px solid ${LINE};border-radius:12px;">
     <tr><td style="padding:18px 20px;">${inner}</td></tr>
   </table>`;
+}
+
+/**
+ * How long the customer waits. Stated in the email itself rather than left to
+ * the order page, because the email is the thing they still have in a week when
+ * they start wondering where the bag is.
+ */
+export const DELIVERY_WINDOW = "7–10 days";
+
+/**
+ * Nothing ships from a shelf here — each bag is cut and stitched for the order
+ * that paid for it, which is the whole reason the wait is longer than the
+ * next-day delivery people are used to. An unexplained ten-day gap reads as a
+ * late order; the same ten days explained reads as the point.
+ */
+function deliveryBlock(): string {
+  return card(
+    `${eyebrow("Delivery")}
+    <p style="margin:9px 0 0 0;font-family:${SANS};font-size:15px;line-height:1.65;color:${INK};font-weight:700;">Arrives within ${DELIVERY_WINDOW}.</p>
+    <p style="margin:7px 0 0 0;font-family:${SANS};font-size:13px;line-height:1.7;color:${MUTED};">Your bag is made to order — cut and stitched by hand for you, not picked off a shelf. That is what the wait is for.</p>`
+  );
 }
 
 function itemsBlock(order: EmailOrder): string {
@@ -396,15 +423,16 @@ export function orderConfirmationEmail(
     ${itemsBlock(order)}
     ${totalsBlock(order)}
     ${paymentCard}
+    ${deliveryBlock()}
     ${addressBlock(order)}
   `;
 
   const html = layout({
-    preheader: `Payment received — order ${order.order_number} is being prepared.`,
+    preheader: `Payment received — order ${order.order_number} arrives within ${DELIVERY_WINDOW}.`,
     pill: { label: "Payment confirmed", tone: "positive" },
     heading: name ? `Thank you, ${name}.` : "Thank you for your order.",
     intro:
-      "We've received your payment and started preparing your order by hand. We'll email you again the moment it ships.",
+      `We've received your payment and started making your order by hand. Because every bag is made to order, it reaches you within ${DELIVERY_WINDOW} — we'll email you the moment it ships.`,
     cta: { label: "View your order", url: trackUrl },
     bodyHtml,
     footerNote:
@@ -415,6 +443,7 @@ export function orderConfirmationEmail(
     `Thank you${name ? `, ${name}` : ""}.`,
     `Your order ${order.order_number} is confirmed. Total ${money(order.total)}.`,
     remaining > 0 ? `Paid online: ${money(paidOnline)}. Due on delivery: ${money(remaining)}.` : "",
+    `Arrives within ${DELIVERY_WINDOW} — every bag is made to order and stitched by hand for you.`,
     `View your order: ${trackUrl}`,
   ]
     .filter(Boolean)
@@ -460,6 +489,7 @@ export function orderRecoveryEmail(
     ${orderHeader(order)}
     ${itemsBlock(order)}
     ${totalsBlock(order, discount)}
+    ${deliveryBlock()}
     ${addressBlock(order)}
   `;
 
@@ -520,6 +550,7 @@ export function orderRecoveryEmail(
       ? `${discount.percent}% off: ${money(discount.previousTotal)} → ${money(order.total)}.`
       : "",
     `Order ${order.order_number} — ${money(order.total)}.`,
+    `Made to order and stitched by hand, so it arrives within ${DELIVERY_WINDOW} once payment goes through.`,
     `Finish your payment: ${payUrl}`,
   ]
     .filter(Boolean)

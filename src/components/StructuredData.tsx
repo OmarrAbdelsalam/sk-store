@@ -157,7 +157,7 @@ export function FAQSchema({ locale = "ar" }: FAQSchemaProps) {
   const faqs = locale === "ar" ? [
     {
       question: "ما هي مدة التوصيل؟",
-      answer: "التوصيل لجميع أنحاء مصر خلال 3-7 أيام عمل من تاريخ تأكيد الطلب.",
+      answer: "كل شنطة تُصنع خصيصًا لطلبك وتُخاط يدويًا بعد الطلب، لذلك يصل الطلب خلال 7-10 أيام من تاريخ تأكيد الطلب لجميع أنحاء مصر.",
     },
     {
       question: "هل يمكن استرجاع أو استبدال المنتج؟",
@@ -182,7 +182,7 @@ export function FAQSchema({ locale = "ar" }: FAQSchemaProps) {
   ] : [
     {
       question: "What is the delivery time?",
-      answer: "Delivery to all parts of Egypt within 3-7 business days from order confirmation.",
+      answer: "Every bag is made for your order and stitched by hand after you order, so delivery takes 7-10 days from order confirmation, anywhere in Egypt.",
     },
     {
       question: "Can I return or exchange the product?",

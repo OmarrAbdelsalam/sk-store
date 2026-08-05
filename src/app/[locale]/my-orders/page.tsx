@@ -109,7 +109,11 @@ export default function MyOrdersPage() {
     try {
       const orderDate = new Date(orderDateString);
       const deliveryDate = new Date(orderDate);
-      deliveryDate.setDate(deliveryDate.getDate() + 7);
+      // The far end of the 7–10 day window, not the near one. This prints as a
+      // single date with no "around" attached to it, so the customer reads it as
+      // a promise — and the only promise safe to make in one date is the last
+      // day we'd still be on time.
+      deliveryDate.setDate(deliveryDate.getDate() + 10);
       return new Intl.DateTimeFormat(locale, {
         year: "numeric",
         month: "long",
