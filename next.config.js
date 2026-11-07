@@ -14,6 +14,12 @@ const withNextIntl = createNextIntlPlugin({
 const nextConfig = {
   reactStrictMode: true,
 
+  // Product pages are prerendered at deploy time; the first build after a
+  // new photo is added also classifies it (studio shot or not), which can
+  // push a page past the 60s default — then it silently falls back to being
+  // rendered on the first visit (the slow path we're avoiding).
+  staticPageGenerationTimeout: 180,
+
   images: {
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],

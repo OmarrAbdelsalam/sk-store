@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import sharp from "sharp";
+import { unstable_cache } from "next/cache";
 import { cutoutWidth } from "@/lib/cutout";
 
 /**
@@ -30,33 +31,16 @@ const TILE_TONE = 244 / 255;
 
 const CACHE = "public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=86400, immutable";
 
-export async function GET(req: NextRequest) {
-  const u = req.nextUrl.searchParams.get("u");
-  const w = cutoutWidth(Number(req.nextUrl.searchParams.get("w")) || 828);
-  // "plain" = resize + WebP only (lifestyle photos); default = melt the white.
-  const plain = req.nextUrl.searchParams.get("mode") === "plain";
-  if (!u) return new Response("Missing u", { status: 400 });
-
-  let target: URL;
-  try {
-    target = new URL(u, req.nextUrl.origin);
-  } catch {
-    return new Response("Bad url", { status: 400 });
-  }
-  const sameOrigin = target.origin === req.nextUrl.origin;
-  if (!sameOrigin && !(target.protocol === "https:" && ALLOWED_HOSTS.some((r) => r.test(target.hostname)))) {
-    return new Response("Host not allowed", { status: 400 });
-  }
-
-  let input: Buffer;
-  try {
-    const res = await fetch(target, { cache: "force-cache" });
-    if (!res.ok) return new Response("Upstream error", { status: 502 });
-    input = Buffer.from(await res.arrayBuffer());
-  } catch {
-    return new Response("Upstream unreachable", { status: 502 });
-  }
-
+/**
+ * Fetch + process one photo, returned as base64 WebP (null = not an image).
+ * Cached in the Vercel Data Cache, which — unlike the CDN — survives new
+ * deployments: after a deploy the first request returns the stored result
+ * instead of downloading and re-processing the photo.
+ */
+async function processPhoto(url: string, w: number, plain: boolean): Promise<string | null> {
+  const res = await fetch(url, { cache: "force-cache" });
+  if (!res.ok) throw new Error(`upstream ${res.status}`);
+  const input = Buffer.from(await res.arrayBuffer());
   try {
     if (plain) {
       const out = await sharp(input)
@@ -66,9 +50,7 @@ export async function GET(req: NextRequest) {
         // with no visible loss at the sizes they're shown.
         .webp({ quality: 72 })
         .toBuffer();
-      return new Response(new Uint8Array(out), {
-        headers: { "Content-Type": "image/webp", "Cache-Control": CACHE },
-      });
+      return out.toString("base64");
     }
 
     // 1) orient, resize, transparent → white, push near-white to pure white
@@ -88,12 +70,42 @@ export async function GET(req: NextRequest) {
       .linear(TILE_TONE, 0)
       .webp({ quality: 82 })
       .toBuffer();
-
-    return new Response(new Uint8Array(out), {
-      headers: { "Content-Type": "image/webp", "Cache-Control": CACHE },
-    });
+    return out.toString("base64");
   } catch {
-    // Not an image sharp can read — send the original rather than nothing.
-    return Response.redirect(target.toString(), 302);
+    return null;
   }
+}
+
+const processPhotoCached = unstable_cache(processPhoto, ["cutout-v2"], { revalidate: false });
+
+export async function GET(req: NextRequest) {
+  const u = req.nextUrl.searchParams.get("u");
+  const w = cutoutWidth(Number(req.nextUrl.searchParams.get("w")) || 828);
+  // "plain" = resize + WebP only (lifestyle photos); default = melt the white.
+  const plain = req.nextUrl.searchParams.get("mode") === "plain";
+  if (!u) return new Response("Missing u", { status: 400 });
+
+  let target: URL;
+  try {
+    target = new URL(u, req.nextUrl.origin);
+  } catch {
+    return new Response("Bad url", { status: 400 });
+  }
+  const sameOrigin = target.origin === req.nextUrl.origin;
+  if (!sameOrigin && !(target.protocol === "https:" && ALLOWED_HOSTS.some((r) => r.test(target.hostname)))) {
+    return new Response("Host not allowed", { status: 400 });
+  }
+
+  let encoded: string | null;
+  try {
+    encoded = await processPhotoCached(target.toString(), w, plain);
+  } catch {
+    return new Response("Upstream unreachable", { status: 502 });
+  }
+  // Not an image sharp can read — send the original rather than nothing.
+  if (!encoded) return Response.redirect(target.toString(), 302);
+
+  return new Response(new Uint8Array(Buffer.from(encoded, "base64")), {
+    headers: { "Content-Type": "image/webp", "Cache-Control": CACHE },
+  });
 }

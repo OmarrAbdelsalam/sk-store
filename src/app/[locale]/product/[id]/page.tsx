@@ -1,7 +1,7 @@
 import { cache } from "react";
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
-import { fetchProductById } from "@/api/products";
+import { fetchProductById, fetchProducts } from "@/api/products";
 import { getStudioMap } from "@/lib/studio-photos";
 import ProductDetailContent from "@/components/product/ProductDetailContent";
 import ProductHeader from "@/components/product/ProductHeader";
@@ -11,10 +11,16 @@ import { generatePageMetadata } from "@/lib/metadata";
 // Cached page, refreshed at most once a minute (admin edits show within 60s).
 export const revalidate = 60;
 
-// No product is built ahead of time; each one is rendered on its first
-// visit and then served from the cache (and refreshed as above).
+// Every current product is built at deploy time, so nobody hits a slow
+// first render after a deploy (the catalogue is small). Products added
+// later are built on their first visit and cached from then on.
 export async function generateStaticParams() {
-  return [];
+  try {
+    const { items } = await fetchProducts(1, 500);
+    return items.map((p) => ({ id: String(p.id) }));
+  } catch {
+    return [];
+  }
 }
 
 // One database round trip per render: generateMetadata and the page share it.
