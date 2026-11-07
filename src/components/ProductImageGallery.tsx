@@ -81,7 +81,9 @@ function SafeImage({
     effectiveSrc = cutoutSrc(effectiveSrc, fill ? 1080 : 256) || effectiveSrc;
   } else if (!failed && !cutoutFailed && effectiveSrc) {
     // Real photos: resized WebP instead of the full-size original.
-    effectiveSrc = photoSrc(effectiveSrc, fill ? 1080 : 256) || effectiveSrc;
+    // 828px covers a phone at 3x and the desktop 2-up column at ~2x; the
+    // originals are ~960px, so wider would only make files bigger.
+    effectiveSrc = photoSrc(effectiveSrc, fill ? 828 : 256) || effectiveSrc;
   }
 
   // Show loader while loading Dropbox URL
