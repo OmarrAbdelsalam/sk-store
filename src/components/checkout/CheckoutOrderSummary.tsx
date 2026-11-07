@@ -2,7 +2,7 @@
 
 import { memo } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import Image from "next/image";
+import CutoutImage from "@/components/CutoutImage";
 import PromoCodeInput from "./PromoCodeInput";
 import { formatAmount } from "@/lib/price";
 
@@ -116,8 +116,9 @@ const CheckoutOrderSummary = memo(
               <li key={item.id} className="flex items-center gap-3.5">
                 <div className="relative shrink-0">
                   <div className="ds-cutout-frame relative size-16 overflow-hidden border border-gray-200">
-                    <Image
-                      src={item.image || "/SK_Logo.svg"}
+                    <CutoutImage
+                      src={item.image}
+                      requestWidth={256}
                       alt={name}
                       fill
                       sizes="64px"

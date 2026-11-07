@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useDropboxImage } from '@/hooks/useDropboxImage';
 import { Loader2 } from 'lucide-react';
+import { cutoutSrc } from '@/lib/cutout';
 
 interface DropboxImageProps {
   src: string | undefined;
@@ -20,6 +21,10 @@ interface DropboxImageProps {
   onError?: () => void;
   showLoader?: boolean;
   fallbackSrc?: string;
+  /** Turn the photo's white background into the tile gray (server-side, see lib/cutout). */
+  cutout?: boolean;
+  /** Pixel width to request when `cutout` is on. */
+  cutoutWidth?: number;
 }
 
 /**
@@ -44,16 +49,25 @@ export default function DropboxImage({
   onError,
   showLoader = true,
   fallbackSrc = '/placeholder.png',
+  cutout = false,
+  cutoutWidth = 828,
 }: DropboxImageProps) {
   const { url, loading, error } = useDropboxImage(src);
   const [imgError, setImgError] = useState(false);
+  // The processed (gray-background) version failed → fall back to the original.
+  const [cutoutFailed, setCutoutFailed] = useState(false);
 
   // Reset error state when src changes
   useEffect(() => {
     setImgError(false);
+    setCutoutFailed(false);
   }, [src]);
 
   const handleError = () => {
+    if (cutout && !cutoutFailed) {
+      setCutoutFailed(true);
+      return;
+    }
     setImgError(true);
     onError?.();
   };
@@ -62,7 +76,8 @@ export default function DropboxImage({
     onLoad?.();
   };
 
-  const finalUrl = imgError || error ? fallbackSrc : url;
+  const baseUrl = imgError || error ? fallbackSrc : url;
+  const finalUrl = cutout && !cutoutFailed && !imgError && !error ? cutoutSrc(baseUrl, cutoutWidth) || baseUrl : baseUrl;
 
   if (loading && showLoader) {
     return (
@@ -76,7 +91,7 @@ export default function DropboxImage({
   }
 
   // Use regular img tag for external URLs to avoid Next.js image optimization issues
-  if (finalUrl.startsWith('http')) {
+  if (finalUrl.startsWith('http') || finalUrl.startsWith('/api/cutout')) {
     return (
       <img
         src={finalUrl}

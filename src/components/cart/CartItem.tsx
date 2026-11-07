@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import Image from "next/image";
+import CutoutImage from "@/components/CutoutImage";
 import { AlertCircle, Minus, Plus, Trash2 } from "lucide-react";
 import { memo, useCallback, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
@@ -86,8 +86,9 @@ const CartItem = memo(({ item, onUpdateQuantity, onRemove, maxQuantity }: CartIt
 
   const image = (
     <div className="ds-cutout-frame relative aspect-product w-full overflow-hidden">
-      <Image
-        src={item.image || "/SK_Logo.svg"}
+      <CutoutImage
+        src={item.image}
+        requestWidth={384}
         alt={displayName}
         fill
         sizes="(max-width: 768px) 96px, 120px"

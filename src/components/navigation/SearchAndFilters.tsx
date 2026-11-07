@@ -2,7 +2,7 @@
 
 import { Search, X, ArrowRight } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
+import CutoutImage from "@/components/CutoutImage";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -166,8 +166,9 @@ export const SearchAndFilters = ({ showLabel = false }: SearchAndFiltersProps) =
                   <li key={p.id}>
                     <Link href={`/product/${p.id}`} onClick={() => setOpen(false)} className="group block">
                       <div className="ds-cutout-frame relative aspect-product overflow-hidden">
-                        <Image
+                        <CutoutImage
                           src={p.image}
+                          requestWidth={640}
                           alt={p.name}
                           fill
                           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 12vw"

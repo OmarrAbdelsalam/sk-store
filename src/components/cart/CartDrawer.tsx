@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
+import CutoutImage from "@/components/CutoutImage";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
@@ -204,7 +204,7 @@ function DrawerLine({
     <li className="flex gap-4 border-b border-gray-200 py-5 last:border-0">
       <Link href={href} onClick={onClose} tabIndex={-1} aria-hidden="true" className="w-[84px] shrink-0">
         <div className="ds-cutout-frame relative aspect-product w-full overflow-hidden">
-          <Image src={item.image || "/SK_Logo.svg"} alt="" fill sizes="84px" className="ds-cutout object-center" />
+          <CutoutImage src={item.image} requestWidth={256} alt="" fill sizes="84px" className="ds-cutout object-center" />
         </div>
       </Link>
 

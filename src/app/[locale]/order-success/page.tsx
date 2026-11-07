@@ -7,6 +7,7 @@ import { Check, Package, ArrowRight, Loader2, Copy, Banknote, Store, Clock, XCir
 import { useCart } from "@/hooks/useCart";
 import type { PaymentStatus } from "@/lib/easykash";
 import { formatPrice } from "@/lib/price";
+import { cutoutSrc } from "@/lib/cutout";
 import { OrderSuccessSkeleton } from "@/components/skeletons";
 import { CONTACT_INFO } from "@/lib/constants";
 
@@ -412,7 +413,15 @@ function OrderSuccessContent() {
                       <div key={index} className="flex items-center gap-4 border-b border-gray-200 py-4 first:pt-0 last:border-0 last:pb-0">
                         <div className="ds-cutout-frame relative aspect-product w-16 flex-shrink-0 overflow-hidden">
                           {item.image ? (
-                            <img src={item.image} alt={productName} className="ds-cutout h-full w-full object-center" />
+                            <img
+                              src={cutoutSrc(item.image, 256)}
+                              alt={productName}
+                              className="ds-cutout h-full w-full object-center"
+                              onError={(e) => {
+                                // processed version failed → show the original
+                                const orig = item.image || ""; if (orig && !e.currentTarget.src.endsWith(orig)) e.currentTarget.src = orig;
+                              }}
+                            />
                           ) : (
                             <div className="flex h-full w-full items-center justify-center">
                               <Package className="h-6 w-6 text-gray-300" strokeWidth={1.25} />

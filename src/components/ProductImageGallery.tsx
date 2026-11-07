@@ -10,6 +10,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDropboxImage } from "@/hooks/useDropboxImage";
 import { useStudioPhotos } from "@/hooks/useStudioPhotos";
+import { cutoutSrc } from "@/lib/cutout";
 
 type Photo = {
   id: string | number;
@@ -57,6 +58,7 @@ function SafeImage({
   style?: React.CSSProperties;
 }) {
   const [failed, setFailed] = useState(false);
+  const [cutoutFailed, setCutoutFailed] = useState(false);
   
   // Use Dropbox hook for paths starting with / (Dropbox paths)
   const isDropboxPath = src?.startsWith('/') && !src.startsWith('/placeholder');
@@ -69,6 +71,12 @@ function SafeImage({
   }
   if (failed) {
     effectiveSrc = FALLBACK;
+  }
+  // Studio shots (".ds-blend") get the server-processed photo whose white
+  // background is already the tile gray; fall back to the original on error.
+  const wantsCutout = !failed && !cutoutFailed && /ds-blend/.test(className || "");
+  if (wantsCutout && effectiveSrc) {
+    effectiveSrc = cutoutSrc(effectiveSrc, fill ? 1600 : 256) || effectiveSrc;
   }
 
   // Show loader while loading Dropbox URL
@@ -85,7 +93,7 @@ function SafeImage({
       src={effectiveSrc}
       alt={alt}
       className={className}
-      onError={() => setFailed(true)}
+      onError={() => (wantsCutout ? setCutoutFailed(true) : setFailed(true))}
       {...(fill
         ? { fill: true, sizes: sizes || "(max-width: 1024px) 100vw, 50vw" }
         : { width: width ?? 80, height: height ?? 80 })}

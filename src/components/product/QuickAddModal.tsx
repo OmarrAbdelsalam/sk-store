@@ -143,6 +143,8 @@ export default function QuickAddModal({ open, onOpenChange, product, initialColo
           >
             <DropboxImage
               src={image}
+              cutout
+              cutoutWidth={828}
               alt={product.name}
               fill
               sizes="(min-width: 760px) 380px, 100vw"

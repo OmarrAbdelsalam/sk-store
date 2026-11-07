@@ -177,6 +177,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
       >
         <DropboxImage
           src={primaryImage}
+          cutout
+          cutoutWidth={828}
           alt={product.name}
           fill
           sizes="(max-width: 1024px) 50vw, 25vw"
