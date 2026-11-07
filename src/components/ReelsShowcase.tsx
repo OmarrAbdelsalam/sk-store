@@ -1,7 +1,7 @@
 "use client";
 
 import useEmblaCarousel from "embla-carousel-react";
-import { Play, X, Volume2, VolumeX } from "lucide-react";
+import { Play, X, Volume2, VolumeX, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import Image from "next/image";
@@ -14,7 +14,7 @@ import { formatPrice } from "@/lib/price";
 export const ReelsShowcase = () => {
   const t = useTranslations("ReelsShowcase");
   const locale = useLocale();
-  const [emblaRef] = useEmblaCarousel({
+  const [emblaRef, emblaApi] = useEmblaCarousel({
     align: "center",
     loop: true,
     dragFree: false,
@@ -103,16 +103,19 @@ export const ReelsShowcase = () => {
 
   if (videos.length === 0) return null;
 
+  // Only centre when the reels don't fill the row on their own.
   const getCenterClasses = () => {
     const len = videos.length;
     if (len === 1) return "justify-center";
-    if (len === 2) return "md:justify-center lg:justify-center";
-    if (len <= 4) return "lg:justify-center";
+    if (len === 2) return "md:justify-center";
     return "";
   };
 
   return (
-    <section className="bg-beige py-section lg:py-section-lg">
+    // Full-bleed, no backdrop: reels sit edge to edge like the other home
+    // sections (2px gaps). Phones: one big reel + a peek of the next;
+    // desktop: three large tiles in a 3:4 crop (the dialog plays full 9:16).
+    <section className="relative bg-background">
       {/* Header */}
       <h2 className="sr-only">{t('title')}</h2>
 
@@ -120,12 +123,12 @@ export const ReelsShowcase = () => {
       <div className="overflow-hidden" ref={emblaRef}>
         <div className={`flex -ms-tile ${getCenterClasses()}`}>
           {videos.map((video) => (
-            <div key={video.id} className="min-w-0 flex-[0_0_75%] ps-tile md:flex-[0_0_40%] lg:flex-[0_0_24%]">
+            <div key={video.id} className="min-w-0 flex-[0_0_82%] ps-tile md:flex-[0_0_45%] lg:flex-[0_0_33.3333%]">
               <button
                 type="button"
                 onClick={() => setSelectedReel(video)}
                 aria-label={`${isAr ? "تشغيل" : "Play"}: ${getTitle(video)}`}
-                className="group relative block aspect-[9/16] w-full overflow-hidden bg-gray-200 focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink"
+                className="group relative block aspect-[9/16] w-full overflow-hidden bg-gray-200 lg:aspect-[3/4] focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink"
               >
                 {getThumbnail(video) && (
                   <Image
@@ -134,7 +137,7 @@ export const ReelsShowcase = () => {
                     fill
                     className="object-cover transition-transform duration-500 ease-brand group-hover:scale-[1.04]"
                     loading="lazy"
-                    sizes="(max-width: 768px) 75vw, (max-width: 1024px) 40vw, 30vw"
+                    sizes="(max-width: 768px) 82vw, (max-width: 1024px) 45vw, 34vw"
                   />
                 )}
                 <span className="absolute inset-0 bg-scrim" />
@@ -155,6 +158,32 @@ export const ReelsShowcase = () => {
           ))}
         </div>
       </div>
+
+      {/* Desktop arrows (phones swipe) */}
+      {videos.length > 3 && (
+        <>
+          <Button
+            type="button"
+            variant="overlay"
+            size="icon"
+            onClick={() => emblaApi?.scrollPrev()}
+            className="absolute start-4 top-1/2 z-10 hidden -translate-y-1/2 lg:inline-flex"
+            aria-label={isAr ? "السابق" : "Previous"}
+          >
+            <ChevronLeft className="rtl:rotate-180" strokeWidth={1.25} />
+          </Button>
+          <Button
+            type="button"
+            variant="overlay"
+            size="icon"
+            onClick={() => emblaApi?.scrollNext()}
+            className="absolute end-4 top-1/2 z-10 hidden -translate-y-1/2 lg:inline-flex"
+            aria-label={isAr ? "التالي" : "Next"}
+          >
+            <ChevronRight className="rtl:rotate-180" strokeWidth={1.25} />
+          </Button>
+        </>
+      )}
 
       {/* Reel modal — a real dialog: Esc closes, focus is trapped, page scroll locks */}
       <DialogPrimitive.Root open={!!selectedReel} onOpenChange={(o) => !o && setSelectedReel(null)}>
