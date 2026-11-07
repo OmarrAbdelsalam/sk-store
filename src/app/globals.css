@@ -222,8 +222,10 @@
     @apply h-input w-full rounded-none border border-gray-300 bg-white px-[13px] font-sans text-[16px] text-ink placeholder:text-ink/60 md:text-body;
     transition: border-color var(--ds-fast);
   }
-  .ds-input:hover {
-    @apply border-gray-500;
+  @media (hover: hover) and (pointer: fine) {
+    .ds-input:hover {
+      @apply border-gray-500;
+    }
   }
   .ds-input:focus,
   .ds-input:focus-visible {
@@ -438,15 +440,9 @@
   }
 }
 
-/* Touch devices: no sticky hover zooms */
-@media (hover: none) {
-  .group:hover .group-hover\:scale-110 {
-    transform: none !important;
-  }
-  .group:hover .group-hover\:opacity-100 {
-    opacity: inherit !important;
-  }
-}
+/* Touch devices: sticky hover is handled globally — tailwind.config.ts
+   `future.hoverOnlyWhenSupported` limits every hover: / group-hover: to
+   devices that can really hover. */
 
 /* ---------------------------------------------------------------------
    Customer Love — checkerboard pattern (data-attribute approach)

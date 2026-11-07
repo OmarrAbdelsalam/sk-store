@@ -5,6 +5,13 @@ const { color, overlay, fontFamily, fontSize, space, size, radius, aspect, motio
 
 export default {
 	darkMode: ["class"],
+	// hover: / group-hover: only apply on devices with a real pointer that
+	// can hover (mouse / trackpad). On phones a tap used to leave the hover
+	// state "stuck" — a product card would flip to its second photo as if
+	// hovered. Taps keep their active:/focus styles.
+	future: {
+		hoverOnlyWhenSupported: true,
+	},
 	content: [
 		"./pages/**/*.{ts,tsx}",
 		"./components/**/*.{ts,tsx}",
