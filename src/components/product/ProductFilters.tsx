@@ -141,6 +141,15 @@ export default function ProductFilters({
     push((p) => p.delete("colorName"));
   };
 
+  // ---- Has deal ----
+  // Only offered when it would actually narrow the list: if every product is
+  // discounted (or none is), the toggle changes nothing and just looks broken.
+  const saleCount = products.filter((p) => {
+    const before = Number(p.raw?.compareAtPrice ?? p.raw?.beforePrice) || 0;
+    return before > Number(p.priceNum);
+  }).length;
+  const showDeal = f.badge === "sale" || (saleCount > 0 && saleCount < products.length);
+
   // ---- Sort ----
   const sorts: Array<{ value: "" | "price-asc" | "price-desc"; label: string }> = [
     { value: "", label: isAr ? "مميز" : "Featured" },
@@ -284,6 +293,7 @@ export default function ProductFilters({
       )}
 
       {/* Has deal */}
+      {showDeal && (
       <button
         type="button"
         onClick={() => push((p) => (f.badge === "sale" ? p.delete("badge") : p.set("badge", "sale")))}
@@ -292,6 +302,7 @@ export default function ProductFilters({
       >
         {isAr ? "عليه خصم" : "Has deal"}
       </button>
+      )}
 
       {anyActive && (
         <button

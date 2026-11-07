@@ -138,6 +138,9 @@ export const space = {
   tile: "var(--ds-tile-gap)",
   /** Gap between rows of product cards (Parfois: 42px desktop, 32px phone). */
   "row-gap": "42px",
+  /** Row gap where cards end in a Quick add button (phones + tablets): the
+   *  button already closes the card, so 42px read as an empty band. */
+  "row-gap-tight": "20px",
   /** Side padding of header, titles, tabs, filters — phone (Parfois: 16px). */
   gutter: "16px",
   /** Same, desktop (Parfois: 30px). */

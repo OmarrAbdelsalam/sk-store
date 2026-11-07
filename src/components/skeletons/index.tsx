@@ -33,7 +33,7 @@ export function ProductCardSkeleton() {
 /** Products grid as on the shop page: edge to edge on phones, 2px gaps. */
 export function ProductGridSkeleton({ count = 8 }: { count?: number }) {
   return (
-    <div className="ds-grid-page grid grid-cols-2 gap-x-tile gap-y-row-gap md:grid-cols-3 lg:grid-cols-4">
+    <div className="ds-grid-page grid grid-cols-2 gap-x-tile gap-y-row-gap-tight md:grid-cols-3 lg:gap-y-row-gap lg:grid-cols-4">
       {Array.from({ length: count }).map((_, i) => (
         <ProductCardSkeleton key={i} />
       ))}

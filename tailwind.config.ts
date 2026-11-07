@@ -35,6 +35,7 @@ export default {
 			spacing: {
 				tile: space.tile,
 				"row-gap": space["row-gap"],
+				"row-gap-tight": space["row-gap-tight"],
 				gutter: space.gutter,
 				"gutter-lg": space["gutter-lg"],
 				"grid-gutter-lg": space["grid-gutter-lg"],

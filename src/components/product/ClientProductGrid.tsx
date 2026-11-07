@@ -341,7 +341,7 @@ const ClientProductGrid = ({ initialProducts }: ClientProductGridProps) => {
 
         {/* Products grid */}
         {displayedProducts.length > 0 ? (
-          <div className="ds-grid-page grid grid-cols-2 items-stretch gap-x-tile gap-y-row-gap md:grid-cols-3 lg:grid-cols-4">
+          <div className="ds-grid-page grid grid-cols-2 items-stretch gap-x-tile gap-y-row-gap-tight md:grid-cols-3 lg:gap-y-row-gap lg:grid-cols-4">
             {displayedProducts.map((product, index) => (
               <ProductCard
                 key={String(product.id)}
