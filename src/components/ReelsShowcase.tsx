@@ -135,9 +135,11 @@ export const ReelsShowcase = () => {
                 <span className="absolute inset-0 bg-scrim" />
 
                 {/* Play icon */}
+                {/* Quiet glass circle + thin white triangle, nudged right so it
+                    looks optically centred; grows a touch on hover. */}
                 <span className="absolute inset-0 flex items-center justify-center">
-                  <span className="ds-btn-overlay w-button-overlay px-0">
-                    <Play strokeWidth={1.25} className="h-4 w-4 fill-current" />
+                  <span className="flex size-16 items-center justify-center rounded-full border border-white/70 bg-black/15 text-white backdrop-blur-[2px] transition-[transform,background-color] duration-300 ease-brand group-hover:scale-105 group-hover:bg-black/25 lg:size-[72px]">
+                    <Play strokeWidth={1.25} className="ms-1 size-5 fill-current lg:size-6" />
                   </span>
                 </span>
 

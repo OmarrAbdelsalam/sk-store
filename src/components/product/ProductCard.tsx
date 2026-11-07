@@ -166,7 +166,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   return (
     <div
       onClick={handleClick}
-      className="group flex cursor-pointer flex-col"
+      className="group flex h-full cursor-pointer flex-col"
       style={{ animationDelay: `${Math.min(index, 4) * 0.05}s` }}
     >
       <div
