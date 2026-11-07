@@ -9,6 +9,7 @@ import {
   filterProducts,
   type ProductApi,
 } from "@/api/products";
+import { formatPrice } from "@/lib/price";
 
 export interface Product {
   id: string;
@@ -44,7 +45,7 @@ export const mapApiProductToUI = (apiProduct: ProductApi, locale: 'ar' | 'en'): 
     nameAr: apiProduct.nameAr,
     nameEn: apiProduct.nameEn,
     category: apiProduct.categories?.[0]?.arabicName || 'عام',
-    price: `${apiProduct.price} ${locale === 'ar' ? 'جنيه' : 'EGP'}`,
+    price: formatPrice(apiProduct.price, locale),
     priceNum: apiProduct.price,
     image: mainImage,
     description,

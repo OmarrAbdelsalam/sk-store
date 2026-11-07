@@ -2,13 +2,14 @@
 
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, X, ZoomIn, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import clsx from "clsx";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDropboxImage } from "@/hooks/useDropboxImage";
+import { useStudioPhotos } from "@/hooks/useStudioPhotos";
 
 type Photo = {
   id: string | number;
@@ -73,8 +74,8 @@ function SafeImage({
   // Show loader while loading Dropbox URL
   if (isDropboxPath && dropboxLoading) {
     return (
-      <div className={clsx("flex items-center justify-center bg-gray-100", className)} style={{ width: fill ? '100%' : width, height: fill ? '100%' : height }}>
-        <Loader2 className="animate-spin text-gray-400" size={24} />
+      <div className={clsx("flex items-center justify-center bg-beige", className)} style={{ width: fill ? '100%' : width, height: fill ? '100%' : height }}>
+        <Loader2 className="animate-spin text-gray-400" size={20} strokeWidth={1.25} />
       </div>
     );
   }
@@ -114,7 +115,7 @@ const ProductImageGallery = ({
   const [direction, setDirection] = useState(0);
 
   // عرض كل الصور مع إعطاء الأولوية لصور اللون المختار + الـ option value المختار
-  const currentImages = useMemo(() => {
+  const orderedImages = useMemo(() => {
     if (!photos || photos.length === 0) return [];
     
     // فلترة بناءً على اللون والـ option value
@@ -158,6 +159,22 @@ const ProductImageGallery = ({
     // Default: main first
     return [...primaryMains, ...primaryOthers, ...otherMains, ...otherOthers];
   }, [photos, selectedColorId, selectedOptionValueId, mainImageSecond]);
+
+  // Studio (white-background, cut-out) shots: when the product also has
+  // real photos, hide them here — they stay on the cards / quick add. When a
+  // product only has studio shots, show them as usual.
+  const { studio, ready: studioReady } = useStudioPhotos(orderedImages.map((p) => p.imageUrl));
+  const currentImages = useMemo(() => {
+    if (orderedImages.length < 2) return orderedImages;
+    const hasLifestyle = orderedImages.some((p) => studio[p.imageUrl] === false);
+    if (!hasLifestyle) return orderedImages;
+    return orderedImages.filter((p) => studio[p.imageUrl] !== true);
+  }, [orderedImages, studio]);
+
+  // Real (lifestyle) photos fill the tile edge to edge; only the white-
+  // background studio shots are fitted and melted into the gray tile.
+  const fitClass = (url?: string) =>
+    url && studio[url] === false ? "object-cover object-center" : "ds-blend object-contain";
 
   // Reset index عند تغيير اللون أو الصور أو الـ option value
   useEffect(() => {
@@ -276,16 +293,28 @@ const ProductImageGallery = ({
     sc.scrollBy({ top: delta, behavior: "smooth" });
   };
 
-  if (!currentImages || currentImages.length === 0) {
+  // Wait for the studio check (max ~2.5s) so a hidden photo never flashes.
+  if (orderedImages.length >= 2 && !studioReady) {
     return (
-      <div
-        className="relative aspect-[4/5] bg-gray-50 overflow-hidden flex items-center justify-center lg:rounded-lg lg:aspect-[4/3]"
-        dir={dir}
-      >
-        <span className="text-muted-foreground">{t("noImages")}</span>
+      <div className="grid grid-cols-1 gap-tile lg:grid-cols-2" dir={dir} aria-busy="true">
+        <div className="aspect-product animate-pulse bg-beige" />
+        <div className="hidden aspect-product animate-pulse bg-beige lg:block" />
       </div>
     );
   }
+
+  if (!currentImages || currentImages.length === 0) {
+    return (
+      <div
+        className="relative flex aspect-product items-center justify-center overflow-hidden bg-beige lg:aspect-tile"
+        dir={dir}
+      >
+        <span className="ds-fine">{t("noImages")}</span>
+      </div>
+    );
+  }
+
+  const isSingle = currentImages.length === 1;
 
   return (
     <div dir={dir}>
@@ -304,103 +333,39 @@ const ProductImageGallery = ({
         ))}
       </div>
 
-      {/* ======== DESKTOP LAYOUT: Thumbnails + Main Image side by side ======== */}
-      <div className="hidden lg:flex gap-3" style={{ direction: dir === "rtl" ? "rtl" : "ltr" }}>
-        
-        {/* Vertical Thumbnails Column */}
-        {currentImages.length > 1 && (
-          <div className="relative flex flex-col items-center w-[72px] shrink-0">
-            {/* Scroll up arrow */}
-            {canScrollUp && (
-              <button
-                className="absolute -top-1 left-1/2 -translate-x-1/2 z-10 w-8 h-8 flex items-center justify-center bg-white/90 rounded-full shadow-sm hover:bg-white transition-colors"
-                onClick={() => scrollThumbsBy(-160)}
-                aria-label="Scroll up"
-              >
-                <ChevronUp className="w-4 h-4 text-gray-600" />
-              </button>
-            )}
-
-            {/* Thumbnails scroll area */}
-            <div
-              ref={thumbsScrollRef}
-              className="flex flex-col gap-2 overflow-y-auto scrollbar-hide max-h-[520px] py-1"
-              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-            >
-              {currentImages.map((img, idx) => (
-                <button
-                  key={img.id}
-                  className={clsx(
-                    "relative w-16 h-16 rounded-md overflow-hidden shrink-0 transition-all duration-200 border-2",
-                    idx === currentImageIndex
-                      ? "border-black ring-1 ring-black/10 opacity-100"
-                      : "border-transparent opacity-60 hover:opacity-100 hover:border-gray-300"
-                  )}
-                  onClick={() => selectImage(idx)}
-                  aria-label={t("imageAlt", { index: idx + 1 })}
-                >
-                  <SafeImage
-                    src={img.imageUrl || FALLBACK}
-                    alt={t("imageAlt", { index: idx + 1 })}
-                    className="object-cover"
-                    fill
-                    sizes="72px"
-                  />
-                </button>
-              ))}
-            </div>
-
-            {/* Scroll down arrow */}
-            {canScrollDown && (
-              <button
-                className="absolute -bottom-1 left-1/2 -translate-x-1/2 z-10 w-8 h-8 flex items-center justify-center bg-white/90 rounded-full shadow-sm hover:bg-white transition-colors"
-                onClick={() => scrollThumbsBy(160)}
-                aria-label="Scroll down"
-              >
-                <ChevronDown className="w-4 h-4 text-gray-600" />
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* Main Image */}
-        <div className="flex-1 min-w-0">
-          <div
+      {/* ======== DESKTOP LAYOUT: every image stacked in a 2-up grid on beige ======== */}
+      <div className={clsx("hidden lg:grid gap-tile", isSingle ? "grid-cols-1" : "grid-cols-2")}>
+        {currentImages.map((img, idx) => (
+          <button
+            key={img.id}
+            type="button"
             className={clsx(
-              "relative aspect-[4/5] bg-gray-50 overflow-hidden rounded-lg cursor-zoom-in group"
+              "relative isolate block w-full overflow-hidden bg-beige cursor-zoom-in focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink",
+              isSingle ? "aspect-tile" : "aspect-product"
             )}
-            onClick={() => setIsLightboxOpen(true)}
+            onClick={() => {
+              selectImage(idx);
+              setIsLightboxOpen(true);
+            }}
+            aria-label={t("imageAlt", { index: idx + 1 })}
           >
-            {/* Normal Image */}
             <SafeImage
-              src={currentImages[currentImageIndex]?.imageUrl || FALLBACK}
-              alt={t("imageAlt", { index: currentImageIndex + 1 })}
-              className="object-cover"
+              src={img.imageUrl || FALLBACK}
+              alt={t("imageAlt", { index: idx + 1 })}
+              className={fitClass(img.imageUrl)}
               fill
-              priority={true}
-              loading="eager"
-              sizes="(max-width: 1024px) 100vw, 50vw"
+              priority={idx < 2}
+              loading={idx < 2 ? "eager" : "lazy"}
+              sizes={isSingle ? "66vw" : "33vw"}
             />
-
-            {/* Zoom hint icon */}
-            <div className="absolute top-3 right-3 bg-black/40 backdrop-blur-sm rounded-full p-2 transition-opacity duration-300 opacity-0 group-hover:opacity-100 pointer-events-none z-10">
-               <ZoomIn className="h-4 w-4 text-white" />
-            </div>
-
-            {/* Image counter */}
-            {currentImages.length > 1 && (
-              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded-full text-xs backdrop-blur-sm z-10">
-                {currentImageIndex + 1} / {currentImages.length}
-              </div>
-            )}
-          </div>
-        </div>
+          </button>
+        ))}
       </div>
 
-      {/* ======== MOBILE LAYOUT: Swipeable carousel ======== */}
+      {/* ======== MOBILE LAYOUT: full-bleed swipeable carousel ======== */}
       <div className="lg:hidden">
         <div
-          className="relative aspect-[4/4.8] w-full bg-gray-50 overflow-hidden cursor-zoom-in group shadow-[0_6px_24px_rgba(0,0,0,0.08)]"
+          className="relative isolate aspect-product w-full overflow-hidden bg-beige cursor-zoom-in"
           onClick={() => setIsLightboxOpen(true)}
         >
           <AnimatePresence initial={false} custom={direction}>
@@ -423,33 +388,22 @@ const ProductImageGallery = ({
               <SafeImage
                 src={currentImages[currentImageIndex]?.imageUrl || FALLBACK}
                 alt={t("imageAlt", { index: currentImageIndex + 1 })}
-                className="object-cover"
+                className={fitClass(currentImages[currentImageIndex]?.imageUrl)}
                 fill
                 priority={true}
                 loading="eager"
-                sizes="(max-width: 1024px) 100vw, 50vw"
+                sizes="100vw"
               />
             </motion.div>
           </AnimatePresence>
-
-          {/* Zoom icon */}
-          <div className="absolute top-3 right-3 bg-black/40 backdrop-blur-sm rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10">
-            <ZoomIn className="h-4 w-4 text-white" />
-          </div>
 
           {/* Mobile swipe arrows */}
           {currentImages.length > 1 && (
             <>
               <Button
                 variant="ghost"
-                size="sm"
-                className={clsx(
-                  "absolute top-1/2 -translate-y-1/2 rounded-full p-2",
-                  currentImages[currentImageIndex]?.isMain
-                    ? "bg-black/60 hover:bg-black/80"
-                    : "bg-white/80 hover:bg-white/90",
-                  dir === "rtl" ? "right-2" : "left-2"
-                )}
+                size="icon"
+                className="absolute start-0 top-1/2 z-10 -translate-y-1/2"
                 onClick={(e) => {
                   e.stopPropagation();
                   dir === "rtl" ? nextImage() : prevImage();
@@ -457,21 +411,15 @@ const ProductImageGallery = ({
                 aria-label={dir === "rtl" ? t("next") : t("prev")}
               >
                 {dir === "rtl" ? (
-                  <ChevronRight className={clsx("h-4 w-4", currentImages[currentImageIndex]?.isMain ? "text-white" : "text-black")} />
+                  <ChevronRight className="h-4 w-4 text-ink" strokeWidth={1.25} />
                 ) : (
-                  <ChevronLeft className={clsx("h-4 w-4", currentImages[currentImageIndex]?.isMain ? "text-white" : "text-black")} />
+                  <ChevronLeft className="h-4 w-4 text-ink" strokeWidth={1.25} />
                 )}
               </Button>
               <Button
                 variant="ghost"
-                size="sm"
-                className={clsx(
-                  "absolute top-1/2 -translate-y-1/2 rounded-full p-2",
-                  currentImages[currentImageIndex]?.isMain
-                    ? "bg-black/60 hover:bg-black/80"
-                    : "bg-white/80 hover:bg-white/90",
-                  dir === "rtl" ? "left-2" : "right-2"
-                )}
+                size="icon"
+                className="absolute end-0 top-1/2 z-10 -translate-y-1/2"
                 onClick={(e) => {
                   e.stopPropagation();
                   dir === "rtl" ? prevImage() : nextImage();
@@ -479,32 +427,36 @@ const ProductImageGallery = ({
                 aria-label={dir === "rtl" ? t("prev") : t("next")}
               >
                 {dir === "rtl" ? (
-                  <ChevronLeft className={clsx("h-4 w-4", currentImages[currentImageIndex]?.isMain ? "text-white" : "text-black")} />
+                  <ChevronLeft className="h-4 w-4 text-ink" strokeWidth={1.25} />
                 ) : (
-                  <ChevronRight className={clsx("h-4 w-4", currentImages[currentImageIndex]?.isMain ? "text-white" : "text-black")} />
+                  <ChevronRight className="h-4 w-4 text-ink" strokeWidth={1.25} />
                 )}
               </Button>
             </>
           )}
 
-          {/* Mobile dot indicators */}
+          {/* Mobile position indicators — hairlines, no pills */}
           {currentImages.length > 1 && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+            <div className="absolute bottom-3 inset-x-0 z-10 flex justify-center gap-1">
               {currentImages.map((_, idx) => (
                 <button
                   key={idx}
-                  className={clsx(
-                    "rounded-full transition-all duration-300",
-                    idx === currentImageIndex
-                      ? currentImages[currentImageIndex]?.isMain ? "w-8 h-1.5 bg-black" : "w-8 h-1.5 bg-white"
-                      : currentImages[currentImageIndex]?.isMain ? "w-2 h-1.5 bg-black/30" : "w-2 h-1.5 bg-white/50"
-                  )}
+                  type="button"
+                  className="flex h-4 items-center px-0.5"
                   onClick={(e) => {
                     e.stopPropagation();
                     selectImage(idx);
                   }}
                   aria-label={`Image ${idx + 1}`}
-                />
+                  aria-current={idx === currentImageIndex ? "true" : undefined}
+                >
+                  <span
+                    className={clsx(
+                      "block h-px transition-[width,background-color] duration-fast",
+                      idx === currentImageIndex ? "w-5 bg-ink" : "w-3 bg-ink/30"
+                    )}
+                  />
+                </button>
               ))}
             </div>
           )}
@@ -513,20 +465,20 @@ const ProductImageGallery = ({
 
       {/* ======== Lightbox Dialog ======== */}
       <Dialog open={isLightboxOpen} onOpenChange={setIsLightboxOpen}>
-        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-black/95 border-none" hideTitle accessibleTitle="Image Gallery">
-          <div className="relative w-full h-[95vh] flex items-center justify-center overflow-hidden">
+        <DialogContent className="max-w-[95vw] max-h-[95vh] gap-0 rounded-ds border-none bg-background p-0 shadow-none sm:rounded-ds" hideTitle accessibleTitle="Image Gallery">
+          <div className="relative isolate flex h-[95vh] w-full items-center justify-center overflow-hidden bg-beige">
             {/* Close button */}
             <Button
               variant="ghost"
               size="icon"
-              className="absolute top-4 right-4 z-50 bg-white/10 hover:bg-white/20 text-white rounded-full"
+              className="absolute end-2 top-2 z-50"
               onClick={() => setIsLightboxOpen(false)}
             >
-              <X className="h-6 w-6" />
+              <X className="h-5 w-5" strokeWidth={1.25} />
             </Button>
 
             {/* Main image with animation */}
-            <div className="relative w-full h-full flex items-center justify-center p-8">
+            <div className="relative flex h-full w-full items-center justify-center p-8">
               <AnimatePresence initial={false} custom={direction}>
                 <motion.div
                   key={`lightbox-${currentImageIndex}`}
@@ -547,7 +499,7 @@ const ProductImageGallery = ({
                   <SafeImage
                     src={currentImages[currentImageIndex]?.imageUrl || FALLBACK}
                     alt={t("imageAlt", { index: currentImageIndex + 1 })}
-                    className="object-contain"
+                    className="ds-blend object-contain"
                     fill
                     priority
                   />
@@ -561,37 +513,31 @@ const ProductImageGallery = ({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className={clsx(
-                    "absolute top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white rounded-full z-50",
-                    dir === "rtl" ? "right-4" : "left-4"
-                  )}
+                  className="absolute start-2 top-1/2 z-50 -translate-y-1/2"
                   onClick={(e) => {
                     e.stopPropagation();
                     dir === "rtl" ? nextImage() : prevImage();
                   }}
                 >
                   {dir === "rtl" ? (
-                    <ChevronRight className="h-6 w-6" />
+                    <ChevronRight className="h-6 w-6" strokeWidth={1.25} />
                   ) : (
-                    <ChevronLeft className="h-6 w-6" />
+                    <ChevronLeft className="h-6 w-6" strokeWidth={1.25} />
                   )}
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className={clsx(
-                    "absolute top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white rounded-full z-50",
-                    dir === "rtl" ? "left-4" : "right-4"
-                  )}
+                  className="absolute end-2 top-1/2 z-50 -translate-y-1/2"
                   onClick={(e) => {
                     e.stopPropagation();
                     dir === "rtl" ? prevImage() : nextImage();
                   }}
                 >
                   {dir === "rtl" ? (
-                    <ChevronLeft className="h-6 w-6" />
+                    <ChevronLeft className="h-6 w-6" strokeWidth={1.25} />
                   ) : (
-                    <ChevronRight className="h-6 w-6" />
+                    <ChevronRight className="h-6 w-6" strokeWidth={1.25} />
                   )}
                 </Button>
               </>
@@ -599,22 +545,23 @@ const ProductImageGallery = ({
 
             {/* Lightbox thumbnails strip */}
             {currentImages.length > 1 && (
-              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-50 max-w-[80vw] overflow-x-auto px-4 py-2 bg-black/40 backdrop-blur-sm rounded-xl" style={{ scrollbarWidth: "none" }}>
+              <div className="absolute bottom-4 inset-x-0 z-50 mx-auto flex w-fit max-w-[80vw] gap-tile overflow-x-auto scrollbar-hide">
                 {currentImages.map((img, idx) => (
                   <button
                     key={`lb-${img.id}`}
+                    type="button"
                     className={clsx(
-                      "relative w-12 h-12 rounded-md overflow-hidden shrink-0 transition-all duration-200 border-2",
+                      "relative isolate h-12 w-12 shrink-0 overflow-hidden border bg-beige transition-[border-color,opacity] duration-fast",
                       idx === currentImageIndex
-                        ? "border-white opacity-100"
-                        : "border-transparent opacity-50 hover:opacity-80"
+                        ? "border-ink opacity-100"
+                        : "border-gray-200 opacity-60 hover:opacity-100"
                     )}
                     onClick={() => selectImage(idx)}
                   >
                     <SafeImage
                       src={img.imageUrl || FALLBACK}
                       alt=""
-                      className="object-cover"
+                      className="ds-blend object-contain"
                       fill
                       sizes="48px"
                     />

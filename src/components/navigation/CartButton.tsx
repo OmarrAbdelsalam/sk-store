@@ -3,7 +3,7 @@
 import { ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/useCart";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 
@@ -11,9 +11,12 @@ interface CartButtonProps {
   isMobile?: boolean;
   className?: string;
   isTransparent?: boolean;
+  /** Desktop header: render "CART (n)" as a tracked label instead of an icon. */
+  showLabel?: boolean;
 }
 
-export const CartButton = ({ isMobile = false, className = "", isTransparent = false }: CartButtonProps) => {
+export const CartButton = ({ isMobile = false, className = "", isTransparent = false, showLabel = false }: CartButtonProps) => {
+  const t = useTranslations("Nav");
   const locale = useLocale();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
@@ -54,19 +57,43 @@ export const CartButton = ({ isMobile = false, className = "", isTransparent = f
     router.push(`/cart`);
   };
 
+  const ariaLabel = cartItemsCount > 0 ? `Cart (${cartItemsCount} items)` : "Cart";
+
+  if (showLabel) {
+    return (
+      <button
+        type="button"
+        onClick={handleClick}
+        aria-label={ariaLabel}
+        className={`flex items-center gap-2 font-sans text-fine font-semibold transition-opacity duration-fast hover:opacity-70 ${isBouncing ? "animate-cart-bounce" : ""} ${className}`}
+      >
+        <ShoppingBag className="size-5" strokeWidth={1.25} />
+        {t("cart")}
+        {cartItemsCount > 0 && (
+          <span className={isBouncing ? "inline-block animate-badge-pop" : ""}> ({cartItemsCount})</span>
+        )}
+      </button>
+    );
+  }
+
   return (
-    <Button 
-      variant="ghost" 
-      size="sm" 
-      className={`relative hover:bg-transparent transition-all px-2 ${isTransparent ? "text-white hover:text-white/80 hover:bg-white/10" : "hover:opacity-70"} ${isBouncing ? "animate-cart-bounce" : ""} ${className}`}
-      aria-label={cartItemsCount > 0 ? `Cart (${cartItemsCount} items)` : 'Cart'}
+    <Button
+      variant="ghost"
+      size="icon"
+      // Over the hero the focus ring is white and flush, not an ink ring on a
+      // white offset box.
+      className={`relative ${isTransparent ? "focus-visible:ring-white focus-visible:ring-offset-0" : ""} ${isBouncing ? "animate-cart-bounce" : ""} ${className}`}
+      aria-label={ariaLabel}
       onClick={handleClick}
     >
-      <ShoppingBag className="h-6 w-6" strokeWidth={1.2} color={isTransparent ? "white" : "black"} />
+      <ShoppingBag className="!size-[22px]" strokeWidth={1.25} />
       {cartItemsCount > 0 && (
-        <span 
+        <span
           ref={badgeRef}
-          className={`absolute -top-1 -right-1 ${isTransparent ? 'bg-white text-black border-transparent' : 'bg-black text-white border-white'} text-[10px] rounded-full h-4 w-4 flex items-center justify-center font-bold shadow-md border-[1.5px] transition-transform duration-300 ${isBouncing ? "animate-badge-pop" : ""}`}
+          className={`absolute end-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-pill px-1 font-sans text-[10px] font-semibold leading-none tracking-normal transition-colors duration-300 ${
+            // Transparent header over the hero: white bubble, dark number.
+            isTransparent ? "bg-white text-ink [text-shadow:none]" : "bg-primary text-white"
+          } ${isBouncing ? "animate-badge-pop" : ""}`}
         >
           {cartItemsCount}
         </span>

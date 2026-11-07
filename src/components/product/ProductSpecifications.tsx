@@ -1,12 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { cn } from "@/lib/utils";
+import { highlightDescription } from "@/components/product/ProductInfo";
 
 interface ProductSpecificationsProps {
   product: {
@@ -19,53 +16,99 @@ interface ProductSpecificationsProps {
   };
 }
 
+type TabKey = "services" | "description" | "details" | "care";
+
+/**
+ * PDP information tabs (DESIGN_SYSTEM.md › Product page): `text-button`
+ * labels, the active one underlined, content in `.ds-fine`.
+ */
 export default function ProductSpecifications({ product }: ProductSpecificationsProps) {
   const t = useTranslations("ProductSpecifications");
   const locale = useLocale();
   const dir = locale === "ar" ? "rtl" : "ltr";
   const isAr = locale === "ar";
 
+  const hasDescription = !!product.longDescription?.trim();
+  // Details only when there is something real to say.
+  const hasDetails = !!(product.category?.trim() || product.materials?.trim());
+  const [active, setActive] = useState<TabKey>(hasDescription ? "description" : "services");
+
+  const tabs: { key: TabKey; label: string }[] = [
+    { key: "services", label: isAr ? "الخدمات" : "Services" },
+    ...(hasDescription ? [{ key: "description" as const, label: t("descriptionTitle") }] : []),
+    ...(hasDetails ? [{ key: "details" as const, label: isAr ? "التفاصيل" : "Details" }] : []),
+    { key: "care", label: isAr ? "العناية" : "Care" },
+  ];
+
   return (
-    <div className="mt-4" dir={dir}>
-      <Accordion type="single" collapsible defaultValue="materials-care" className="w-full">
+    <div dir={dir}>
+      <div role="tablist" className="flex flex-wrap gap-x-4 gap-y-2">
+        {tabs.map((tab) => {
+          const selected = tab.key === active;
+          return (
+            <button
+              key={tab.key}
+              type="button"
+              role="tab"
+              id={`pdp-tab-${tab.key}`}
+              aria-selected={selected}
+              aria-controls={`pdp-panel-${tab.key}`}
+              onClick={() => setActive(tab.key)}
+              className={cn(
+                "font-sans text-button tracking-button uppercase text-ink underline-offset-4 transition-opacity duration-fast",
+                selected ? "underline" : "hover:opacity-60"
+              )}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
 
-        {/* Materials & Care */}
-        <AccordionItem value="materials-care">
-          <AccordionTrigger className="text-lg font-semibold">
-            {t("materialsCareTitle")}
-          </AccordionTrigger>
-          <AccordionContent>
-            <div className="space-y-3 text-muted-foreground">
-              <p>{product.materials || t("noMaterials")}</p>
-              <p>{product.care || t("noCare")}</p>
+      <div
+        role="tabpanel"
+        id={`pdp-panel-${active}`}
+        aria-labelledby={`pdp-tab-${active}`}
+        className="ds-fine mt-4 flex flex-col gap-3"
+      >
+        {active === "services" && (
+          <>
+            <div>
+              <p className="text-ink">{t("shippingTitle")}</p>
+              <p>{product.shipping || t("shippingText")}</p>
             </div>
-          </AccordionContent>
-        </AccordionItem>
+            <div>
+              <p className="text-ink">{t("returnExchangeTitle")}</p>
+              <p>{product.returnExchange || t("returnExchangeText")}</p>
+            </div>
+          </>
+        )}
 
-        {/* Shipping */}
-        <AccordionItem value="shipping">
-          <AccordionTrigger className="text-lg font-semibold">
-            {t("shippingTitle")}
-          </AccordionTrigger>
-          <AccordionContent>
-            <p className="text-muted-foreground leading-relaxed">
-              {product.shipping || t("shippingText")}
-            </p>
-          </AccordionContent>
-        </AccordionItem>
+        {active === "description" && (
+          <p>
+            {hasDescription ? highlightDescription(product.longDescription!) : t("noDescription")}
+          </p>
+        )}
 
-        {/* Return & Exchange */}
-        <AccordionItem value="return-exchange">
-          <AccordionTrigger className="text-lg font-semibold">
-            {t("returnExchangeTitle")}
-          </AccordionTrigger>
-          <AccordionContent>
-            <p className="text-muted-foreground leading-relaxed">
-              {product.returnExchange || t("returnExchangeText")}
-            </p>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+        {active === "details" && (
+          <>
+            {product.category && (
+              <p>
+                <span className="text-ink">{isAr ? "الفئة: " : "Category: "}</span>
+                {product.category}
+              </p>
+            )}
+            {product.materials && (
+              <p>
+                <span className="text-ink">{isAr ? "الخامة: " : "Material: "}</span>
+                {product.materials}
+              </p>
+            )}
+          </>
+        )}
+
+        {active === "care" && <p>{product.care || t("noCare")}</p>}
+      </div>
     </div>
   );
 }

@@ -40,15 +40,19 @@ export type EmailOrder = {
 
 // ── Palette ────────────────────────────────────────────────────────────────
 
-const INK = "#14100C";
-const GOLD = "#A8834E";
-const MUTED = "#7A736B";
-const LINE = "#E7E1D8";
-const CANVAS = "#F4F1EC";
-const SOFT = "#FAF8F5";
+// Same tokens as the storefront (src/design-system/tokens.ts): ink, gray
+// tile, hairline, square corners. GOLD is kept as the "accent" name used
+// below but is now ink — the store has no gold.
+const INK = "#1C1C1C";
+const GOLD = "#1C1C1C";
+const MUTED = "#6E6E6E";
+const LINE = "#DDDDDD";
+const CANVAS = "#F5F5F5";
+const SOFT = "#FAFAFA";
 const GREEN = "#1B7F4B";
 
-const SERIF = "Georgia, 'Times New Roman', Times, serif";
+// Headings: a clean sans (Instrument Sans isn't available in mail clients).
+const SERIF = "'Helvetica Neue', Helvetica, Arial, sans-serif";
 const SANS = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
 
 const WHATSAPP_URL = `https://wa.me/${siteContact.whatsapp}`;
@@ -66,10 +70,11 @@ function escapeHtml(value: unknown): string {
 
 function money(amount: number | null | undefined): string {
   const value = Number(amount || 0);
-  return `EGP ${value.toLocaleString("en-US", {
+  // Same order as the site: "1,250 EGP".
+  return `${value.toLocaleString("en-US", {
     minimumFractionDigits: value % 1 === 0 ? 0 : 2,
     maximumFractionDigits: 2,
-  })}`;
+  })} EGP`;
 }
 
 /**
@@ -116,7 +121,7 @@ function layout({
   footerNote,
 }: LayoutInput): string {
   const pillColor = pill.tone === "positive" ? GREEN : GOLD;
-  const pillBg = pill.tone === "positive" ? "#EAF5EE" : "#F6EFE4";
+  const pillBg = pill.tone === "positive" ? "#EAF5EE" : CANVAS;
 
   return `<!DOCTYPE html>
 <html lang="en" dir="ltr">
@@ -136,7 +141,7 @@ function layout({
   <tr>
     <td align="center" style="padding:32px 12px;">
 
-      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;background:#FFFFFF;border:1px solid ${LINE};border-radius:16px;">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;background:#FFFFFF;border:1px solid ${LINE};border-radius:0;">
 
         <!-- Masthead -->
         <tr>
@@ -144,7 +149,7 @@ function layout({
             <!-- Wordmark as live text, not an image: every client blocks remote
                  images by default, and a masthead nobody sees until they click
                  "display images" is a masthead that isn't there. -->
-            <a href="${siteUrl}" style="display:inline-block;text-decoration:none;font-family:${SERIF};font-size:34px;line-height:1.1;letter-spacing:0.08em;color:${INK};">${escapeHtml(siteBrand)}</a>
+            <a href="${siteUrl}" style="display:inline-block;text-decoration:none;font-family:${SERIF};font-size:26px;line-height:1.1;letter-spacing:0.24em;text-transform:uppercase;color:${INK};">${escapeHtml(siteBrand)}</a>
             <div style="margin-top:14px;font-family:${SANS};font-size:10px;letter-spacing:0.34em;text-transform:uppercase;color:${MUTED};">Handmade in Egypt</div>
           </td>
         </tr>
@@ -158,8 +163,8 @@ function layout({
         <!-- Headline -->
         <tr>
           <td style="padding:28px 32px 0 32px;">
-            <span style="display:inline-block;background:${pillBg};color:${pillColor};font-family:${SANS};font-size:10px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;padding:7px 13px;border-radius:100px;">${escapeHtml(pill.label)}</span>
-            <h1 style="margin:16px 0 0 0;font-family:${SERIF};font-size:29px;line-height:1.28;color:${INK};font-weight:400;">${escapeHtml(heading)}</h1>
+            <span style="display:inline-block;background:${pillBg};color:${pillColor};font-family:${SANS};font-size:10px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;padding:7px 13px;border-radius:0;">${escapeHtml(pill.label)}</span>
+            <h1 style="margin:16px 0 0 0;font-family:${SERIF};font-size:26px;line-height:1.3;color:${INK};font-weight:500;">${escapeHtml(heading)}</h1>
             <p style="margin:12px 0 0 0;font-family:${SANS};font-size:15px;line-height:1.72;color:${MUTED};">${escapeHtml(intro)}</p>
           </td>
         </tr>
@@ -178,8 +183,8 @@ function layout({
           <td align="center" style="padding:28px 32px 0 32px;">
             <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;">
               <tr>
-                <td align="center" bgcolor="${INK}" style="background-color:${INK};border:1px solid ${INK};border-radius:100px;mso-padding-alt:17px 42px;">
-                  <a href="${cta.url}" style="display:inline-block;padding:17px 42px;font-family:${SANS};font-size:16px;font-weight:700;letter-spacing:0.03em;color:#FFFFFF !important;text-decoration:none !important;border-radius:100px;mso-text-raise:2px;">${escapeHtml(cta.label)}&nbsp;&rarr;</a>
+                <td align="center" bgcolor="${INK}" style="background-color:${INK};border:1px solid ${INK};border-radius:0;mso-padding-alt:17px 42px;">
+                  <a href="${cta.url}" style="display:inline-block;padding:17px 42px;font-family:${SANS};font-size:16px;font-weight:700;letter-spacing:0.03em;color:#FFFFFF !important;text-decoration:none !important;border-radius:0;mso-text-raise:2px;">${escapeHtml(cta.label)}&nbsp;&rarr;</a>
                 </td>
               </tr>
             </table>
@@ -219,16 +224,16 @@ function layout({
                 </td>
               </tr>
               <tr>
-                <td bgcolor="#FFFFFF" style="border:1px solid ${LINE};border-radius:100px;">
+                <td bgcolor="#FFFFFF" style="border:1px solid ${LINE};border-radius:0;">
                   <a href="${WHATSAPP_URL}" style="display:block;padding:11px 22px;font-family:${SANS};font-size:14px;font-weight:700;color:${INK};text-decoration:none;" dir="ltr">WhatsApp ${escapeHtml(siteContact.phoneInternational)}</a>
                 </td>
               </tr>
             </table>
-            <p style="margin:22px 0 0 0;font-family:${SANS};font-size:11px;line-height:1.7;color:#A79F95;">
+            <p style="margin:22px 0 0 0;font-family:${SANS};font-size:11px;line-height:1.7;color:#8A8A8A;">
               ${escapeHtml(siteBrand)} — premium handmade bags, delivered across Egypt.<br>
               This mailbox isn't monitored, so replies won't reach us — message us on WhatsApp instead.<br>
               You received this email because you placed an order at
-              <a href="${siteUrl}" style="color:#A79F95;text-decoration:underline;">${escapeHtml(siteUrl.replace(/^https?:\/\//, ""))}</a>.
+              <a href="${siteUrl}" style="color:#8A8A8A;text-decoration:underline;">${escapeHtml(siteUrl.replace(/^https?:\/\//, ""))}</a>.
             </p>
           </td>
         </tr>
@@ -249,7 +254,7 @@ function eyebrow(text: string): string {
 }
 
 function card(inner: string, background = SOFT): string {
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:18px;background:${background};border:1px solid ${LINE};border-radius:12px;">
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:18px;background:${background};border:1px solid ${LINE};border-radius:0;">
     <tr><td style="padding:18px 20px;">${inner}</td></tr>
   </table>`;
 }
@@ -297,7 +302,7 @@ function itemsBlock(order: EmailOrder): string {
                     // product shot that isn't already square.
                     `<td width="72" valign="top" style="padding-right:14px;">
                 <img src="${escapeHtml(image)}" width="72" alt=""
-                     style="display:block;border:1px solid ${LINE};border-radius:10px;width:72px;height:auto;background:${CANVAS};">
+                     style="display:block;border:1px solid ${LINE};border-radius:0;width:72px;height:auto;background:${CANVAS};">
               </td>`
                   : ""
               }
@@ -469,7 +474,7 @@ export function orderRecoveryEmail(
   // everything else — old price struck through, new price beside it.
   const discountBanner = discount
     ? `
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:20px;background:#FBF6EE;border:1px solid #E7D6BC;border-radius:12px;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:20px;background:${CANVAS};border:1px solid ${LINE};border-radius:0;">
     <tr>
       <td align="center" style="padding:20px;">
         <div style="font-family:${SANS};font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:${GOLD};font-weight:700;">${discount.percent}% off, just for you</div>
@@ -604,7 +609,7 @@ function cartItemsBlock(items: EmailCartItem[]): string {
                 image
                   ? `<td width="72" valign="top" style="padding-right:14px;">
                 <img src="${escapeHtml(image)}" width="72" alt=""
-                     style="display:block;border:1px solid ${LINE};border-radius:10px;width:72px;height:auto;background:${CANVAS};">
+                     style="display:block;border:1px solid ${LINE};border-radius:0;width:72px;height:auto;background:${CANVAS};">
               </td>`
                   : ""
               }
@@ -646,7 +651,7 @@ export function cartRecoveryEmail(
 
   const codeCard = discount
     ? `
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:20px;background:#FBF6EE;border:1px solid #E7D6BC;border-radius:12px;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:20px;background:${CANVAS};border:1px solid ${LINE};border-radius:0;">
     <tr>
       <td align="center" style="padding:22px 20px;">
         <div style="font-family:${SANS};font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:${GOLD};font-weight:700;">${discount.percent}% off, yours alone</div>
@@ -672,7 +677,7 @@ export function cartRecoveryEmail(
       <td align="right" style="font-family:${SANS};font-size:17px;font-weight:800;color:${INK};white-space:nowrap;padding-top:8px;">${escapeHtml(money(subtotal))}</td>
     </tr>
   </table>
-  <p style="margin:10px 0 0 0;font-family:${SANS};font-size:11px;line-height:1.6;color:#A79F95;">
+  <p style="margin:10px 0 0 0;font-family:${SANS};font-size:11px;line-height:1.6;color:#8A8A8A;">
     Before shipping${discount ? " and before your code" : ""}. Final prices are confirmed at checkout.
   </p>`
     : "";

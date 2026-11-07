@@ -9,6 +9,7 @@ import { useProducts } from "@/hooks/useProducts";
 import { useState, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import ProductCard from "@/components/product/ProductCard";
+import { ProductCardSkeleton } from "@/components/skeletons";
 
 const BestSellers = () => {
   const t = useTranslations("BestSellers");
@@ -50,12 +51,23 @@ const BestSellers = () => {
     emblaApi.on("reInit", onSelect);
   }, [emblaApi, onSelect]);
 
-  // Prevent hydration mismatch
-  if (!mounted) return null;
+  const isAr = locale === "ar";
 
-  // Don't render if no data
-  if (loading && products.length === 0) {
-    return null;
+  // Until the products are in, hold the space with the same 4-up card
+  // skeleton so the page doesn't jump when the row arrives.
+  if (!mounted || (loading && products.length === 0)) {
+    return (
+      <section className="bg-background py-section lg:py-section-lg" aria-busy="true">
+        <div className="mx-auto mb-8 h-7 w-48 animate-pulse bg-gray-100 lg:mb-10" />
+        <div className="grid animate-pulse grid-cols-2 gap-x-tile lg:grid-cols-4">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className={i > 1 ? "hidden lg:block" : ""}>
+              <ProductCardSkeleton />
+            </div>
+          ))}
+        </div>
+      </section>
+    );
   }
   
   if (!products || products.length === 0) return null;
@@ -70,81 +82,87 @@ const BestSellers = () => {
   }
 
   return (
-    <section className="bg-white">
-      <div className="container mx-auto px-5">
-        {/* Header */}
-        <div className="text-center mb-10">
-          <h2 className="font-sans font-normal text-3xl md:text-4xl text-gray-800 mb-2">
-            {t('title')}
-          </h2>
-          <div className="w-24 h-1 bg-[#C2A878] mx-auto rounded-full"></div>
-        </div>
+    <section className="bg-background py-section lg:py-section-lg">
+      {/* Header */}
+      <h2 className="ds-gutter ds-display-md mb-8 text-center text-ink lg:mb-10">{t('title')}</h2>
 
-        {/* Carousel */}
-        <div className="relative">
-          <div className="overflow-hidden" ref={emblaRef}>
-            <div className="flex -ml-4">
-              {bestSellers.map((product, index) => (
-                <div 
-                  key={product.id} 
-                  className="flex-[0_0_50%] md:flex-[0_0_33.33%] lg:flex-[0_0_25%] pl-4 min-w-0"
-                >
-                  <ProductCard 
-                    product={product as any} 
-                    index={index}
-                    showNewBadge={false}
-                  />
-                </div>
-              ))}
-            </div>
+      {/* Carousel (full-bleed) */}
+      <div className="relative">
+        <div className="overflow-hidden" ref={emblaRef}>
+          <div className="flex -ms-tile">
+            {bestSellers.map((product, index) => (
+              <div
+                key={product.id}
+                className="min-w-0 flex-[0_0_50%] ps-tile lg:flex-[0_0_25%]"
+              >
+                <ProductCard
+                  product={product as any}
+                  index={index}
+                  showNewBadge={false}
+                />
+              </div>
+            ))}
           </div>
-
-          {/* Navigation Arrows */}
-          <button
-            onClick={scrollPrev}
-            className={cn(
-              "absolute left-0 top-1/2 -translate-y-1/2 -ml-4 md:-ml-12 z-20 p-2 text-gray-800 hover:text-black transition-colors disabled:opacity-30 disabled:cursor-not-allowed hidden md:block",
-              !canScrollPrev && "md:hidden"
-            )}
-            disabled={!canScrollPrev}
-          >
-            <ChevronLeft className="w-8 h-8 md:w-10 md:h-10" />
-          </button>
-
-          <button
-            onClick={scrollNext}
-            className={cn(
-              "absolute right-0 top-1/2 -translate-y-1/2 -mr-4 md:-mr-12 z-20 p-2 text-gray-800 hover:text-black transition-colors disabled:opacity-30 disabled:cursor-not-allowed hidden md:block",
-              !canScrollNext && "md:hidden"
-            )}
-            disabled={!canScrollNext}
-          >
-            <ChevronRight className="w-8 h-8 md:w-10 md:h-10" />
-          </button>
         </div>
 
-        {/* Pagination Dots */}
-        <div className="flex justify-center gap-2 mt-8">
-          {scrollSnaps.map((_, index) => (
-            <button
-              key={index}
+        {/* Navigation Arrows */}
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={scrollPrev}
+          className={cn(
+            "absolute start-0 top-1/2 z-20 hidden -translate-y-1/2 md:inline-flex",
+            !canScrollPrev && "md:hidden"
+          )}
+          disabled={!canScrollPrev}
+          aria-label={isAr ? "السابق" : "Previous"}
+        >
+          <ChevronLeft strokeWidth={1.25} className="rtl:rotate-180" />
+        </Button>
+
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={scrollNext}
+          className={cn(
+            "absolute end-0 top-1/2 z-20 hidden -translate-y-1/2 md:inline-flex",
+            !canScrollNext && "md:hidden"
+          )}
+          disabled={!canScrollNext}
+          aria-label={isAr ? "التالي" : "Next"}
+        >
+          <ChevronRight strokeWidth={1.25} className="rtl:rotate-180" />
+        </Button>
+      </div>
+
+      {/* Pagination */}
+      <div className="flex justify-center gap-2 py-3 lg:hidden">
+        {scrollSnaps.map((_, index) => (
+          <button
+            key={index}
+            type="button"
+            className="py-2"
+            onClick={() => emblaApi?.scrollTo(index)}
+            aria-label={isAr ? `شريحة ${index + 1}` : `Slide ${index + 1}`}
+            aria-current={index === selectedIndex}
+          >
+            <span
               className={cn(
-                "w-2 h-2 rounded-full transition-all duration-300",
-                index === selectedIndex ? "bg-[#C2A878] w-4" : "bg-gray-300 hover:bg-gray-400"
+                "block h-px w-6 transition-colors duration-fast",
+                index === selectedIndex ? "bg-ink" : "bg-gray-200 hover:bg-gray-400"
               )}
-              onClick={() => emblaApi?.scrollTo(index)}
             />
-          ))}
-        </div>
+          </button>
+        ))}
+      </div>
 
-        {/* View All Button */}
-        <div className="text-center mt-12">
-          <Link href="/products">
-            <Button className="px-8 py-3 bg-black text-white hover:bg-[#C2A878] rounded-full tracking-[0.2em] font-sans font-medium uppercase text-xs transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1">
-              {t('viewAll')}
-            </Button>
-          </Link>
-        </div>
+      {/* View All Button */}
+      <div className="ds-gutter mt-8 text-center">
+        <Button asChild variant="outline">
+          <Link href="/products">{t('viewAll')}</Link>
+        </Button>
       </div>
     </section>
   );

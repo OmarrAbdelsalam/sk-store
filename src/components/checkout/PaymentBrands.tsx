@@ -28,7 +28,7 @@ function Badge({
   return (
     <span
       title={label}
-      className={`inline-flex items-center justify-center h-7 min-w-[42px] px-2 rounded-md border border-gray-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.05)] select-none ${
+      className={`inline-flex items-center justify-center h-7 min-w-[42px] px-2 rounded-ds border border-gray-200 bg-background select-none ${
         className || ""
       }`}
     >

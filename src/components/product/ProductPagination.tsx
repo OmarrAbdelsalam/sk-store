@@ -86,7 +86,7 @@ export default function ProductPagination({
   if (totalPages <= 1) return null;
 
   return (
-    <div className="mt-16" dir={dir} aria-label={t("paginationNavLabel")}>
+    <div className="pt-section px-gutter" dir={dir} aria-label={t("paginationNavLabel")}>
       <Pagination>
         <PaginationContent>
           {/* السابق */}
@@ -98,7 +98,7 @@ export default function ProductPagination({
                 if (canPrev) goTo(safeCurrent - 1);
               }}
               aria-disabled={!canPrev}
-              className={!canPrev ? "pointer-events-none opacity-50" : ""}
+              className={`ds-label ${!canPrev ? "pointer-events-none opacity-50" : ""}`}
             >
               {t("previous")}
             </PaginationPrevious>
@@ -117,6 +117,7 @@ export default function ProductPagination({
                   isActive={token === safeCurrent}
                   aria-current={token === safeCurrent ? "page" : undefined}
                   aria-label={t("pageOfTotal", { page: token, total: totalPages })}
+                  className={`ds-label h-button w-button ${token === safeCurrent ? "border-ink" : ""}`}
                   onClick={(e) => {
                     e.preventDefault();
                     goTo(token);
@@ -137,7 +138,7 @@ export default function ProductPagination({
                 if (canNext) goTo(safeCurrent + 1);
               }}
               aria-disabled={!canNext}
-              className={!canNext ? "pointer-events-none opacity-50" : ""}
+              className={`ds-label ${!canNext ? "pointer-events-none opacity-50" : ""}`}
             >
               {t("next")}
             </PaginationNext>

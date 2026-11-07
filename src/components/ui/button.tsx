@@ -4,26 +4,36 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 
+/**
+ * Button — DESIGN_SYSTEM.md › Buttons (Prestige): square, 44px, 13px Nunito
+ * uppercase with 0.18em tracking. Never add rounded-* or a custom height.
+ */
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-[0.98]",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-none border border-transparent font-sans text-button font-normal uppercase transition-[background-color,color,border-color,opacity] duration-fast focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90 rounded-full",
-        destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-full",
-        outline:
-          "border border-input bg-background hover:bg-accent hover:text-accent-foreground rounded-full",
-        secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80 rounded-full",
-        ghost: "hover:bg-accent hover:text-accent-foreground rounded-full",
-        link: "text-primary underline-offset-4 hover:underline",
+        /** Solid ink — add to cart, checkout, submit. */
+        default: "border-primary bg-primary text-white hover:border-night hover:bg-night",
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        /** Ink outline. */
+        outline: "border-ink bg-transparent text-ink hover:bg-ink hover:text-white",
+        /** White surface. */
+        secondary: "border-white bg-white text-ink hover:border-ink",
+        /** Text / icon only — inherits the surrounding text color. */
+        ghost: "bg-transparent hover:opacity-60",
+        /** Underlined link. */
+        link: "h-auto px-0 font-display text-label underline underline-offset-4 hover:opacity-70",
+        /** Solid white on photography (Prestige slideshow). */
+        overlay: "border-white bg-white text-ink hover:bg-transparent hover:text-white",
+        /** White outline on a dark surface. */
+        onPrimary: "border-white bg-transparent text-white hover:bg-white hover:text-ink",
       },
       size: {
-        default: "min-h-[48px] px-6 py-3",
-        sm: "h-9 px-3",
-        lg: "min-h-[54px] px-8 py-4",
-        icon: "h-10 w-10",
+        default: "h-button px-7",
+        sm: "h-10 px-4",
+        lg: "h-12 px-8",
+        icon: "h-10 w-10 px-0",
       },
     },
     defaultVariants: {

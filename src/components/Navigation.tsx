@@ -1,14 +1,13 @@
 "use client"
 
 import { MobileMenu } from "./navigation/MobileMenu";
-import { DesktopMenu } from "./navigation/DesktopMenu";
+import Wordmark from "./Wordmark";
 import { SearchAndFilters } from "./navigation/SearchAndFilters";
 import { CartButton } from "./navigation/CartButton";
 import { useTranslations, useLocale } from 'next-intl';
 import { usePathname } from 'next/navigation';
 import { Link } from "@/i18n/navigation";
-import { Globe } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Globe, User } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
@@ -30,88 +29,75 @@ export const LanguageSwitcher = () => {
   );
 };
 
+/**
+ * Header — DESIGN_SYSTEM.md › Page anatomy (2). Parfois layout, theme tokens.
+ * One row. Desktop: ☰ + "sk bags" wordmark (start) · underlined search field (center) ·
+ *   "My orders" + "Cart" with icons (end).
+ * Phone: ☰ + search · logo · cart.
+ * Home page, while over the hero: transparent with white text and the
+ * wordmark in white. Everywhere else and once scrolled: canvas bar, ink text,
+ * no bottom line.
+ */
 const Navigation = () => {
-  const t = useTranslations();
-  const locale = useLocale();
+  const t = useTranslations("Nav");
   const pathname = usePathname();
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
-  // Transparent only on homepage at scroll point 0
-  const isHome = pathname === '/';
-  const isTransparent = isHome && !isScrolled;
-
+  // Parfois behaviour: the promo bar scrolls away, the header sticks to the
+  // top and stays transparent for as long as it is over the hero; it turns
+  // into the solid bar only once the hero has scrolled past.
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-
-    handleScroll();
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    const onScroll = () => setScrolled(window.scrollY > window.innerHeight - 120);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // Locale prefix is "never" (src/i18n/routing.ts), so home is always "/".
+  const overHero = pathname === "/" && !scrolled;
+  // Logo = the drawn SVG wordmark (components/Wordmark.tsx) — geometric
+  // monoline letters in the Parfois style; follows the header text colour.
+
   return (
-    <header className="w-full sticky top-0 z-50 transition-all duration-300">
-      {/* Main Navigation */}
-      <div className="pointer-events-auto w-full">
-        <div 
-          className={`h-16 md:h-20 flex items-center px-4 sm:px-6 lg:px-4 xl:px-8 2xl:px-12 transition-all duration-300 ${
-            isTransparent 
-              ? "bg-white border-b border-gray-900/10 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] lg:bg-transparent lg:border-transparent lg:shadow-none"
-              : "bg-white/95 backdrop-blur-md border-b border-gray-900/10 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)]"
-          }`}
-        >
-          {/* Mobile & Tablet Layout - يظهر حتى مقاس lg (768px وأصغر) */}
-          <div className="lg:hidden w-full relative flex items-center justify-between">
-            {/* Left: Menu Button */}
-            <div className="flex-1 flex justify-start items-center">
-              <MobileMenu />
-            </div>
-            
-            {/* Center: Logo */}
-            <div className="flex-1 flex justify-center items-center">
-              <Link href="/" className="hover:opacity-70 transition-opacity duration-300">
-                <Image src="/sk.png" alt="SK Bags" width={110} height={40} className="h-9 sm:h-10 w-auto object-contain" priority />
-              </Link>
-            </div>
-            
-            {/* Right: Search & Cart */}
-            <div className="flex-1 flex justify-end items-center gap-1 sm:gap-2">
-              <SearchAndFilters />
-              <CartButton isMobile={true} />
-            </div>
-          </div>
-
-          {/* Desktop Layout - يظهر على الشاشات من lg (1024px) وما فوق */}
-          <div className="hidden lg:flex items-center justify-between w-full max-w-[1440px] mx-auto gap-2">
-            {/* Logo + Separator + Categories */}
-            <div className="flex items-center gap-3 lg:gap-3.5 xl:gap-6 2xl:gap-8 min-w-0 shrink">
-              <Link href="/" className="hover:opacity-70 transition-opacity duration-300 shrink-0">
-                <Image 
-                  src="/sk.png" 
-                  alt="SK Bags" 
-                  width={130} 
-                  height={44} 
-                  className={`h-9 xl:h-10 2xl:h-11 w-auto object-contain transition-all duration-300 ${
-                    isTransparent ? "invert brightness-200" : ""
-                  }`} 
-                  priority 
-                />
-              </Link>
-              <div className={`w-px h-7 xl:h-8 transition-colors duration-300 shrink-0 ${isTransparent ? "bg-white/25" : "bg-black/10"}`}></div>
-              <DesktopMenu isTransparent={isTransparent} />
-            </div>
-
-            {/* Right Icons */}
-            <div className="flex items-center space-x-1.5 xl:space-x-3 shrink-0 ml-2">
-              <SearchAndFilters isTransparent={isTransparent} />
-              
-              <div className={`w-px h-5 mx-0.5 xl:mx-1 transition-colors duration-300 ${isTransparent ? "bg-white/25" : "bg-black/10"}`}></div>
-              
-              <CartButton isMobile={false} isTransparent={isTransparent} />
-            </div>
-          </div>
+    <header
+      className={`sticky top-0 z-50 w-full transition-colors duration-300 ${
+        overHero
+          ? "bg-transparent text-white text-shadow-overlay [&_svg]:drop-shadow-overlay"
+          : "bg-background text-ink"
+      }`}
+    >
+      {/* Phone & tablet */}
+      <div className="flex h-header-mobile items-center px-1 lg:hidden">
+        <div className="flex flex-1 items-center">
+          <MobileMenu />
+          <SearchAndFilters />
         </div>
+        <Link href="/" aria-label={t("logo")} className="shrink-0">
+          <Wordmark className="h-[17px] w-auto" title={t("brand")} />
+        </Link>
+        <div className="flex flex-1 items-center justify-end">
+          <CartButton isMobile isTransparent={overHero} />
+        </div>
+      </div>
+
+      {/* Desktop */}
+      <div className="ds-gutter hidden h-header-desktop grid-cols-[1fr_auto_1fr] items-center lg:grid">
+        <div className="flex items-center gap-3">
+          <MobileMenu />
+          <Link href="/" aria-label={t("logo")} className="flex items-center gap-3 transition-opacity duration-fast hover:opacity-70">
+            <Wordmark className="h-[22px] w-auto" title={t("brand")} />
+          </Link>
+        </div>
+
+        <SearchAndFilters showLabel />
+
+        <nav className="flex items-center justify-end gap-7" aria-label={t("orders")}>
+          <Link href="/my-orders" className="flex items-center gap-2 font-sans text-fine font-semibold transition-opacity duration-fast hover:opacity-70">
+            <User className="size-5" strokeWidth={1.25} />
+            {t("orders")}
+          </Link>
+          <CartButton showLabel />
+        </nav>
       </div>
     </header>
   );

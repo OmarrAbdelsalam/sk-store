@@ -5,6 +5,9 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import ProductCard from "@/components/product/ProductCard";
 import ProductPagination from "@/components/product/ProductPagination";
+import ProductFilters, { colorKey, readFilterParams } from "@/components/product/ProductFilters";
+import { ProductsPageSkeleton } from "@/components/skeletons";
+import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
 import { getCategories, type CategoryOption } from "@/api/categories";
 import {
@@ -168,10 +171,27 @@ const ClientProductGrid = ({ initialProducts }: ClientProductGridProps) => {
   /* Search & filter */
   const qRaw = (searchParams.get("q") ?? "").toLowerCase().trim();
 
-  const filteredProducts = useMemo(() => {
-    if (activeFilter === "All" && !qRaw) return allProducts;
+  // ?badge=new_arrival | best_seller | sale — used by the header menu.
+  // Falls back to every product when nothing carries the badge, so the
+  // page is never empty (same rule as the home page sections).
+  const badge = (searchParams.get("badge") ?? "").trim();
+  const badgeProducts = useMemo(() => {
+    if (!badge) return allProducts;
+    const matches = allProducts.filter((p) => {
+      if (p.raw?.badge === badge) return true;
+      if (badge === "sale") {
+        const before = Number((p as any).beforePrice ?? (p.raw as any)?.compareAtPrice) || 0;
+        return before > Number(p.priceNum);
+      }
+      return false;
+    });
+    return matches.length > 0 ? matches : allProducts;
+  }, [allProducts, badge]);
 
-    return allProducts.filter((p) => {
+  const filteredProducts = useMemo(() => {
+    if (activeFilter === "All" && !qRaw) return badgeProducts;
+
+    return badgeProducts.filter((p) => {
       const okCategory =
         activeFilter === "All" ||
         (p.categoryIds ?? []).some(
@@ -184,16 +204,43 @@ const ClientProductGrid = ({ initialProducts }: ClientProductGridProps) => {
           (p.nameEn ?? "").toLowerCase().includes(qRaw);
       return okCategory && okSearch;
     });
-  }, [allProducts, activeFilter, qRaw]);
+  }, [badgeProducts, activeFilter, qRaw]);
+
+  /* Price / colour / sort (ProductFilters writes them to the URL) */
+  const fp = readFilterParams(searchParams);
+  const fpKey = `${fp.priceFrom}|${fp.priceTo}|${fp.colors.join(",")}|${fp.sort}`;
+  const refinedProducts = useMemo(() => {
+    let list = filteredProducts.filter((p) => {
+      const price = Number(p.priceNum) || 0;
+      if (fp.priceFrom !== null && price < fp.priceFrom) return false;
+      if (fp.priceTo !== null && price > fp.priceTo) return false;
+      if (fp.colors.length) {
+        const names = (p.raw?.colors ?? []).flatMap((c: any) => [
+          colorKey(c),
+          String(c.colorNameAr ?? "").trim().toLowerCase(),
+        ]);
+        if (!fp.colors.some((k) => names.includes(k))) return false;
+      }
+      return true;
+    });
+    if (fp.sort === "price-asc") list = [...list].sort((a, b) => a.priceNum - b.priceNum);
+    if (fp.sort === "price-desc") list = [...list].sort((a, b) => b.priceNum - a.priceNum);
+    return list;
+  }, [filteredProducts, fpKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Back to page 1 whenever a filter or the sort changes.
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [fpKey]);
 
   /* Pagination */
-  const totalPages = Math.ceil(filteredProducts.length / productsPerPage) || 1;
+  const totalPages = Math.ceil(refinedProducts.length / productsPerPage) || 1;
 
   const displayedProducts = useMemo(() => {
     const indexOfLastProduct = currentPage * productsPerPage;
     const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
-    return filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
-  }, [filteredProducts, currentPage, productsPerPage]);
+    return refinedProducts.slice(indexOfFirstProduct, indexOfLastProduct);
+  }, [refinedProducts, currentPage, productsPerPage]);
 
   /* Prefetch visible products */
   useEffect(() => {
@@ -229,92 +276,72 @@ const ClientProductGrid = ({ initialProducts }: ClientProductGridProps) => {
     return locale === "ar" ? cat.arabicName : cat.englishName;
   }, [activeFilter, categories, locale]);
 
-  if (!mounted) return null;
-
-  // Show skeleton while loading
-  if (isLoadingMore) {
+  // Before mount and while loading: the same skeleton as the route loader,
+  // so the page doesn't flash blank or change shape.
+  if (!mounted || isLoadingMore) {
     return (
-      <section className="pb-8 bg-background">
-        <div className="container mx-auto px-5">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 items-stretch">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="space-y-2 md:space-y-4 animate-pulse">
-                <div className="aspect-[4/5] w-full rounded bg-muted" />
-                <div className="space-y-1.5 md:space-y-2">
-                  <div className="h-4 md:h-6 w-3/4 rounded bg-muted" />
-                  <div className="h-3 md:h-4 w-1/2 rounded bg-muted" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+      <section className="bg-background pb-section">
+        <ProductsPageSkeleton />
       </section>
     );
   }
 
-  return (
-    <section id="products" className="pb-8 bg-background">
-      <div className="container mx-auto px-5">
-        {/* Breadcrumb - Desktop only */}
-        <nav className="hidden md:flex items-center gap-2 text-sm mb-6">
-          <span className="text-muted-foreground">
-            {locale === "ar" ? "الرئيسية" : "Home"}
-          </span>
-          <span className="text-muted-foreground">/</span>
-          {activeCategoryName ? (
-            <>
-              <button
-                onClick={() => handleCategoryClick(null)}
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {locale === "ar" ? "كل المنتجات" : "All Products"}
-              </button>
-              <span className="text-muted-foreground">/</span>
-              <span className="font-medium text-foreground">
-                {activeCategoryName}
-              </span>
-            </>
-          ) : (
-            <span className="font-medium text-foreground">
-              {locale === "ar" ? "كل المنتجات" : "All Products"}
-            </span>
-          )}
-        </nav>
+  const badgeTitles: Record<string, [string, string]> = {
+    new_arrival: ["New In", "وصل حديثاً"],
+    best_seller: ["Best Sellers", "الأكثر مبيعاً"],
+    sale: ["Sale", "تخفيضات"],
+  };
+  const pageTitle =
+    activeCategoryName ||
+    (badge && badgeTitles[badge] ? badgeTitles[badge][locale === "ar" ? 1 : 0] : "") ||
+    (locale === "ar" ? "كل الشنط" : "All bags");
 
-        {/* Category Tabs - Mobile only */}
-        {categories.length > 0 && (
-          <div className="md:hidden mb-6 overflow-x-auto scrollbar-hide">
-            <div className="flex gap-2 min-w-max pb-2">
-              <button
-                onClick={() => handleCategoryClick(null)}
-                className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${
-                  activeFilter === "All"
-                    ? "bg-black text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                {locale === "ar" ? "كل المنتجات" : "All Products"}
-              </button>
-              {categories.map((cat) => (
+
+  return (
+    <section id="products" className="pb-section bg-background">
+      <div className="container px-0">
+        {/* Page title (Parfois: small, bold, above the tabs) */}
+        <div className="ds-page pb-1 pt-2">
+          <h1 className="font-sans text-fine font-semibold text-ink">{pageTitle}</h1>
+        </div>
+
+        {/* Category tabs — active one underlined in ink */}
+        <div className="border-b border-gray-200">
+          <div className="ds-page flex overflow-x-auto scrollbar-hide" role="tablist">
+            {[{ key: "All", label: locale === "ar" ? "عرض الكل" : "View All", cat: null as CategoryOption | null },
+              ...categories.map((cat) => ({
+                key: String(cat.key),
+                label: locale === "ar" ? cat.arabicName : cat.englishName,
+                cat,
+              }))].map((tab) => {
+              const active = String(activeFilter) === tab.key;
+              return (
                 <button
-                  key={cat.key}
-                  onClick={() => handleCategoryClick(cat)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${
-                    String(activeFilter) === String(cat.key)
-                      ? "bg-black text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  key={tab.key}
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => handleCategoryClick(tab.cat)}
+                  className={`-mb-px flex h-10 shrink-0 items-center whitespace-nowrap border-b-2 px-4 font-sans text-fine transition-colors duration-fast ${
+                    active
+                      ? "border-ink font-semibold text-ink"
+                      : "border-transparent text-ink/55 hover:text-ink"
                   }`}
                 >
-                  {locale === "ar" ? cat.arabicName : cat.englishName}
+                  {tab.label}
                 </button>
-              ))}
-            </div>
+              );
+            })}
           </div>
-        )}
+        </div>
+
+        {/* Filters — dropdowns (Price · Color · Has deal), count, Sort by */}
+        <div className="ds-page py-5">
+          <ProductFilters products={filteredProducts as any} resultCount={refinedProducts.length} />
+        </div>
 
         {/* Products grid */}
         {displayedProducts.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 items-stretch">
+          <div className="ds-grid-page grid grid-cols-2 items-stretch gap-x-tile gap-y-row-gap md:grid-cols-3 lg:grid-cols-4">
             {displayedProducts.map((product, index) => (
               <ProductCard
                 key={String(product.id)}
@@ -324,11 +351,19 @@ const ClientProductGrid = ({ initialProducts }: ClientProductGridProps) => {
             ))}
           </div>
         ) : (
-          hasLoaded && activeFilter !== "All" && (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground text-sm">
-                {locale === "ar" ? "لا توجد منتجات في هذا التصنيف" : "No products in this category"}
+          hasLoaded && (activeFilter !== "All" || refinedProducts.length === 0) && (
+            <div className="flex flex-col items-center px-gutter py-section text-center">
+              <h2 className="font-display text-[22px] leading-tight text-ink sm:text-[26px]">
+                {locale === "ar" ? "مفيش منتجات هنا" : "No products found"}
+              </h2>
+              <p className="mt-2 font-sans text-[14px] leading-6 text-gray-500">
+                {refinedProducts.length === 0 && filteredProducts.length > 0
+                  ? locale === "ar" ? "مفيش منتجات بتطابق الفلاتر اللي اخترتيها." : "No products match these filters."
+                  : locale === "ar" ? "مفيش منتجات في التصنيف ده لسه." : "There are no products in this category yet."}
               </p>
+              <Button asChild variant="outline" className="mt-6 h-12 px-8">
+                <Link href="/products">{locale === "ar" ? "مسح الفلاتر" : "Clear filters"}</Link>
+              </Button>
             </div>
           )
         )}

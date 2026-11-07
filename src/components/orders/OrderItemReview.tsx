@@ -109,9 +109,9 @@ export function OrderItemReview({
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center p-3 bg-muted/50 rounded-lg border">
-        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-        <span className="ml-2 text-sm text-muted-foreground">
+      <div className="flex items-center justify-center border border-gray-200 bg-background p-3">
+        <div className="h-4 w-4 animate-spin rounded-pill border border-gray-200 border-t-primary"></div>
+        <span className="ds-label ms-2 text-gray-500">
           {t("checkingReview")}
         </span>
       </div>
@@ -121,25 +121,26 @@ export function OrderItemReview({
   if (existingReview) {
     return (
       <>
-        <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg border">
+        <div className="flex items-start gap-3 bg-beige p-3">
           <div className="flex-1 space-y-2">
             <div className="flex items-center gap-2">
               <div className="flex">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <Star
                     key={star}
+                    strokeWidth={1.25}
                     className={`h-4 w-4 ${
                       star <= existingReview.rating
-                        ? "fill-yellow-400 text-yellow-400"
+                        ? "fill-ink text-ink"
                         : "text-gray-300"
                     }`}
                   />
                 ))}
               </div>
-              <span className="text-sm font-medium">{t("yourReview")}</span>
+              <span className="ds-label-strong text-ink">{t("yourReview")}</span>
             </div>
             {existingReview.comment && (
-              <p className="text-sm text-muted-foreground">{existingReview.comment}</p>
+              <p className="ds-body text-gray-500">{existingReview.comment}</p>
             )}
           </div>
           <div className="flex gap-1">
@@ -147,9 +148,10 @@ export function OrderItemReview({
               variant="ghost"
               size="icon"
               onClick={() => setShowReviewDialog(true)}
-              className="text-muted-foreground hover:text-foreground"
+              className="text-ink"
+              aria-label={isAr ? "تعديل التقييم" : "Edit review"}
             >
-              <Edit className="h-4 w-4" />
+              <Edit className="h-4 w-4" strokeWidth={1.25} />
             </Button>
           </div>
         </div>
@@ -172,11 +174,10 @@ export function OrderItemReview({
     <>
       <Button
         variant="outline"
-        size="sm"
         onClick={() => setShowReviewDialog(true)}
         className="w-full"
       >
-        <Star className="h-4 w-4 me-2" />
+        <Star className="h-4 w-4" strokeWidth={1.25} />
         {t("addReview")}
       </Button>
 

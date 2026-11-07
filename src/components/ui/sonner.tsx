@@ -12,15 +12,17 @@ const Toaster = ({ ...props }: ToasterProps) => {
     <Sonner
       theme={theme as ToasterProps["theme"]}
       className="toaster group"
+      style={{ "--border-radius": "var(--radius)" } as React.CSSProperties}
       toastOptions={{
         classNames: {
           toast:
-            "group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg",
-          description: "group-[.toast]:text-muted-foreground",
+            "group toast font-sans text-body group-[.toaster]:rounded-md group-[.toaster]:border group-[.toaster]:border-gray-200 group-[.toaster]:bg-background group-[.toaster]:text-ink group-[.toaster]:shadow-none [.rm-admin-theme_&]:group-[.toaster]:shadow-lg",
+          title: "ds-body font-medium",
+          description: "ds-body group-[.toast]:text-gray-500",
           actionButton:
-            "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
+            "group-[.toast]:rounded-ds group-[.toast]:bg-primary group-[.toast]:text-label group-[.toast]:uppercase group-[.toast]:text-primary-foreground",
           cancelButton:
-            "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
+            "group-[.toast]:rounded-ds group-[.toast]:bg-beige group-[.toast]:text-label group-[.toast]:uppercase group-[.toast]:text-ink",
         },
       }}
       {...props}

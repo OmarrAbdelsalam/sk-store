@@ -4,11 +4,7 @@ import { useState, useEffect } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import ProductCard from "@/components/product/ProductCard";
 import { getProductsPage, getMainImage, type ProductApi } from "@/lib/api/products";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-} from "@/components/ui/carousel";
+import { formatPrice } from "@/lib/price";
 
 interface RelatedProductsProps {
   currentProductId: number | string;
@@ -72,7 +68,7 @@ export default function RelatedProducts({
   const mapProduct = (product: ProductApi, index: number) => ({
     id: product.id,
     name: isAr ? (product.nameAr || product.nameEn || "") : (product.nameEn || product.nameAr || ""),
-    price: `${product.price} ${isAr ? 'جنيه' : 'EGP'}`,
+    price: formatPrice(product.price, isAr ? 'ar' : 'en'),
     priceNum: product.price,
     image: getMainImage(product) || "/placeholder.png",
     description: isAr ? (product.descriptionAr || product.descriptionEn || "") : (product.descriptionEn || product.descriptionAr || ""),
@@ -91,31 +87,23 @@ export default function RelatedProducts({
 
   if (loading) {
     return (
-      <div className="mt-16">
-        <h2 className="text-2xl font-semibold mb-6">
+      <section className="pt-section">
+        <h2 className="ds-title-md mb-6 text-center text-ink">
           {t("title")}
         </h2>
-        {/* Mobile Loading */}
-        <div className="flex gap-4 overflow-hidden lg:hidden">
-          {[1, 2].map((i) => (
-            <div key={i} className="animate-pulse min-w-[60%]">
-              <div className="bg-gray-100 aspect-[4/5] rounded mb-3"></div>
-              <div className="bg-gray-100 h-4 rounded mb-2"></div>
-              <div className="bg-gray-100 h-4 rounded w-2/3"></div>
-            </div>
-          ))}
-        </div>
-        {/* Desktop Loading */}
-        <div className="hidden lg:grid grid-cols-4 gap-4">
+        {/* Product row skeleton: 2 up on phone, 4 up on desktop */}
+        <div className="grid grid-cols-2 gap-tile lg:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="animate-pulse">
-              <div className="bg-gray-100 aspect-[4/5] rounded mb-3"></div>
-              <div className="bg-gray-100 h-4 rounded mb-2"></div>
-              <div className="bg-gray-100 h-4 rounded w-2/3"></div>
+              <div className="aspect-product bg-beige"></div>
+              <div className="flex flex-col items-center gap-2 px-4 pt-2 pb-4">
+                <div className="h-2.5 w-2/3 bg-gray-100"></div>
+                <div className="h-2.5 w-1/3 bg-gray-100"></div>
+              </div>
             </div>
           ))}
         </div>
-      </div>
+      </section>
     );
   }
 
@@ -124,38 +112,13 @@ export default function RelatedProducts({
   }
 
   return (
-    <div className="mt-16">
-      <div className="mb-6">
-        <h2 className="text-2xl font-semibold">
-          {t("title")}
-        </h2>
-      </div>
+    <section className="pt-section">
+      <h2 className="ds-title-md mb-6 text-center text-ink">
+        {t("title")}
+      </h2>
 
-      {/* Mobile Carousel */}
-      <div className="lg:hidden">
-        <Carousel
-          opts={{
-            align: "start",
-            direction: isAr ? "rtl" : "ltr",
-          }}
-          className="w-full"
-        >
-          <CarouselContent className="-ml-3">
-            {products.map((product, index) => (
-              <CarouselItem key={product.id} className="pl-3 basis-[65%]">
-                <ProductCard
-                  index={index}
-                  product={mapProduct(product, index)}
-                  hideViewDetails
-                />
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-        </Carousel>
-      </div>
-
-      {/* Desktop Grid */}
-      <div className="hidden lg:grid grid-cols-4 gap-6">
+      {/* Product row: 2 up on phone, 4 up on desktop, 2px gutters */}
+      <div className="grid grid-cols-2 gap-tile lg:grid-cols-4">
         {products.map((product, index) => (
           <ProductCard
             key={product.id}
@@ -165,6 +128,6 @@ export default function RelatedProducts({
           />
         ))}
       </div>
-    </div>
+    </section>
   );
 }

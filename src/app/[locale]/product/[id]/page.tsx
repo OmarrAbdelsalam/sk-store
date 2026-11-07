@@ -62,8 +62,8 @@ export default async function ProductDetailPage({
   const productName = isAr ? product.nameAr : product.nameEn;
 
   return (
-    <div className="min-h-screen" dir={dir}>
-      <div className="mx-auto px-0 pt-0 pb-4 lg:container lg:px-4 lg:py-4">
+    <div className="min-h-screen bg-background" dir={dir}>
+      <div className="container px-0 pb-section">
         <ProductHeader productName={productName} />
         <ProductDetailContent product={product} />
       </div>

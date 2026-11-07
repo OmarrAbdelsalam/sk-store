@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import ProductCard from "@/components/product/ProductCard";
 import { useLocale } from "next-intl";
 import type { ProductApi } from "@/api/products";
+import { formatPrice } from "@/lib/price";
 
 interface NewArrivalsCarouselProps {
   products: ProductApi[];
@@ -59,7 +60,7 @@ const NewArrivalsCarousel = ({ products, viewAllText }: NewArrivalsCarouselProps
       name: locale === "ar" ? p.nameAr : p.nameEn,
       nameAr: p.nameAr,
       nameEn: p.nameEn,
-      price: `${p.price} ${locale === "ar" ? "جنيه" : "EGP"}`,
+      price: formatPrice(p.price, locale),
       priceNum: p.price,
       image: mainImage,
       description:
@@ -79,16 +80,18 @@ const NewArrivalsCarousel = ({ products, viewAllText }: NewArrivalsCarouselProps
     };
   });
 
+  const isAr = locale === "ar";
+
   return (
     <>
       {/* Carousel - renders products immediately, embla enhances after hydration */}
       <div className="relative">
         <div className="overflow-hidden" ref={emblaRef}>
-          <div className="flex -ml-4">
+          <div className="flex -ms-tile">
             {mappedProducts.map((product, index) => (
               <div
                 key={product.id}
-                className="flex-[0_0_50%] md:flex-[0_0_33.33%] lg:flex-[0_0_25%] pl-4 min-w-0"
+                className="min-w-0 flex-[0_0_50%] ps-tile lg:flex-[0_0_25%]"
               >
                 <ProductCard
                   product={product as any}
@@ -102,54 +105,68 @@ const NewArrivalsCarousel = ({ products, viewAllText }: NewArrivalsCarouselProps
         </div>
 
         {/* Navigation Arrows */}
-        <button
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
           onClick={scrollPrev}
           className={cn(
-            "absolute left-0 top-1/2 -translate-y-1/2 -ml-4 md:-ml-12 z-20 p-2 text-gray-800 hover:text-black transition-colors disabled:opacity-30 disabled:cursor-not-allowed hidden md:block",
+            "absolute start-0 top-1/2 z-20 hidden -translate-y-1/2 md:inline-flex",
             !canScrollPrev && "md:hidden"
           )}
           disabled={!canScrollPrev}
+          aria-label={isAr ? "السابق" : "Previous"}
         >
-          <ChevronLeft className="w-8 h-8 md:w-10 md:h-10" />
-        </button>
+          <ChevronLeft strokeWidth={1.25} className="rtl:rotate-180" />
+        </Button>
 
-        <button
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
           onClick={scrollNext}
           className={cn(
-            "absolute right-0 top-1/2 -translate-y-1/2 -mr-4 md:-mr-12 z-20 p-2 text-gray-800 hover:text-black transition-colors disabled:opacity-30 disabled:cursor-not-allowed hidden md:block",
+            "absolute end-0 top-1/2 z-20 hidden -translate-y-1/2 md:inline-flex",
             !canScrollNext && "md:hidden"
           )}
           disabled={!canScrollNext}
+          aria-label={isAr ? "التالي" : "Next"}
         >
-          <ChevronRight className="w-8 h-8 md:w-10 md:h-10" />
-        </button>
+          <ChevronRight strokeWidth={1.25} className="rtl:rotate-180" />
+        </Button>
       </div>
 
-      {/* Pagination Dots */}
+      {/* Pagination (phones only — desktop shows the 4-up row with arrows) */}
       {scrollSnaps.length > 1 && (
-        <div className="flex justify-center gap-2 mt-8">
+        <div className="flex justify-center gap-2 py-3 lg:hidden">
           {scrollSnaps.map((_, index) => (
             <button
               key={index}
-              className={cn(
-                "w-2 h-2 rounded-full transition-all duration-300",
-                index === selectedIndex
-                  ? "bg-[#C2A878] w-4"
-                  : "bg-gray-300 hover:bg-gray-400"
-              )}
+              type="button"
+              className="py-2"
               onClick={() => emblaApi?.scrollTo(index)}
-            />
+              aria-label={isAr ? `شريحة ${index + 1}` : `Slide ${index + 1}`}
+              aria-current={index === selectedIndex}
+            >
+              <span
+                className={cn(
+                  "block h-px w-6 transition-colors duration-fast",
+                  index === selectedIndex ? "bg-ink" : "bg-gray-200 hover:bg-gray-400"
+                )}
+              />
+            </button>
           ))}
         </div>
       )}
 
-      <div className="text-center mt-12">
-        <Link href="/products">
-          <Button className="px-8 py-3 bg-black text-white hover:bg-[#C2A878] rounded-full tracking-[0.2em] font-sans font-medium uppercase text-xs transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1">
-            {viewAllText}
+      {/* View all — same as Best Sellers */}
+      {viewAllText && (
+        <div className="ds-gutter mt-8 text-center">
+          <Button asChild variant="outline">
+            <Link href="/products?badge=new_arrival">{viewAllText}</Link>
           </Button>
-        </Link>
-      </div>
+        </div>
+      )}
     </>
   );
 };

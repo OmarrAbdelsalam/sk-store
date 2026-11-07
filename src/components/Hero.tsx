@@ -27,18 +27,24 @@ export default async function Hero() {
 
   // Summer Edition slide only
   const slide1 = {
-    title: "Summer Edition",
+    eyebrow: "Handmade in Egypt",
+    title: "Crochet bags, made by hand",
     description: "Discover our vibrant new summer collection of handcrafted bags.",
-    desktopImage: "/heroo.jpeg",
-    mobileMedia: "/e.webp",
+    // Product-led photos where the bag is the subject (hero.png 1080×1920,
+    // discover2.webp 965×1280) — split on desktop, the sand shot on phones.
+    desktopImage: "/hero.png",
+    desktopImage2: "/discover2.webp",
+    desktopPositions: ["50% 22%", "50% 78%"] as [string, string],
+    mobileMedia: "/hero.png",
     mobileIsVideo: false,
-    buttonText: "SHOP SUMMER",
-    buttonLink: `/products?category=summer-collection`,
-    mobileButtonLink: `/products?category=summer-collection`,
+    buttonText: "Shop the collection",
+    buttonLink: `/products`,
+    mobileButtonLink: `/products`,
   };
 
   return (
-    <section className="w-full bg-white overflow-hidden lg:-mt-20">
+    // Pulled up under the transparent header (home page only).
+    <section className="w-full overflow-hidden bg-background -mt-header-mobile lg:-mt-header-desktop">
       <HeroCarousel slides={[slide1]} />
     </section>
   );

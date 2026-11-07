@@ -5,6 +5,7 @@ import { moreToDiscoverService, MoreToDiscoverItem } from "@/services/moreToDisc
 
 const DiscoverSection = async () => {
   const t = await getTranslations("DiscoverSection");
+  const tBanners = await getTranslations("Banners");
 
   let items: MoreToDiscoverItem[] = [];
   try {
@@ -22,36 +23,31 @@ const DiscoverSection = async () => {
   const displayItems = items.length >= 2 ? items.slice(0, 2) : fallbackItems;
 
   return (
-    <section className="bg-white overflow-hidden">
-      <div className="container mx-auto px-5">
-        <div className="text-center mb-10">
-          <h2 className="font-sans font-normal text-3xl md:text-4xl text-gray-800 mb-2">
-            {t("title")}
-          </h2>
-          <div className="w-24 h-[2px] bg-[#C2A878] mx-auto mt-3 rounded-full"></div>
-        </div>
+    <section className="bg-background" aria-labelledby="discover-title">
+      <h2 id="discover-title" className="sr-only">{t("title")}</h2>
 
-        <div className="grid grid-cols-2 gap-3 md:gap-4">
-          {displayItems.map((item) => (
-            <Link key={item.id} href={item.link || "/products"}>
-              <div className="relative aspect-[4/5] lg:aspect-square lg:max-h-[80vh] overflow-hidden group cursor-pointer shadow-md md:shadow-lg rounded">
-                <Image
-                  src={item.image_url}
-                  alt={item.title || "Discover"}
-                  fill
-                  className="object-cover transition-transform duration-700 group-hover:scale-105"
-                  sizes="(max-width: 768px) 50vw, 50vw"
-                />
-                <div className="absolute inset-0 bg-black/5 group-hover:bg-black/15 transition-colors duration-500" />
+      {/* Full-bleed two-up editorial tiles */}
+      <div className="grid grid-cols-1 gap-tile md:grid-cols-2">
+        {displayItems.map((item) => (
+          <Link key={item.id} href={item.link || "/products"} className="group block">
+            <div className="relative aspect-tile overflow-hidden bg-beige">
+              <Image
+                src={item.image_url}
+                alt={item.title || t("title")}
+                fill
+                className="object-cover transition-transform duration-700 ease-brand group-hover:scale-[1.03]"
+                sizes="(max-width: 768px) 100vw, 50vw"
+              />
+              <div className="absolute inset-0 bg-scrim" />
+              <div className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-6 px-gutter pb-10 text-center lg:pb-12">
                 {item.title && (
-                  <div className="absolute bottom-4 left-0 right-0 text-center">
-                    <span className="text-white font-sans font-bold text-lg drop-shadow-md">{item.title}</span>
-                  </div>
+                  <h3 className="ds-display-lg ds-on-image">{item.title}</h3>
                 )}
+                <span className="ds-btn-overlay">{tBanners("shopNow")}</span>
               </div>
-            </Link>
-          ))}
-        </div>
+            </div>
+          </Link>
+        ))}
       </div>
     </section>
   );

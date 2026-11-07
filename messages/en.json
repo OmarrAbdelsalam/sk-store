@@ -34,7 +34,10 @@
     "cart": "Shopping cart",
     "orders": "Orders",
     "myOrders": "My Orders",
-    "itemsInCart": "{count} item(s) in cart"
+    "itemsInCart": "{count} item(s) in cart",
+    "shopAll": "Shop all",
+    "shopByCategory": "Shop by category",
+    "close": "Close menu"
   },
   "Checkout": {
     "emptyCartTitle": "No items in cart",
@@ -253,7 +256,6 @@
       "currentQty": "Current quantity {qty}"
     }
   },
-
   "Footer": {
     "brand": "SK Bags",
     "slogan": "Handcrafted Quality for Every Occasion",
@@ -285,7 +287,18 @@
   "Nav": {
     "home": "Home",
     "allProducts": "All Products",
-    "logo": "SK bags"
+    "logo": "SK bags",
+    "menu": "Menu",
+    "search": "Search",
+    "cart": "Cart",
+    "orders": "My orders",
+    "delivery": "Delivery across Egypt",
+    "shop": "Shop",
+    "newIn": "New In",
+    "bestSellers": "Best Sellers",
+    "collections": "Collections",
+    "sale": "Sale",
+    "brand": "SK Bags"
   },
   "ProductGrid": {
     "all": "All",

@@ -2,7 +2,7 @@
 
 import { useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "@/i18n/navigation";
+import { Link } from "@/i18n/navigation";
 import { useEffect, useRef, useState } from "react";
 
 interface MaisonClutchClientProps {
@@ -31,7 +31,6 @@ const MaisonClutchClient = ({
   videoUrl,
 }: MaisonClutchClientProps) => {
   const locale = useLocale();
-  const router = useRouter();
   const isAr = locale === "ar";
   const videoRef = useRef<HTMLVideoElement>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -70,53 +69,41 @@ const MaisonClutchClient = ({
     }
   }, [isVisible]);
 
-  const handleShopClick = () => {
-    router.push(href);
-  };
-
   return (
-    <section ref={sectionRef} className="bg-[#F0EBE3] py-12 md:py-16 overflow-hidden">
-      <div className="container mx-auto px-5">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-          {/* Text Content */}
-          <div className="order-2 lg:order-1 flex flex-col items-center lg:items-start text-center lg:text-left space-y-8">
-            <h2 className="font-sans font-medium text-3xl md:text-5xl lg:text-6xl text-gray-900 leading-tight">
-              {title}
-            </h2>
+    <section ref={sectionRef} className="overflow-hidden bg-background">
+      {/* Full-bleed editorial video */}
+      <div className="relative h-[82svh] w-full bg-beige lg:h-[80vh]">
+        {/* Always mounted with preload="metadata" and a #t fragment, so the
+            first frame paints right away as a poster instead of an empty
+            gray block; it starts playing once the section is in view. */}
+        <video
+          ref={videoRef}
+          className="absolute inset-0 h-full w-full object-cover"
+          muted
+          loop
+          playsInline
+          preload={isVisible ? "auto" : "metadata"}
+          src={`${videoUrl}#t=0.1`}
+          aria-hidden="true"
+        />
+        <div className="absolute inset-0 bg-scrim" />
 
-            <div className="space-y-6 max-w-xl">
-              <p className="text-gray-600 text-base md:text-lg leading-relaxed font-light">
-                {subtitle}
-              </p>
-              <p className="text-gray-600 text-base md:text-lg leading-relaxed font-light">
-                {description}
-              </p>
-            </div>
-
-            <Button
-              onClick={handleShopClick}
-              className="px-8 py-3 min-h-[48px] bg-black text-white hover:bg-[#C2A878] rounded-full tracking-[0.2em] uppercase text-xs transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1"
-            >
-              {buttonText}
-            </Button>
-          </div>
-
-          {/* Video Content */}
-          <div className="order-1 lg:order-2 w-full h-[500px] lg:h-[700px] relative bg-gray-100 rounded overflow-hidden">
-            {isVisible && (
-              <video
-                ref={videoRef}
-                className="absolute inset-0 w-full h-full object-cover"
-                muted
-                loop
-                playsInline
-                preload="none"
-                src={videoUrl}
-              />
-            )}
-          </div>
+        <div className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-8 px-gutter pb-12 text-center lg:pb-16">
+          <h2 className="ds-display-lg ds-on-image">{title}</h2>
+          <Button asChild variant="overlay">
+            <Link href={href}>{buttonText}</Link>
+          </Button>
         </div>
       </div>
+
+      {/* Banner only, like the reference; subtitle/description stay for
+          screen readers. */}
+      {(subtitle || description) && (
+        <div className="sr-only">
+          {subtitle && <p>{subtitle}</p>}
+          {description && <p>{description}</p>}
+        </div>
+      )}
     </section>
   );
 };

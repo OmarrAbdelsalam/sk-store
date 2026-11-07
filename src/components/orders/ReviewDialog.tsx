@@ -127,7 +127,7 @@ export function ReviewDialog({
         <div className="space-y-6 py-4">
           {/* Star Rating */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">{t("rating")}</label>
+            <label className="ds-label block text-ink">{t("rating")}</label>
             <div className="flex gap-2">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
@@ -136,12 +136,15 @@ export function ReviewDialog({
                   onClick={() => setRating(star)}
                   onMouseEnter={() => setHoveredRating(star)}
                   onMouseLeave={() => setHoveredRating(0)}
-                  className="transition-transform hover:scale-110"
+                  aria-label={`${star} / 5`}
+                  aria-pressed={rating >= star}
+                  className="transition-opacity duration-fast hover:opacity-60"
                 >
                   <Star
-                    className={`h-8 w-8 ${
+                    strokeWidth={1.25}
+                    className={`h-7 w-7 ${
                       star <= (hoveredRating || rating)
-                        ? "fill-yellow-400 text-yellow-400"
+                        ? "fill-ink text-ink"
                         : "text-gray-300"
                     }`}
                   />
@@ -152,8 +155,8 @@ export function ReviewDialog({
 
           {/* Comment */}
           <div className="space-y-2">
-            <label htmlFor="comment" className="text-sm font-medium">
-              {t("comment")} <span className="text-muted-foreground">({t("optional")})</span>
+            <label htmlFor="comment" className="ds-label block text-ink">
+              {t("comment")} <span className="text-gray-500">({t("optional")})</span>
             </label>
             <Textarea
               id="comment"
@@ -163,19 +166,19 @@ export function ReviewDialog({
               rows={4}
               maxLength={500}
             />
-            <p className="text-xs text-muted-foreground text-end">
+            <p className="ds-fine text-end">
               {comment.length}/500
             </p>
           </div>
 
           {error && (
-            <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
+            <div className="border border-danger bg-background p-3 text-fine text-danger">
               {error}
             </div>
           )}
 
           {/* Actions */}
-          <div className="flex gap-3 justify-end">
+          <div className="flex justify-end gap-3">
             <Button
               type="button"
               variant="outline"

@@ -3,6 +3,7 @@ import { fetchProducts } from "@/api/products";
 import { generatePageMetadata } from "@/lib/metadata";
 import type { Metadata } from "next";
 import ClientProductGrid from "@/components/product/ClientProductGrid";
+import { ProductsPageSkeleton } from "@/components/skeletons";
 
 export async function generateMetadata({
   params,
@@ -22,20 +23,6 @@ export async function generateMetadata({
   });
 }
 
-const ProductGridSkeleton = () => (
-  <div className="container mx-auto px-5 py-12">
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 items-stretch">
-      {Array.from({ length: 8 }).map((_, i) => (
-        <div key={i} className="space-y-2 animate-pulse">
-          <div className="aspect-[4/5] w-full rounded bg-muted" />
-          <div className="h-4 w-3/4 rounded bg-muted" />
-          <div className="h-3 w-1/2 rounded bg-muted" />
-        </div>
-      ))}
-    </div>
-  </div>
-);
-
 export default async function ProductsPage({
   params,
 }: {
@@ -53,9 +40,9 @@ export default async function ProductsPage({
   }
 
   return (
-    <main className="min-h-screen pt-4 md:pt-6">
+    <main className="min-h-screen bg-background">
       {/* Products with filtering (breadcrumb is inside ClientProductGrid) */}
-      <Suspense fallback={<ProductGridSkeleton />}>
+      <Suspense fallback={<ProductsPageSkeleton />}>
         <ClientProductGrid initialProducts={initialProducts} />
       </Suspense>
     </main>

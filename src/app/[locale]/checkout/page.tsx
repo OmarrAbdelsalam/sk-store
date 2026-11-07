@@ -1,9 +1,13 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ChevronDown, ShoppingBag } from "lucide-react";
+import Link from "next/link";
+import CheckoutHeader from "@/components/checkout/CheckoutHeader";
+import { CheckoutSkeleton } from "@/components/skeletons";
+import { CONTACT_INFO } from "@/lib/constants";
 import { useCart } from "@/hooks/useCart";
-import CheckoutOrderSummary from "@/components/checkout/CheckoutOrderSummary";
+import CheckoutOrderSummary, { payableNowOf } from "@/components/checkout/CheckoutOrderSummary";
 import CheckoutForm, { type CheckoutSubmitData, type PaymentPlan } from "@/components/checkout/CheckoutForm";
 import EmptyCart from "@/components/checkout/EmptyCart";
 import { useRouter } from "next/navigation";
@@ -12,6 +16,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { getShippingPrice, type CheckoutFormData } from "@/lib/checkout-utils";
 import { API_ROUTES } from "@/lib/api-routes";
 import { track, saveCartSnapshot, flushEvents } from "@/lib/track";
+import { formatAmount } from "@/lib/price";
 
 export default function Checkout() {
   const router = useRouter();
@@ -28,6 +33,7 @@ export default function Checkout() {
   const [selectedGovernorate, setSelectedGovernorate] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [mounted, setMounted] = useState(false);
+  const [summaryOpen, setSummaryOpen] = useState(false);
   const [discount, setDiscount] = useState<{
     amount: number;
     percentage: number;
@@ -84,14 +90,7 @@ export default function Checkout() {
     return () => window.removeEventListener("pageshow", handlePageShow);
   }, []);
 
-  const nf = useMemo(
-    () =>
-      new Intl.NumberFormat(locale, {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }),
-    [locale]
-  );
+  const nf = { format: formatAmount };
 
   const computedTotal = useMemo(() => {
     const subtotal = getTotalPrice();
@@ -305,32 +304,25 @@ export default function Checkout() {
     }
   };
 
-  if (!mounted) {
-    return (
-      <div className="min-h-screen" dir={dir}>
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="animate-pulse space-y-6">
-            <div className="h-px w-full bg-border" />
-            <div className="h-8 w-48 bg-muted" />
-            <div className="h-px w-full bg-border" />
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const cartLabel = isAr ? "الرجوع للسلة" : "Back to cart";
+
+  if (!mounted) return <CheckoutSkeleton />;
 
   if (orderCompleted || isProcessing) {
     return (
-      <div className="min-h-screen flex items-center justify-center" dir={dir}>
-        <div className="text-center space-y-6">
-          <div className="animate-spin h-10 w-10 border-2 border-foreground border-t-transparent mx-auto" />
-          <p className="text-sm tracking-widest uppercase text-muted-foreground">
-            {orderCompleted
-              ? isAr
-                ? "جاري التحويل لبوابة الدفع..."
-                : "Redirecting to payment gateway..."
-              : t("processingOrder")}
-          </p>
+      <div className="min-h-screen bg-white" dir={dir}>
+        <CheckoutHeader cartLabel={cartLabel} />
+        <div className="flex min-h-[60vh] items-center justify-center px-gutter">
+          <div className="space-y-5 text-center">
+            <div className="mx-auto size-8 animate-spin rounded-full border-2 border-gray-200 border-t-ink" />
+            <p className="font-sans text-[14px] text-gray-500">
+              {orderCompleted
+                ? isAr
+                  ? "جاري التحويل لبوابة الدفع..."
+                  : "Redirecting to the payment page…"
+                : t("processingOrder")}
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -338,51 +330,70 @@ export default function Checkout() {
 
   if (items.length === 0) return <EmptyCart dir={dir} />;
 
+  const summaryProps = {
+    items,
+    totalPrice: getTotalPrice(),
+    shippingPrice,
+    shippingKnown: !!selectedGovernorate,
+    discount,
+    onDiscountChange: setDiscount,
+    disabled: isProcessing,
+    phoneNumber,
+    freeShippingApplied,
+    bogoDiscount,
+  };
+  const payableNow = payableNowOf({
+    totalPrice: getTotalPrice(),
+    shippingPrice,
+    discount,
+    bogoDiscount,
+  });
+
   return (
-    <div className="min-h-screen bg-background" dir={dir}>
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
-        {/* Back Button */}
+    <div className="min-h-screen bg-white" dir={dir}>
+      <CheckoutHeader cartLabel={cartLabel} />
+
+      {/* Phone: collapsible "Show order summary" bar with the total */}
+      <div className="border-b border-gray-200 bg-beige lg:hidden">
         <button
-          onClick={() => router.push(`/cart`)}
-          className="hidden sm:inline-flex items-center gap-2 text-sm tracking-wider uppercase text-muted-foreground hover:text-foreground transition-colors mb-6"
-          aria-label={t("backToCart")}
+          type="button"
+          onClick={() => setSummaryOpen((v) => !v)}
+          aria-expanded={summaryOpen}
+          aria-controls="mobile-order-summary"
+          className="flex w-full items-center justify-between gap-4 px-gutter py-4"
         >
-          {isAr ? (
-            <ArrowRight className="h-4 w-4" />
-          ) : (
-            <ArrowLeft className="h-4 w-4" />
-          )}
-          {t("backToCart")}
-        </button>
-
-        {/* Page Title */}
-        <div className="mb-8 sm:mb-10">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-light tracking-wider uppercase">
-            {t("checkoutTitle")}
-          </h1>
-          <div className="h-px w-16 bg-foreground mt-4" />
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12">
-          {/* Order Summary */}
-          <div className="order-last lg:order-last lg:col-span-5 lg:sticky lg:top-24 lg:h-fit">
-            <CheckoutOrderSummary
-              items={items}
-              totalPrice={getTotalPrice()}
-              shippingPrice={shippingPrice}
-              discount={discount}
-              onDiscountChange={setDiscount}
-              disabled={isProcessing}
-              phoneNumber={phoneNumber}
-              freeShippingApplied={freeShippingApplied}
-              bogoDiscount={bogoDiscount}
+          <span className="flex items-center gap-1.5 font-sans text-[14px] text-ink">
+            <ShoppingBag className="size-[18px]" strokeWidth={1.25} />
+            {summaryOpen
+              ? isAr ? "إخفاء ملخص الطلب" : "Hide order summary"
+              : isAr ? "عرض ملخص الطلب" : "Show order summary"}
+            <ChevronDown
+              className={`size-4 transition-transform duration-300 ${summaryOpen ? "rotate-180" : ""}`}
+              strokeWidth={1.5}
             />
+          </span>
+          <span className="font-sans text-[17px] font-semibold tabular-nums text-ink">
+            {nf.format(payableNow)} <span className="text-[12px] font-normal text-gray-500">{isAr ? "ج.م" : "EGP"}</span>
+          </span>
+        </button>
+        <div
+          id="mobile-order-summary"
+          className={`grid transition-[grid-template-rows] duration-300 ease-brand ${summaryOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
+        >
+          <div className="overflow-hidden">
+            <div className="px-gutter pb-6 pt-2">
+              <CheckoutOrderSummary {...summaryProps} />
+            </div>
           </div>
+        </div>
+      </div>
 
-          {/* Form */}
-          <div className="order-first lg:order-first lg:col-span-7 bg-[#F0EBE3]/40 p-5 sm:p-8 border border-[#d4c9bc] rounded-[32px]">
+      <div className="lg:grid lg:min-h-[calc(100vh-84px)] lg:grid-cols-2">
+        {/* Form column — content hugs the centre line */}
+        <div className="lg:flex lg:justify-end">
+          <div className="w-full px-gutter pb-12 pt-8 lg:max-w-[600px] lg:px-[38px] lg:pt-[38px]">
             {orderError && (
-              <div className="p-4 bg-red-50 border border-red-300 text-red-700 text-sm rounded-sm mb-6">
+              <div role="alert" className="mb-6 border border-danger bg-white p-4 font-sans text-[14px] leading-5 text-danger">
                 {orderError}
               </div>
             )}
@@ -392,11 +403,37 @@ export default function Checkout() {
               totalPrice={computedTotal}
               totalAmount={nf.format(computedTotal)}
               shippingCost={shippingPrice}
+              freeShipping={freeShippingApplied}
               onGovernorateChange={setSelectedGovernorate}
               onPhoneChange={setPhoneNumber}
             />
+
+            {/* Footer links (Shopify keeps these under the form) */}
+            <nav className="mt-12 flex flex-wrap gap-x-5 gap-y-2 border-t border-gray-200 pt-4 font-sans text-[12px] leading-4">
+              <Link href="/cart" className="text-ink underline underline-offset-2 transition-opacity duration-fast hover:opacity-60">
+                {isAr ? "الرجوع للسلة" : "Return to cart"}
+              </Link>
+              <Link href="/products" className="text-ink underline underline-offset-2 transition-opacity duration-fast hover:opacity-60">
+                {isAr ? "كملي تسوق" : "Continue shopping"}
+              </Link>
+              <a
+                href={CONTACT_INFO.whatsappLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-ink underline underline-offset-2 transition-opacity duration-fast hover:opacity-60"
+              >
+                {isAr ? "محتاجة مساعدة؟ واتساب" : "Need help? WhatsApp us"}
+              </a>
+            </nav>
           </div>
         </div>
+
+        {/* Summary column — gray, full height, content sticks while scrolling */}
+        <aside className="hidden border-s border-gray-200 bg-beige lg:block" aria-label={isAr ? "ملخص الطلب" : "Order summary"}>
+          <div className="sticky top-0 w-full max-w-[520px] px-[38px] py-[38px]">
+            <CheckoutOrderSummary {...summaryProps} />
+          </div>
+        </aside>
       </div>
     </div>
   );

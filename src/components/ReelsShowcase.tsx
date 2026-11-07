@@ -3,11 +3,13 @@
 import useEmblaCarousel from "embla-carousel-react";
 import { Play, X, Volume2, VolumeX } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
+import { Button } from "@/components/ui/button";
 import { useLocale, useTranslations } from "next-intl";
 import { getFeaturedSocialProofs, type SocialProofVideo } from "@/api/socialProof";
+import { formatPrice } from "@/lib/price";
 
 export const ReelsShowcase = () => {
   const t = useTranslations("ReelsShowcase");
@@ -59,18 +61,6 @@ export const ReelsShowcase = () => {
     loadVideos();
   }, []);
 
-  // Prevent scroll when modal is open
-  useEffect(() => {
-    if (selectedReel) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [selectedReel]);
-
   const getThumbnail = (video: SocialProofVideo) => {
     if (video.thumbnail_url) return video.thumbnail_url;
     const ytMatch = video.video_url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/);
@@ -78,9 +68,9 @@ export const ReelsShowcase = () => {
     return null;
   };
 
-  const getTitle = (video: SocialProofVideo) => {
-    return locale === 'ar' ? video.title_ar : video.title_en;
-  };
+  const isAr = locale === "ar";
+  const getTitle = (video: SocialProofVideo) =>
+    (isAr ? video.title_ar || video.title_en : video.title_en || video.title_ar) || (isAr ? "فيديو" : "Video");
 
   const getEmbedUrl = (url: string) => {
     const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/);
@@ -99,12 +89,12 @@ export const ReelsShowcase = () => {
 
   const getFormattedPrice = (video: SocialProofVideo) => {
     if (!video.product_price) return null;
-    return `${video.product_price} ${locale === 'ar' ? 'ج.م' : 'EGP'}`;
+    return formatPrice(video.product_price, locale);
   };
 
   const getFormattedPriceBefore = (video: SocialProofVideo) => {
     if (!video.product_price_before) return null;
-    return `${video.product_price_before} ${locale === 'ar' ? 'ج.م' : 'EGP'}`;
+    return formatPrice(video.product_price_before, locale);
   };
 
   if (!mounted || (loading && videos.length === 0)) {
@@ -122,163 +112,133 @@ export const ReelsShowcase = () => {
   };
 
   return (
-    <section className="bg-[#F0EBE3] py-12 md:py-16">
-      <div className="container mx-auto px-5">
-        {/* Header */}
-        <div className="text-center mb-10">
-          <h2 className="font-sans font-normal text-3xl md:text-4xl text-gray-800 mb-2">
-            {t('title')}
-          </h2>
-          <div className="w-24 h-[2px] bg-[#C2A878] rounded-full mx-auto mt-3"></div>
-        </div>
+    <section className="bg-beige py-section lg:py-section-lg">
+      {/* Header */}
+      <h2 className="sr-only">{t('title')}</h2>
 
-        <div className="overflow-hidden -mx-5 md:mx-0" ref={emblaRef}>
-          <div className={`flex -ml-4 ${getCenterClasses()}`}>
-            {videos.map((video) => (
-              <div
-                key={video.id}
-                className="flex-[0_0_75%] md:flex-[0_0_40%] lg:flex-[0_0_24%] pl-4 min-w-0"
+      {/* Full-bleed carousel */}
+      <div className="overflow-hidden" ref={emblaRef}>
+        <div className={`flex -ms-tile ${getCenterClasses()}`}>
+          {videos.map((video) => (
+            <div key={video.id} className="min-w-0 flex-[0_0_75%] ps-tile md:flex-[0_0_40%] lg:flex-[0_0_24%]">
+              <button
+                type="button"
                 onClick={() => setSelectedReel(video)}
+                aria-label={`${isAr ? "تشغيل" : "Play"}: ${getTitle(video)}`}
+                className="group relative block aspect-[9/16] w-full overflow-hidden bg-gray-200 focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink"
               >
-                <div className="relative aspect-[9/16] bg-gray-200 rounded-xl overflow-hidden group cursor-pointer shadow-sm">
-                  {getThumbnail(video) ? (
-                    <Image
-                      src={getThumbnail(video)!}
-                      alt={getTitle(video) || "فيديو"}
-                      fill
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
-                      loading="lazy"
-                      sizes="(max-width: 768px) 75vw, (max-width: 1024px) 40vw, 30vw"
-                    />
-                  ) : (
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-100 to-purple-100 transition-opacity duration-300 opacity-80 group-hover:opacity-100" />
-                  )}
+                {getThumbnail(video) && (
+                  <Image
+                    src={getThumbnail(video)!}
+                    alt=""
+                    fill
+                    className="object-cover transition-transform duration-500 ease-brand group-hover:scale-[1.04]"
+                    loading="lazy"
+                    sizes="(max-width: 768px) 75vw, (max-width: 1024px) 40vw, 30vw"
+                  />
+                )}
+                <span className="absolute inset-0 bg-scrim" />
 
-                  {/* Play Icon */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-12 h-12 bg-white/30 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/50 group-hover:scale-110 transition-transform duration-300">
-                      <Play className="w-5 h-5 fill-current ml-1" />
-                    </div>
-                  </div>
+                {/* Play icon */}
+                <span className="absolute inset-0 flex items-center justify-center">
+                  <span className="ds-btn-overlay w-button-overlay px-0">
+                    <Play strokeWidth={1.25} className="h-4 w-4 fill-current" />
+                  </span>
+                </span>
 
-                  {/* Text Overlay */}
-                  <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent pt-12">
-                    <p className="text-white font-medium text-sm md:text-base drop-shadow-md">
-                      {getTitle(video) || "فيديو"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+                {/* Title */}
+                <span className="absolute inset-x-0 bottom-0 px-4 pb-4 text-center">
+                  <span className="ds-label ds-on-image">{getTitle(video)}</span>
+                </span>
+              </button>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* Reel Modal */}
-      <AnimatePresence>
-        {selectedReel && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setSelectedReel(null)}
-              className="absolute inset-0 bg-black/90 backdrop-blur-sm"
-            />
+      {/* Reel modal — a real dialog: Esc closes, focus is trapped, page scroll locks */}
+      <DialogPrimitive.Root open={!!selectedReel} onOpenChange={(o) => !o && setSelectedReel(null)}>
+        <DialogPrimitive.Portal>
+          <DialogPrimitive.Overlay className="fixed inset-0 z-[100] bg-ink/90 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+          <DialogPrimitive.Content
+            className="fixed left-1/2 top-1/2 z-[101] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center overflow-hidden bg-ink outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
+            style={{ width: "min(80vw, calc(90vh * 9 / 16))", aspectRatio: "9/16", maxHeight: "90vh" }}
+            dir={isAr ? "rtl" : "ltr"}
+          >
+            {selectedReel && (
+              <>
+                <DialogPrimitive.Title className="sr-only">{getTitle(selectedReel)}</DialogPrimitive.Title>
+                <DialogPrimitive.Description className="sr-only">
+                  {isAr ? "فيديو من عملائنا" : "A video from our customers"}
+                </DialogPrimitive.Description>
 
-            {/* Modal Content */}
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-              className="relative bg-black rounded-2xl overflow-hidden shadow-2xl flex flex-col items-center justify-center"
-              style={{ width: "min(80vw, calc(90vh * 9 / 16))", aspectRatio: "9/16", maxHeight: "90vh" }}
-            >
-              {/* Close Button */}
-              <button
-                onClick={() => setSelectedReel(null)}
-                className="absolute top-4 left-4 z-[110] bg-white/20 hover:bg-white/40 backdrop-blur-md text-white p-2 rounded-full transition-colors"
-                aria-label="Close"
-              >
-                <X className="w-6 h-6" />
-              </button>
+                <DialogPrimitive.Close asChild>
+                  <Button type="button" variant="overlay" size="icon" className="absolute start-4 top-4 z-[110]" aria-label={isAr ? "إغلاق" : "Close"}>
+                    <X strokeWidth={1.25} />
+                  </Button>
+                </DialogPrimitive.Close>
 
-              {/* Video Player */}
-              {selectedReel.video_url.includes('youtube') || selectedReel.video_url.includes('vimeo') ? (
-                <iframe
-                  src={getEmbedUrl(selectedReel.video_url)}
-                  className="w-full h-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              ) : (
-                <div className="relative w-full h-full">
-                  <video
-                    ref={videoRef}
-                    src={selectedReel.video_url}
-                    autoPlay
-                    loop
-                    muted={false}
-                    playsInline
-                    controls
-                    className="w-full h-full object-cover"
+                {selectedReel.video_url.includes("youtube") || selectedReel.video_url.includes("vimeo") ? (
+                  <iframe
+                    src={getEmbedUrl(selectedReel.video_url)}
+                    title={getTitle(selectedReel)}
+                    className="h-full w-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
                   />
+                ) : (
+                  <div className="relative h-full w-full">
+                    <video
+                      ref={videoRef}
+                      src={selectedReel.video_url}
+                      autoPlay
+                      loop
+                      muted={false}
+                      playsInline
+                      controls
+                      className="h-full w-full object-cover"
+                    />
+                    <Button
+                      type="button"
+                      variant="overlay"
+                      size="icon"
+                      onClick={toggleMute}
+                      className="absolute end-4 top-4"
+                      aria-label={isMuted ? (isAr ? "تشغيل الصوت" : "Unmute") : (isAr ? "كتم الصوت" : "Mute")}
+                    >
+                      {isMuted ? <VolumeX strokeWidth={1.25} /> : <Volume2 strokeWidth={1.25} />}
+                    </Button>
+                  </div>
+                )}
 
-                  {/* Sound Control Button */}
-                  <button
-                    onClick={toggleMute}
-                    className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-200 backdrop-blur-sm border border-white/20"
-                    aria-label={isMuted ? "تشغيل الصوت" : "كتم الصوت"}
-                  >
-                    {isMuted ? (
-                      <VolumeX className="w-5 h-5" />
-                    ) : (
-                      <Volume2 className="w-5 h-5" />
-                    )}
-                  </button>
-                </div>
-              )}
-
-              {/* Product Info Overlay */}
-              {selectedReel.product_id && (selectedReel.product_name_ar || selectedReel.product_name_en) && (
-                <div className="absolute bottom-4 left-4 right-4 z-[110]">
-                  <div className="bg-black/40 backdrop-blur-xl border border-white/20 rounded-2xl p-4 flex items-center gap-4">
-                    {/* Shop Button */}
-                    <Link href={`/product/${selectedReel.product_id}`} className="shrink-0">
-                      <button className="bg-[#004D40] hover:bg-[#003d33] text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors">
-                        {locale === 'ar' ? 'تسوق الآن' : 'SHOP NOW'}
-                      </button>
-                    </Link>
-
-                    {/* Product Details */}
-                    <div className="flex-1 min-w-0 text-right">
-                      <h4 className="text-white text-sm font-medium truncate mb-1">
-                        {locale === 'ar' ? selectedReel.product_name_ar : selectedReel.product_name_en}
-                      </h4>
-
-                      {/* Product Price - from JOIN */}
-                      {getFormattedPrice(selectedReel) && (
-                        <div className="flex items-center justify-end gap-2">
-                          {getFormattedPriceBefore(selectedReel) && (
-                            <span className="text-gray-300 text-xs line-through">
-                              {getFormattedPriceBefore(selectedReel)}
-                            </span>
-                          )}
-                          <span className="text-white text-sm font-bold">
-                            {getFormattedPrice(selectedReel)}
-                          </span>
-                        </div>
-                      )}
+                {/* Product */}
+                {selectedReel.product_id && (selectedReel.product_name_ar || selectedReel.product_name_en) && (
+                  <div className="absolute inset-x-4 bottom-4 z-[110]">
+                    <div className="flex items-center gap-4 border border-white/30 bg-ink/50 p-4">
+                      <Button asChild className="h-11 shrink-0 px-5">
+                        <Link href={`/product/${selectedReel.product_id}`}>{isAr ? "تسوقي الآن" : "Shop now"}</Link>
+                      </Button>
+                      <div className="min-w-0 flex-1 text-end">
+                        <p className="truncate font-sans text-[13px] uppercase tracking-[0.04em] text-white">
+                          {isAr ? selectedReel.product_name_ar || selectedReel.product_name_en : selectedReel.product_name_en || selectedReel.product_name_ar}
+                        </p>
+                        {getFormattedPrice(selectedReel) && (
+                          <p className="mt-0.5 flex flex-wrap items-baseline justify-end gap-x-2 font-sans text-[13px]">
+                            {getFormattedPriceBefore(selectedReel) && (
+                              <span className="whitespace-nowrap text-white/60 line-through">{getFormattedPriceBefore(selectedReel)}</span>
+                            )}
+                            <span className="whitespace-nowrap text-white">{getFormattedPrice(selectedReel)}</span>
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+                )}
+              </>
+            )}
+          </DialogPrimitive.Content>
+        </DialogPrimitive.Portal>
+      </DialogPrimitive.Root>
     </section>
   );
 };

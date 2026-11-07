@@ -23,11 +23,17 @@ export default function CommonLayout({ children, topBanner }: { children: React.
     return <>{children}</>;
   }
 
+  // Checkout runs distraction-free (Shopify): it draws its own slim header,
+  // with no promo bar, store navigation or footer.
+  if (pathname === '/checkout' || pathname?.startsWith('/checkout/')) {
+    return <main id="main-content">{children}</main>;
+  }
+
   return (
     <>
       {topBanner}
       <Navigation />
-      <div className="bg-white flex flex-col min-h-[calc(100vh-100px)]">
+      <div className="bg-background flex flex-col min-h-[calc(100vh-100px)]">
         <main id="main-content" className="flex-grow">
           {children}
         </main>

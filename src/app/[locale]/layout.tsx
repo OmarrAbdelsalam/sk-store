@@ -5,11 +5,10 @@ import { routing } from '@/i18n/routing';
 import ScrollToTop from '@/components/ScrollToTop';
 import { CartProvider } from '@/hooks/useCart';
 import { NavigationLoadingProvider } from '@/contexts/NavigationLoadingContext';
-import NavigationLoadingOverlay from '@/components/ui/NavigationLoadingOverlay';
 import { Toaster } from '@/components/ui/toaster';
 import CommonLayout from '@/components/CommonLayout';
 import TopBanner from '@/components/TopBanner';
-import { Cairo, Inter } from 'next/font/google';
+import { Cairo, Instrument_Sans, Nunito } from 'next/font/google';
 import { generateDefaultMetadata } from '@/lib/metadata';
 import SEOHead from '@/components/SEOHead';
 import { Analytics } from '@vercel/analytics/next';
@@ -17,17 +16,28 @@ import type { Metadata } from 'next';
 import StorefrontProviders from '@/components/StorefrontProviders';
 import { siteOgImage } from '@/lib/site';
 
-const cairo = Cairo({
-  subsets: ['arabic'],
-  weight: ['400', '500', '600'],
-  variable: '--font-cairo',
+// Fonts — see DESIGN_SYSTEM.md › Typography (Shopify "Prestige" pairing).
+// Nunito = body, Instrument Sans = headings + tracked uppercase UI,
+// Cairo = Arabic.
+const body = Nunito({
+  subsets: ['latin'],
+  weight: ['400', '600', '700'],
+  variable: '--font-body',
   display: 'swap',
 });
 
-const inter = Inter({
+// Variable font (no fixed weights): Turbopack fails to resolve Instrument
+// Sans when explicit weights are requested.
+const display = Instrument_Sans({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-inter',
+  variable: '--font-display',
+  display: 'swap',
+});
+
+const cairo = Cairo({
+  subsets: ['arabic', 'latin'],
+  weight: ['300', '400', '500', '600'],
+  variable: '--font-cairo',
   display: 'swap',
 });
 
@@ -64,7 +74,7 @@ export default async function LocaleLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="apple-touch-icon" href="/SK_Logo.svg" />
-        <meta name="theme-color" content="#111111" />
+        <meta name="theme-color" content="#ffffff" />
         
         {/* Open Graph - Explicit tags for better compatibility */}
         <meta property="og:image" content={siteOgImage} />
@@ -76,7 +86,7 @@ export default async function LocaleLayout({
         <meta name="twitter:image" content={siteOgImage} />
         <meta name="twitter:card" content="summary_large_image" />
       </head>
-      <body className={`${cairo.variable} ${inter.variable} ${(locale as string) === 'ar' ? 'font-cairo' : 'font-sans'}`}>
+      <body className={`${body.variable} ${display.variable} ${cairo.variable} ${(locale as string) === 'ar' ? 'font-arabic' : 'font-sans'}`}>
         <SEOHead locale={locale} />
         <ScrollToTop />
         <NextIntlClientProvider locale={locale}>
@@ -85,7 +95,6 @@ export default async function LocaleLayout({
               <CommonLayout topBanner={<TopBanner />}>
                 {children}
               </CommonLayout>
-              <NavigationLoadingOverlay />
               <Toaster />
             </StorefrontProviders>
           </NavigationLoadingProvider>

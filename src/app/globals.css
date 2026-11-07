@@ -1,172 +1,100 @@
-/* Tailwind */
+/* =====================================================================
+   SK Bags — global styles (theme: Shopify "Prestige", Allure preset)
+   ---------------------------------------------------------------------
+   1. Tailwind
+   2. Tokens (CSS variables)       ← mirrors src/design-system/tokens.ts
+   3. Base element styles
+   4. Design-system components     ← .ds-* classes, see DESIGN_SYSTEM.md
+   5. Utilities & animations
+   Rule: components never hard-code a color, size, tracking or radius.
+   Use the Tailwind classes generated from tokens.ts or the .ds-* classes.
+   ===================================================================== */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Layout Helpers */
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
-}
-
-/* Design Tokens */
+/* ---------------------------------------------------------------------
+   2. Tokens
+   --------------------------------------------------------------------- */
 @layer base {
   :root {
-    --background: 0 0% 99%;
-    --foreground: 0 0% 15%;
+    /* Raw palette (hex mirrors of tokens.ts) */
+    --ds-canvas: #ffffff;
+    --ds-ink: #1c1c1c;
+    --ds-white: #ffffff;
+    --ds-primary: #1c1c1c;
+    --ds-night: #000000;
+    --ds-primary-line: #3e3e3e;
+    --ds-accent: #e32c2b;
+    --ds-beige: #f5f5f5;
+    --ds-announcement-h: 36px;
 
-    --card: 0 0% 98%;
-    --card-foreground: 0 0% 15%;
+    --ds-text-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
 
-    --popover: 0 0% 99%;
-    --popover-foreground: 0 0% 15%;
+    /* Layout */
+    --ds-gutter: 16px;
+    --ds-gutter-lg: 30px;
+    --ds-grid-gutter-lg: 40px;
+    --ds-tile-gap: 2px;
 
-    --primary: 0 0% 20%;
-    --primary-foreground: 0 0% 98%;
+    /* Motion */
+    --ds-fast: 200ms;
+    --ds-image: 500ms;
 
-    --secondary: 0 0% 94%;
-    --secondary-foreground: 0 0% 20%;
+    /* shadcn semantic colors (HSL triplets) — mapped onto the palette */
+    --background: 0 0% 100%;            /* canvas white */
+    --foreground: 0 0% 11%;             /* ink #1C1C1C */
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 11%;
+    --primary: 0 0% 11%;                /* #1C1C1C */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 100%;             /* white surface */
+    --secondary-foreground: 0 0% 11%;
+    --muted: 0 0% 90%;
+    --muted-foreground: 0 0% 43%;       /* ink 65% on canvas */
+    --accent: 0 0% 90%;
+    --accent-foreground: 0 0% 11%;
+    --destructive: 1 77% 53%;           /* #E32C2B */
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 81%;                 /* #CFCFCF */
+    --input: 0 0% 81%;
+    --ring: 0 0% 11%;
+    --radius: 0px;
 
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 35%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 11%;
+    --sidebar-primary: 0 0% 11%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 94%;
+    --sidebar-accent-foreground: 0 0% 11%;
+    --sidebar-border: 0 0% 87%;
+    --sidebar-ring: 0 0% 11%;
 
-    --accent: 210 8% 92%;
-    --accent-foreground: 0 0% 20%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 0 0% 20%;
-    --radius: 1rem;
-
-    /* 2026 Spacing & Sizing Standards */
-    --screen-padding: 16px;
-    --screen-padding-premium: 20px;
-    --section-gap: 48px;
-    --section-gap-desktop: 64px;
-    --item-gap: 12px;
-    --item-gap-lg: 16px;
-
-    /* Touch Targets */
-    --btn-height-min: 48px;
-    --btn-height-cta: 54px;
-    --input-height: 48px;
-    --header-height-mobile: 56px;
-    --header-height-desktop: 64px;
-    --bottom-nav-height: 64px;
+    /* legacy names still read by older markup */
+    --luxury-cream: 0 0% 94%;
+    --luxury-stone: 0 0% 81%;
+    --luxury-charcoal: 0 0% 24%;
+    --luxury-platinum: 0 0% 96%;
+    --screen-padding: var(--ds-gutter);
+    --btn-height-min: 44px;
+    --btn-height-cta: 44px;
+    --input-height: 44px;
     --ios-safe-area: env(safe-area-inset-bottom, 0px);
-
-    /* Border Radius - Premium/Luxury */
-    --radius-card: 1.5rem;
-    --radius-btn: 9999px;
-    --radius-input: 9999px;
-
-    --luxury-cream: 35 25% 96%;
-    --luxury-stone: 20 6% 85%;
-    --luxury-charcoal: 0 0% 25%;
-    --luxury-platinum: 0 0% 92%;
-
-    --gradient-hero: linear-gradient(135deg, hsl(var(--luxury-cream)), hsl(var(--luxury-platinum)));
-    --gradient-card: linear-gradient(180deg, hsl(var(--background)), hsl(var(--luxury-cream)));
-
-    --shadow-luxury: 0 8px 32px -4px hsl(var(--luxury-charcoal) / 0.1);
-    --shadow-hover: 0 16px 48px -8px hsl(var(--luxury-charcoal) / 0.15);
-    --transition-luxury: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
 
   .dark {
-    --background: 0 0% 8%;
-    --foreground: 0 0% 95%;
-
-    --card: 0 0% 10%;
-    --card-foreground: 0 0% 95%;
-
-    --popover: 0 0% 8%;
-    --popover-foreground: 0 0% 95%;
-
-    --primary: 0 0% 95%;
-    --primary-foreground: 0 0% 8%;
-
-    --secondary: 0 0% 15%;
-    --secondary-foreground: 0 0% 95%;
-
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 70%;
-
-    --accent: 0 0% 18%;
-    --accent-foreground: 0 0% 95%;
-
-    --destructive: 0 62.8% 50%;
-    --destructive-foreground: 0 0% 95%;
-
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
-    --ring: 0 0% 80%;
-
-    --luxury-cream: 0 0% 12%;
-    --luxury-stone: 0 0% 25%;
-    --luxury-charcoal: 0 0% 90%;
-    --luxury-platinum: 0 0% 15%;
-
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    color-scheme: light;
   }
+}
 
+/* ---------------------------------------------------------------------
+   3. Base
+   --------------------------------------------------------------------- */
+@layer base {
   * {
     @apply border-border;
   }
@@ -176,21 +104,233 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply bg-background font-sans text-base text-ink antialiased;
     -webkit-overflow-scrolling: touch;
     padding-bottom: env(safe-area-inset-bottom);
   }
 
-  .font-plus-jakarta {
-    font-family: var(--font-plus-jakarta), sans-serif;
+  :lang(ar) body,
+  body:lang(ar) {
+    @apply font-arabic;
   }
 
-  .luxury-card {
-    @apply bg-card border border-border rounded-lg shadow-[0_8px_32px_-4px_hsl(var(--luxury-charcoal)_/_0.1)] transition-all duration-300 hover:shadow-[0_16px_48px_-8px_hsl(var(--luxury-charcoal)_/_0.15)];
+  a {
+    transition: color var(--ds-fast), border-color var(--ds-fast),
+      opacity var(--ds-fast), text-decoration-color var(--ds-fast);
   }
 
-  .luxury-gradient {
-    background: linear-gradient(135deg, hsl(var(--luxury-cream)), hsl(var(--luxury-platinum)));
+  ::selection {
+    background: var(--ds-ink);
+    color: var(--ds-white);
+  }
+
+  :focus-visible {
+    outline: 1px solid var(--ds-ink);
+    outline-offset: 2px;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   4. Design-system components (.ds-*)
+   Every class here is documented in DESIGN_SYSTEM.md.
+   --------------------------------------------------------------------- */
+@layer components {
+  /* ---- Typography roles ------------------------------------------- */
+  /* Prestige "h6": Instrument Sans 12px, uppercase, 0.18em */
+  .ds-label {
+    @apply font-display text-label font-normal uppercase;
+  }
+  .ds-label-strong {
+    @apply font-display text-label font-normal uppercase text-ink;
+  }
+  .ds-caption {
+    @apply font-sans text-caption font-normal text-ink/65;
+  }
+  .ds-announce {
+    @apply font-sans text-announce font-semibold normal-case;
+  }
+  .ds-body {
+    @apply font-sans text-body font-normal;
+  }
+  .ds-fine {
+    @apply font-sans text-fine font-normal text-ink/65;
+  }
+  .ds-title-sm {
+    @apply font-display text-[18px] font-normal uppercase leading-[27px] tracking-[0.18em] text-ink md:text-title-sm;
+  }
+  .ds-price-lg {
+    @apply font-sans text-price font-normal text-ink/65;
+  }
+  .ds-title-md {
+    @apply font-display text-[16px] font-normal uppercase leading-[24px] tracking-[0.18em] text-ink md:text-title-md;
+  }
+  .ds-display-sm {
+    @apply font-display text-[18px] font-normal uppercase leading-[27px] tracking-[0.18em] md:text-display-sm;
+  }
+  .ds-display-md {
+    @apply font-display text-[20px] font-normal uppercase leading-[28px] tracking-[0.18em] md:text-display-md;
+  }
+  .ds-display-lg {
+    @apply font-display text-[22px] font-normal uppercase leading-[30px] tracking-[0.18em] md:text-display-lg;
+  }
+  .ds-on-image {
+    color: var(--ds-white);
+    text-shadow: var(--ds-text-shadow);
+  }
+  /* Prestige badge: light chip, ink 65% text */
+  .ds-badge {
+    @apply inline-flex items-center bg-white px-2 py-0.5 font-display text-[11px] font-normal uppercase leading-[18px] tracking-[0.18em] text-ink/65;
+  }
+  .ds-link {
+    @apply font-display text-label uppercase underline underline-offset-4 hover:opacity-70;
+  }
+
+  /* ---- Buttons ---------------------------------------------------- */
+  .ds-btn {
+    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-none border font-sans text-button font-normal uppercase select-none;
+    transition: background-color var(--ds-fast), color var(--ds-fast),
+      border-color var(--ds-fast), opacity var(--ds-fast);
+  }
+  .ds-btn:disabled,
+  .ds-btn[aria-disabled="true"] {
+    @apply pointer-events-none opacity-50;
+  }
+  /* Solid ink — add to cart, checkout, submit */
+  .ds-btn-primary {
+    @apply ds-btn h-button border-primary bg-primary px-7 text-white hover:border-night hover:bg-night;
+  }
+  /* Solid white on imagery (Prestige slideshow buttons) */
+  .ds-btn-overlay {
+    @apply ds-btn h-button-overlay border-white bg-white px-7 text-ink hover:bg-transparent hover:text-white;
+  }
+  .ds-btn-overlay-sm {
+    @apply ds-btn-overlay h-button-overlay-sm px-5;
+  }
+  /* Ink outline */
+  .ds-btn-outline {
+    @apply ds-btn h-button border-ink bg-transparent px-7 text-ink hover:bg-ink hover:text-white;
+  }
+  /* White outline on a dark surface */
+  .ds-btn-on-primary {
+    @apply ds-btn h-button border-white bg-transparent px-7 text-white hover:bg-white hover:text-ink;
+  }
+
+  /* ---- Form controls --------------------------------------------- */
+  .ds-input {
+    @apply h-input w-full rounded-none border border-gray-300 bg-white px-[13px] font-sans text-[16px] text-ink placeholder:text-ink/60 md:text-body;
+    transition: border-color var(--ds-fast);
+  }
+  .ds-input:hover {
+    @apply border-gray-500;
+  }
+  .ds-input:focus,
+  .ds-input:focus-visible {
+    @apply border-ink outline-none;
+  }
+
+  /* ---- Layout ----------------------------------------------------- */
+  .ds-page {
+    @apply mx-auto w-full max-w-page;
+    padding-inline: var(--ds-gutter);
+  }
+  .ds-gutter {
+    padding-inline: var(--ds-gutter);
+  }
+  @media (min-width: 1024px) {
+    .ds-page,
+    .ds-gutter {
+      padding-inline: var(--ds-gutter-lg);
+    }
+  }
+  /* Product grids (Parfois): edge to edge on phones, 64px on desktop. */
+  .ds-grid-page {
+    @apply mx-auto w-full max-w-page;
+  }
+  @media (min-width: 1024px) {
+    .ds-grid-page {
+      padding-inline: var(--ds-grid-gutter-lg);
+    }
+  }
+  .ds-section {
+    @apply py-10 md:py-section;
+  }
+  .ds-tile-grid {
+    @apply grid gap-tile;
+  }
+  .ds-card {
+    @apply overflow-hidden bg-white;
+  }
+
+  /* ---- Surfaces --------------------------------------------------- */
+  .ds-surface-beige {
+    background-color: var(--ds-white);
+  }
+  .ds-surface-primary {
+    background-color: var(--ds-primary);
+    color: var(--ds-white);
+  }
+  .ds-hairline {
+    @apply border-gray-200;
+  }
+
+  /* ---- Product imagery -------------------------------------------- */
+  /* Tile takes the page colour; blending is isolated to the tile. */
+  .ds-cutout-frame {
+    background-color: var(--ds-beige);
+    isolation: isolate;
+  }
+  /* Main product shot: its white studio background melts into the page
+     gray (multiply) — the Prestige "product on background" look, without
+     editing any image. */
+  /* Most product photos are near-white (#FBFBFB–#FEFEFE) with a soft gray
+     vignette, not pure white, so plain multiply leaves a faint box. The
+     filter first pushes every tone above ≈ #E4E4E4 to pure white (darks keep
+     their contrast), then multiply melts that white into the tile. */
+  /* Parfois composition: the (square) photo spans the full tile width and is
+     anchored to the bottom, so the bag sits low with open gray space above
+     it instead of being centred and cropped. */
+  .ds-cutout {
+    object-fit: contain !important;
+    object-position: 50% 100% !important;
+    /* bag ~8% larger, still anchored to the bottom */
+    scale: 1.08;
+    transform-origin: 50% 100%;
+    mix-blend-mode: multiply;
+    filter: contrast(1.08) brightness(1.08);
+  }
+  /* Same white-melting blend, image kept centered (product page gallery,
+     zoom view, thumbnails). Parent needs the tile colour + `isolate`. */
+  .ds-blend {
+    mix-blend-mode: multiply;
+    filter: contrast(1.08) brightness(1.08);
+  }
+  .ds-cutout-cover {
+    object-fit: cover !important;
+    mix-blend-mode: multiply;
+    filter: contrast(1.08) brightness(1.08);
+  }
+
+  /* ---- Arabic: tracking breaks letter joining -------------------- */
+  :is([dir="rtl"], :lang(ar)) :is(
+      .ds-label, .ds-label-strong, .ds-caption, .ds-title-sm, .ds-price-lg,
+      .ds-display-sm, .ds-display-md, .ds-display-lg, .ds-badge, .ds-link,
+      .ds-btn, .ds-announce, .ds-title-md
+    ) {
+    letter-spacing: 0 !important;
+  }
+}
+
+/* Any Tailwind `tracking-*` on Arabic text is also neutralised. */
+:is([dir="rtl"], :lang(ar)) [class*="tracking-"] {
+  letter-spacing: 0 !important;
+}
+
+/* ---------------------------------------------------------------------
+   5. Utilities & animations
+   --------------------------------------------------------------------- */
+@layer utilities {
+  .text-shadow-overlay {
+    text-shadow: var(--ds-text-shadow);
   }
 
   .line-clamp-2 {
@@ -200,147 +340,106 @@
     overflow: hidden;
   }
 
-  .animate-fade-in {
-    animation: fade-in 0.6s ease-out;
-  }
-
-  .animate-slide-up {
-    animation: slide-up 0.8s ease-out;
-  }
-
-  .animate-hero-text {
-    animation: hero-text 1.2s ease-out;
-  }
-
-  @keyframes fade-in {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes slide-up {
-    from {
-      opacity: 0;
-      transform: translateY(40px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes hero-text {
-    from {
-      opacity: 0;
-      transform: translateY(30px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
 
-  /* Cart Item Animations */
-  .cart-item-enter {
-    opacity: 0;
-    transform: translateX(-20px);
+  .animate-fade-in {
+    animation: ds-fade-in var(--ds-image) ease-out both;
   }
-  
-  .cart-item-enter-active {
-    opacity: 1;
-    transform: translateX(0);
-    transition: all 0.3s ease-out;
+  .animate-slide-up {
+    animation: ds-fade-in 0.8s ease-out both;
   }
-
-  /* Delay animation helper */
+  .animate-hero-text {
+    animation: ds-fade-in 1s ease-out both;
+  }
   .delay-150 {
     animation-delay: 150ms;
   }
 }
-/* Navigation Loading Animations */
-@keyframes navigation-pulse {
-  0%, 100% {
+
+@keyframes ds-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
     opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
+    transform: translateY(0);
   }
 }
 
+/* Cart item transitions */
+.cart-item-enter {
+  opacity: 0;
+  transform: translateX(-20px);
+}
+.cart-item-enter-active {
+  opacity: 1;
+  transform: translateX(0);
+  transition: all 0.3s ease-out;
+}
+
+/* Navigation loading */
+@keyframes navigation-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
 @keyframes navigation-shimmer {
-  0% {
-    background-position: -200px 0;
-  }
-  100% {
-    background-position: calc(200px + 100%) 0;
-  }
+  0% { background-position: -200px 0; }
+  100% { background-position: calc(200px + 100%) 0; }
 }
-
 .navigation-loading {
   animation: navigation-pulse 1.5s ease-in-out infinite;
 }
-
 .navigation-shimmer {
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
   background-size: 200px 100%;
   animation: navigation-shimmer 1.5s infinite;
 }
-
-/* Smooth transitions for product cards */
 .product-card-loading {
   transform: scale(0.98);
   opacity: 0.75;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
-/* Loading spinner improvements */
 @keyframes smooth-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
-
 .smooth-spinner {
   animation: smooth-spin 1s linear infinite;
 }
 
+/* Marquee / ticker */
 @keyframes ticker {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
-
-.animate-ticker {
-  animation: ticker 25s linear infinite;
-}
-
+.animate-ticker,
 .animate-marquee {
   animation: ticker 25s linear infinite;
 }
+[dir="rtl"] .animate-ticker,
+[dir="rtl"] .animate-marquee {
+  animation-direction: reverse;
+}
 
-/* ===== Global: disable hover effects on touch/mobile devices ===== */
+@media (prefers-reduced-motion: reduce) {
+  .animate-ticker,
+  .animate-marquee,
+  .animate-fade-in,
+  .animate-slide-up,
+  .animate-hero-text {
+    animation: none;
+  }
+}
+
+/* Touch devices: no sticky hover zooms */
 @media (hover: none) {
-  /* Remove all hover state changes on touch devices */
   .group:hover .group-hover\:scale-110 {
     transform: none !important;
   }
@@ -349,18 +448,16 @@
   }
 }
 
-/* Customer Love - Checkerboard Pattern (data-attribute approach) */
+/* ---------------------------------------------------------------------
+   Customer Love — checkerboard pattern (data-attribute approach)
+   --------------------------------------------------------------------- */
 .review-overlay {
   opacity: 0;
   transition: opacity 300ms;
 }
-
-/* Mobile: reversed cards always show review (no hover on touch) */
 [data-mobile-rev] .review-overlay {
   opacity: 1;
 }
-
-/* Hover interactions only on devices that support hover */
 @media (hover: hover) {
   [data-mobile-rev]:hover .review-overlay {
     opacity: 0;
@@ -369,21 +466,14 @@
     opacity: 1;
   }
 }
-
-/* Desktop: override mobile, use desktop pattern */
 @media (min-width: 1024px) {
-  /* Reset mobile reversed */
   [data-mobile-rev] .review-overlay {
     opacity: 0;
   }
-
-  /* Desktop reversed cards show review */
   [data-desktop-rev] .review-overlay {
     opacity: 1;
   }
 }
-
-/* Desktop hover only on hover-capable devices */
 @media (min-width: 1024px) and (hover: hover) {
   [data-mobile-rev]:hover .review-overlay {
     opacity: 1;

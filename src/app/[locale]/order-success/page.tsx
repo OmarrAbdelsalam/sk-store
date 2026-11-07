@@ -6,6 +6,8 @@ import { useTranslations, useLocale } from "next-intl";
 import { Check, Package, ArrowRight, Loader2, Copy, Banknote, Store, Clock, XCircle, RefreshCw } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
 import type { PaymentStatus } from "@/lib/easykash";
+import { formatPrice } from "@/lib/price";
+import { OrderSuccessSkeleton } from "@/components/skeletons";
 import { CONTACT_INFO } from "@/lib/constants";
 
 /** The callback races the customer's browser back from the gateway, so give it
@@ -254,11 +256,11 @@ function OrderSuccessContent() {
 
   if (!mounted || isLoading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4" dir={dir}>
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        <p className="text-xs tracking-widest uppercase text-muted-foreground">
-          {isAr ? "جاري تأكيد الدفع..." : "Confirming your payment..."}
+      <div className="min-h-screen bg-background" dir={dir}>
+        <p className="pt-8 text-center font-sans text-[13px] text-gray-500" aria-live="polite">
+          {isAr ? "جاري تأكيد الدفع..." : "Confirming your payment…"}
         </p>
+        <OrderSuccessSkeleton />
       </div>
     );
   }
@@ -287,34 +289,33 @@ function OrderSuccessContent() {
   const awaitingPayment = paymentStatus === "pending";
 
   return (
-    <div className="min-h-screen bg-white" dir={dir}>
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
-        <div className="text-center space-y-8 sm:space-y-10">
+    <div className="min-h-screen bg-background" dir={dir}>
+      <div className="mx-auto max-w-2xl px-gutter py-12 sm:py-section-lg lg:px-gutter-lg">
+        <div className="space-y-8 text-center sm:space-y-10">
 
           {/* Status Icon */}
           <div className="flex justify-center">
             {awaitingPayment ? (
-              <div className="w-20 h-20 rounded-full bg-amber-50 flex items-center justify-center shadow-sm">
-                <Clock className="h-10 w-10 text-amber-600" strokeWidth={2} />
+              <div className="flex h-16 w-16 items-center justify-center border border-gray-200 bg-background">
+                <Clock className="h-8 w-8 text-warning" strokeWidth={1.25} />
               </div>
             ) : (
-              <div className="w-20 h-20 rounded-full bg-[#E8F5E9] flex items-center justify-center shadow-sm">
-                <Check className="h-10 w-10 text-[#2E7D32]" strokeWidth={2.5} />
+              <div className="flex h-16 w-16 items-center justify-center bg-beige">
+                <Check className="h-8 w-8 text-primary" strokeWidth={1.25} />
               </div>
             )}
           </div>
 
           {/* Status Message */}
           <div className="space-y-4">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-light tracking-wider uppercase">
+            <h1 className="font-display text-[28px] leading-tight text-ink sm:text-[36px]">
               {awaitingPayment
                 ? isAr
                   ? "في انتظار الدفع"
                   : "Awaiting payment"
                 : t("title")}
             </h1>
-            <div className="h-px w-12 bg-foreground mx-auto" />
-            <p className="text-sm text-muted-foreground tracking-wider">
+            <p className="ds-body text-gray-500">
               {awaitingPayment
                 ? isAr
                   ? "تم تسجيل طلبك ولم يتم تأكيد الدفع بعد. لو دفعت بالفعل، هيتم التأكيد خلال دقائق."
@@ -325,58 +326,58 @@ function OrderSuccessContent() {
               <button
                 onClick={recheckPayment}
                 disabled={isRechecking}
-                className="inline-flex items-center gap-2 text-xs tracking-widest uppercase text-gray-900 underline underline-offset-4 disabled:opacity-50"
+                className="ds-link inline-flex items-center gap-2 disabled:opacity-50"
               >
-                <RefreshCw className={`h-3.5 w-3.5 ${isRechecking ? "animate-spin" : ""}`} />
+                <RefreshCw className={`h-3.5 w-3.5 ${isRechecking ? "animate-spin" : ""}`} strokeWidth={1.25} />
                 {isAr ? "تحديث حالة الدفع" : "Refresh payment status"}
               </button>
             )}
           </div>
 
           {/* Order Details */}
-          <div className="bg-[#F0EBE3]/40 rounded-[32px] p-6 sm:p-8 border border-[#d4c9bc] text-start shadow-sm">
-            <div className="pb-4 mb-4 border-b border-[#d4c9bc]/60">
-              <h3 className="text-sm font-bold tracking-widest uppercase text-gray-900">
+          <div className="bg-beige p-6 text-start sm:p-8">
+            <div className="mb-4 border-b border-gray-200 pb-3">
+              <h3 className="font-sans text-[11px] uppercase tracking-[0.12em] text-gray-500">
                 {t("orderDetails")}
               </h3>
             </div>
             <div className="space-y-6">
               <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <p className="text-xs tracking-wider uppercase text-muted-foreground mb-1.5">
+                  <p className="mb-1 font-sans text-[13px] text-gray-500">
                     {t("orderNumber")}
                   </p>
-                  <p className="text-sm font-medium">
+                  <p className="font-sans text-[15px] text-ink">
                     {orderData?.orderNumber ? `#${orderData.orderNumber}` : orderNumber ? `#${orderNumber}` : "—"}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs tracking-wider uppercase text-muted-foreground mb-1.5">
+                  <p className="mb-1 font-sans text-[13px] text-gray-500">
                     {t("orderDate")}
                   </p>
-                  <p className="text-sm font-medium">{orderDate}</p>
+                  <p className="font-sans text-[15px] text-ink">{orderDate}</p>
                 </div>
               </div>
 
               {orderData?.customerName && (
-                <div className="border-t border-[#d4c9bc]/60 pt-5">
-                  <p className="text-xs tracking-wider uppercase text-muted-foreground mb-1.5">
+                <div className="border-t border-gray-200 pt-5">
+                  <p className="mb-1 font-sans text-[13px] text-gray-500">
                     {isAr ? "اسم العميل" : "Customer"}
                   </p>
-                  <p className="text-sm font-medium text-gray-900">{orderData.customerName}</p>
+                  <p className="font-sans text-[15px] text-ink">{orderData.customerName}</p>
                   {(orderData.government || orderData.city) && (
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="mt-0.5 font-sans text-[13px] leading-5 text-gray-500">
                       {[orderData.city, orderData.government].filter(Boolean).join(", ")}
                     </p>
                   )}
                 </div>
               )}
 
-              <div className="border-t border-[#d4c9bc]/60 pt-5">
-                <p className="text-xs tracking-wider uppercase text-muted-foreground mb-1.5">
+              <div className="border-t border-gray-200 pt-5">
+                <p className="mb-1 font-sans text-[13px] text-gray-500">
                   {t("shippingInfoTitle")}
                 </p>
-                <p className="text-sm text-muted-foreground">
+                <p className="ds-body text-gray-500">
                   {t("shippingInfoBody")}
                 </p>
               </div>
@@ -397,9 +398,9 @@ function OrderSuccessContent() {
 
           {/* Ordered Items */}
           {orderData && orderData.items && orderData.items.length > 0 && (
-            <div className="bg-[#F0EBE3]/40 rounded-[32px] p-6 sm:p-8 border border-[#d4c9bc] text-start shadow-sm">
-              <div className="pb-4 mb-4 border-b border-[#d4c9bc]/60">
-                <h3 className="text-sm font-bold tracking-widest uppercase text-gray-900">
+            <div className="bg-beige p-6 text-start sm:p-8">
+              <div className="mb-4 border-b border-gray-200 pb-3">
+                <h3 className="font-sans text-[11px] uppercase tracking-[0.12em] text-gray-500">
                   {t("orderedItems")}
                 </h3>
               </div>
@@ -408,19 +409,19 @@ function OrderSuccessContent() {
                     const colorName = isAr ? item.colorNameAr : item.colorNameEn;
                     const productName = isAr ? (item.productNameAr || item.productName) : item.productName;
                     return (
-                      <div key={index} className="flex gap-4 items-center py-4 border-b border-[#d4c9bc]/40 last:border-0 last:pb-0 first:pt-0">
-                        <div className="relative w-16 h-20 bg-white rounded-[16px] overflow-hidden flex-shrink-0 shadow-sm border border-[#d4c9bc]/50">
+                      <div key={index} className="flex items-center gap-4 border-b border-gray-200 py-4 first:pt-0 last:border-0 last:pb-0">
+                        <div className="ds-cutout-frame relative aspect-product w-16 flex-shrink-0 overflow-hidden">
                           {item.image ? (
-                            <img src={item.image} alt={productName} className="w-full h-full object-cover" />
+                            <img src={item.image} alt={productName} className="ds-cutout h-full w-full object-center" />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <Package className="h-6 w-6 text-muted-foreground/40" />
+                            <div className="flex h-full w-full items-center justify-center">
+                              <Package className="h-6 w-6 text-gray-300" strokeWidth={1.25} />
                             </div>
                           )}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-sm font-medium line-clamp-1">{productName}</h4>
-                          <p className="text-xs text-muted-foreground mt-1">
+                        <div className="min-w-0 flex-1">
+                          <h4 className="line-clamp-1 font-sans text-[15px] leading-[22px] text-ink">{productName}</h4>
+                          <p className="mt-0.5 font-sans text-[13px] leading-5 text-gray-500">
                             {colorName && `${colorName}`}
                             {colorName && item.sizeName && " · "}
                             {item.sizeName}
@@ -428,13 +429,13 @@ function OrderSuccessContent() {
                             {t("quantity")}: {item.quantity}
                           </p>
                         </div>
-                        <div className="text-end flex-shrink-0">
-                          <p className="text-sm font-medium">
-                            {item.unitPrice.toLocaleString()} {isAr ? "جنيه" : "EGP"}
+                        <div className="flex-shrink-0 text-end">
+                          <p className="font-sans text-[14px] tabular-nums text-ink">
+                            {formatPrice(item.unitPrice, locale)}
                           </p>
                           {item.quantity > 1 && (
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              {t("subtotal")}: {item.subtotal.toLocaleString()} {isAr ? "جنيه" : "EGP"}
+                            <p className="mt-0.5 font-sans text-[13px] leading-5 text-gray-500">
+                              {t("subtotal")}: {formatPrice(item.subtotal, locale)}
                             </p>
                           )}
                         </div>
@@ -444,23 +445,23 @@ function OrderSuccessContent() {
                 </div>
 
                 {/* Totals */}
-                <div className="mt-6 pt-6 border-t border-[#d4c9bc]/60 space-y-3">
+                <div className="mt-6 space-y-2 border-t border-gray-200 pt-6 font-sans text-[14px] text-ink">
                   {orderData.shippingCost > 0 && (
-                    <div className="flex justify-between text-sm text-muted-foreground">
-                      <span className="tracking-wider uppercase text-xs">{isAr ? "الشحن" : "Shipping"}</span>
-                      <span>{orderData.shippingCost.toLocaleString()} {isAr ? "جنيه" : "EGP"}</span>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">{isAr ? "الشحن" : "Shipping"}</span>
+                      <span className="tabular-nums">{formatPrice(orderData.shippingCost, locale)}</span>
                     </div>
                   )}
                   {orderData.discountAmount > 0 && (
-                    <div className="flex justify-between text-sm text-green-600">
-                      <span className="tracking-wider uppercase text-xs">{isAr ? "الخصم" : "Discount"}</span>
-                      <span>- {orderData.discountAmount.toLocaleString()} {isAr ? "جنيه" : "EGP"}</span>
+                    <div className="flex justify-between">
+                      <span>{isAr ? "الخصم" : "Discount"}</span>
+                      <span className="tabular-nums">−{formatPrice(orderData.discountAmount, locale)}</span>
                     </div>
                   )}
-                  <div className="flex justify-between items-center pt-3 mt-2 border-t border-[#d4c9bc]">
-                    <span className="text-sm font-bold tracking-wider uppercase text-gray-900">{t("total")}</span>
-                    <span className="text-2xl font-bold text-gray-900 tracking-wider">
-                      {orderData.total.toLocaleString()} <span className="text-sm font-medium tracking-wider uppercase">{isAr ? "جنيه" : "EGP"}</span>
+                  <div className="mt-2 flex items-baseline justify-between border-t border-gray-200 pt-3 font-semibold">
+                    <span>{t("total")}</span>
+                    <span className="text-[17px] tabular-nums">
+                      {formatPrice(orderData.total, locale)}
                     </span>
                   </div>
                 </div>
@@ -468,36 +469,33 @@ function OrderSuccessContent() {
           )}
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row justify-center gap-4 pt-6">
+          <div className="flex flex-col justify-center gap-3 pt-6 sm:flex-row">
             <button
               onClick={() => router.push("/my-orders")}
-              className="h-14 px-10 rounded-full border border-gray-900 text-gray-900 bg-white text-sm font-bold tracking-widest uppercase
-                transition-all duration-300 hover:bg-[#F0EBE3]"
+              className="ds-btn-outline px-10"
             >
               {t("trackOrders")}
             </button>
             <button
-              onClick={() => router.push("/")}
-              className="h-14 px-10 rounded-full bg-black text-white text-sm font-bold tracking-widest uppercase
-                transition-all duration-300 hover:bg-black hover:-translate-y-1 shadow-md hover:shadow-xl inline-flex items-center justify-center gap-2"
+              onClick={() => router.push("/products")}
+              className="ds-btn-primary px-10"
             >
               {t("continueShopping")}
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight className="h-4 w-4 rtl:rotate-180" strokeWidth={1.25} />
             </button>
           </div>
 
           {/* Customer Support */}
-          <div className="bg-[#F0EBE3]/20 rounded-[32px] p-8 text-center border border-[#d4c9bc]">
-            <h3 className="text-sm font-bold tracking-widest uppercase mb-3 text-gray-900">
+          <div className="border border-gray-200 p-8 text-center">
+            <h3 className="mb-3 font-display text-[22px] leading-tight text-ink">
               {t("needHelp")}
             </h3>
-            <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
+            <p className="ds-body mx-auto mb-6 max-w-md text-gray-500">
               {t("needHelpBody")}
             </p>
             <button
               onClick={() => window.open(CONTACT_INFO.whatsappLink, "_blank")}
-              className="h-12 px-8 rounded-full bg-[#25D366] text-white text-xs font-bold tracking-widest uppercase
-                transition-all duration-300 hover:bg-[#1EBE5D] hover:-translate-y-1 shadow-md hover:shadow-lg inline-flex items-center justify-center gap-2"
+              className="ds-btn-outline px-8"
             >
               {t("contactWhatsApp")}
             </button>
@@ -542,38 +540,36 @@ function PaymentFailed({
       : "We haven't received a payment confirmation. If you're still paying, refresh the status in a moment.";
 
   return (
-    <div className="min-h-screen bg-white" dir={dir}>
-      <div className="max-w-lg mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
-        <div className="text-center space-y-8">
+    <div className="min-h-screen bg-background" dir={dir}>
+      <div className="mx-auto max-w-lg px-gutter py-12 sm:py-section-lg lg:px-gutter-lg">
+        <div className="space-y-8 text-center">
           <div className="flex justify-center">
-            <div className="w-20 h-20 rounded-full bg-red-50 flex items-center justify-center shadow-sm">
-              <XCircle className="h-10 w-10 text-red-600" strokeWidth={2} />
+            <div className="flex h-16 w-16 items-center justify-center border border-gray-200 bg-background">
+              <XCircle className="h-8 w-8 text-danger" strokeWidth={1.25} />
             </div>
           </div>
 
           <div className="space-y-4">
-            <h1 className="text-2xl sm:text-3xl font-light tracking-wider uppercase">
+            <h1 className="font-display text-[28px] leading-tight text-ink sm:text-[36px]">
               {isAr ? "لم يتم إتمام الدفع" : "Payment not completed"}
             </h1>
-            <div className="h-px w-12 bg-foreground mx-auto" />
-            <p className="text-sm text-muted-foreground leading-relaxed">{body}</p>
+            <p className="ds-body text-gray-500">{body}</p>
             {orderNumber && (
-              <p className="text-xs tracking-wider uppercase text-muted-foreground">
+              <p className="font-sans text-[13px] text-gray-500">
                 {isAr ? "رقم الطلب" : "Order number"}: #{orderNumber}
               </p>
             )}
-            <p className="text-xs text-muted-foreground">
+            <p className="ds-fine">
               {isAr
                 ? "منتجاتك لسه في السلة."
                 : "Your items are still in your cart."}
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row justify-center gap-4 pt-2">
+          <div className="flex flex-col justify-center gap-3 pt-2 sm:flex-row">
             <button
               onClick={onRetry}
-              className="h-14 px-10 rounded-full bg-black text-white text-sm font-bold tracking-widest uppercase
-                transition-all duration-300 hover:-translate-y-1 shadow-md hover:shadow-xl"
+              className="ds-btn-primary px-10"
             >
               {isAr ? "إعادة المحاولة" : "Try again"}
             </button>
@@ -581,10 +577,9 @@ function PaymentFailed({
               <button
                 onClick={onRecheck}
                 disabled={isRechecking}
-                className="h-14 px-10 rounded-full border border-gray-900 text-gray-900 bg-white text-sm font-bold tracking-widest uppercase
-                  transition-all duration-300 hover:bg-[#F0EBE3] disabled:opacity-50 inline-flex items-center justify-center gap-2"
+                className="ds-btn-outline px-10"
               >
-                <RefreshCw className={`h-4 w-4 ${isRechecking ? "animate-spin" : ""}`} />
+                <RefreshCw className={`h-4 w-4 ${isRechecking ? "animate-spin" : ""}`} strokeWidth={1.25} />
                 {isAr ? "تحديث الحالة" : "Refresh status"}
               </button>
             )}
@@ -593,7 +588,7 @@ function PaymentFailed({
           <div className="pt-4">
             <button
               onClick={() => window.open(CONTACT_INFO.whatsappLink, "_blank")}
-              className="text-xs tracking-widest uppercase text-muted-foreground underline underline-offset-4 hover:text-foreground transition-colors"
+              className="ds-link"
             >
               {isAr ? "تواصل معنا على واتساب" : "Contact us on WhatsApp"}
             </button>
@@ -630,47 +625,47 @@ function EasyKashVoucherCard({
   };
 
   return (
-    <div className="bg-amber-50 border border-amber-200 rounded-[32px] p-6 sm:p-8 text-start shadow-sm">
-      <div className="pb-4 mb-4 border-b border-amber-200/80 flex items-center gap-2">
-        <Banknote className="w-4 h-4 text-amber-700" />
-        <h3 className="text-sm font-bold tracking-widest uppercase text-amber-900">
+    <div className="border border-gray-200 bg-background p-6 text-start sm:p-8">
+      <div className="mb-4 flex items-center gap-2 border-b border-gray-200 pb-3">
+        <Banknote className="h-4 w-4 text-ink" strokeWidth={1.25} />
+        <h3 className="font-sans text-[11px] uppercase tracking-[0.12em] text-gray-500">
           {isAr ? "كود الدفع النقدي" : "Cash Payment Code"}
         </h3>
       </div>
 
-      <p className="text-sm text-amber-800 mb-5">
+      <p className="ds-body mb-5 text-ink">
         {isAr
-          ? `ادفع ${total.toLocaleString()} جنيه في أقرب فرع ${provider || ""} باستخدام الكود التالي:`
-          : `Pay ${total.toLocaleString()} EGP at any ${provider || ""} branch using the code below:`}
+          ? `ادفع ${formatPrice(total, "ar")} في أقرب فرع ${provider || ""} باستخدام الكود التالي:`
+          : `Pay ${formatPrice(total, "en")} at any ${provider || ""} branch using the code below:`}
       </p>
 
       {/* Voucher */}
-      <div className="bg-white rounded-2xl p-4 flex items-center justify-between gap-3 border border-amber-200 mb-4">
+      <div className="mb-4 flex items-center justify-between gap-3 bg-beige p-4">
         <div>
-          <p className="text-[10px] tracking-widest uppercase text-muted-foreground mb-1">
+          <p className="mb-1 font-sans text-[11px] uppercase tracking-[0.12em] text-gray-500">
             {isAr ? "كود الدفع" : "Payment Code"}
           </p>
-          <p className="text-2xl font-bold tracking-widest text-gray-900 font-mono">
+          <p className="font-mono text-display-md tracking-label text-ink">
             {voucher}
           </p>
         </div>
         <button
           onClick={handleCopy}
-          className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium tracking-wider uppercase transition-all ${
+          className={`ds-btn h-button gap-1.5 px-4 text-label ${
             copied
-              ? "bg-green-100 text-green-700"
-              : "bg-amber-900 text-white hover:bg-amber-800"
+              ? "border-gray-200 bg-background text-ink"
+              : "bg-primary text-white hover:bg-night"
           }`}
           aria-label={isAr ? "نسخ الكود" : "Copy code"}
         >
           {copied ? (
             <>
-              <Check className="w-3.5 h-3.5" />
+              <Check className="h-3.5 w-3.5" strokeWidth={1.25} />
               {isAr ? "تم النسخ" : "Copied"}
             </>
           ) : (
             <>
-              <Copy className="w-3.5 h-3.5" />
+              <Copy className="h-3.5 w-3.5" strokeWidth={1.25} />
               {isAr ? "نسخ" : "Copy"}
             </>
           )}
@@ -678,35 +673,35 @@ function EasyKashVoucherCard({
       </div>
 
       {/* Meta */}
-      <div className="grid grid-cols-2 gap-3 text-sm">
+      <div className="grid grid-cols-2 gap-3">
         {provider && (
-          <div className="bg-white rounded-xl p-3 border border-amber-100">
+          <div className="border border-gray-200 bg-background p-3">
             <div className="flex items-center gap-1.5 mb-1">
-              <Store className="w-3.5 h-3.5 text-amber-600" />
-              <p className="text-[10px] tracking-widest uppercase text-muted-foreground">
+              <Store className="h-3.5 w-3.5 text-gray-500" strokeWidth={1.25} />
+              <p className="font-sans text-[11px] uppercase tracking-[0.12em] text-gray-500">
                 {isAr ? "المزود" : "Provider"}
               </p>
             </div>
-            <p className="font-semibold text-gray-900">{provider}</p>
+            <p className="font-sans text-[15px] text-ink">{provider}</p>
           </div>
         )}
         {expiryDate && (
-          <div className="bg-white rounded-xl p-3 border border-amber-100">
+          <div className="border border-gray-200 bg-background p-3">
             <div className="flex items-center gap-1.5 mb-1">
-              <Clock className="w-3.5 h-3.5 text-amber-600" />
-              <p className="text-[10px] tracking-widest uppercase text-muted-foreground">
+              <Clock className="h-3.5 w-3.5 text-gray-500" strokeWidth={1.25} />
+              <p className="font-sans text-[11px] uppercase tracking-[0.12em] text-gray-500">
                 {isAr ? "صالح حتى" : "Expires"}
               </p>
             </div>
-            <p className="font-semibold text-gray-900">{expiryDate}</p>
+            <p className="font-sans text-[15px] text-ink">{expiryDate}</p>
           </div>
         )}
       </div>
 
       {easykashRef && (
-        <p className="mt-4 text-center text-[11px] text-amber-700">
+        <p className="ds-fine mt-4 text-center">
           {isAr ? "مرجع EasyKash:" : "EasyKash Ref:"}{" "}
-          <span className="font-mono font-semibold">{easykashRef}</span>
+          <span className="font-mono font-normal text-ink">{easykashRef}</span>
         </p>
       )}
     </div>
@@ -714,11 +709,7 @@ function EasyKashVoucherCard({
 }
 
 export default function OrderSuccessPage() {  return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    }>
+    <Suspense fallback={<OrderSuccessSkeleton />}>
       <OrderSuccessContent />
     </Suspense>
   );

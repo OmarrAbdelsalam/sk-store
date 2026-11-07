@@ -34,19 +34,12 @@ const NewArrivals = async ({ products: initialProducts }: NewArrivalsProps = {})
   if (!products || products.length === 0) return null;
 
   return (
-    <section className="bg-white">
-      <div className="container mx-auto px-5">
-        {/* Header */}
-        <div className="text-center mb-10">
-          <h2 className="font-sans font-normal text-3xl md:text-4xl text-gray-800 mb-2">
-            {t("title")}
-          </h2>
-          <div className="w-24 h-[2px] bg-[#C2A878] rounded-full mx-auto mt-3"></div>
-        </div>
+    // Product row — no visible heading, flush with neighbours (reference).
+    <section className="bg-background" aria-labelledby="new-arrivals-title">
+      <h2 id="new-arrivals-title" className="ds-gutter ds-display-md mb-8 text-center text-ink lg:mb-10">{t("title")}</h2>
 
-        {/* Client-side carousel with server-fetched data */}
-        <NewArrivalsCarousel products={products} viewAllText={t("viewAll")} />
-      </div>
+      {/* Client-side carousel with server-fetched data (full-bleed) */}
+      <NewArrivalsCarousel products={products} viewAllText={t("viewAll")} />
     </section>
   );
 };

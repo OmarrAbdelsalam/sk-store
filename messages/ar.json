@@ -34,7 +34,10 @@
     "cart": "سلة التسوق",
     "orders": "الطلبات",
     "myOrders": "طلباتي",
-    "itemsInCart": "{count} عنصر في السلة"
+    "itemsInCart": "{count} عنصر في السلة",
+    "shopAll": "تسوقي الكل",
+    "shopByCategory": "تسوقي حسب الفئة",
+    "close": "إغلاق القائمة"
   },
   "Checkout": {
     "emptyCartTitle": "لا توجد عناصر في السلة",
@@ -76,7 +79,6 @@
     "shareExperience": "شارك تجربتك",
     "helpOthers": "ساعد الآخرين في اتخاذ قرار الشراء"
   },
-
   "PromoCode": {
     "label": "كود الخصم",
     "placeholder": "أدخل كود الخصم",
@@ -257,7 +259,6 @@
       "currentQty": "الكمية الحالية {qty}"
     }
   },
-
   "Footer": {
     "brand": "SK Bags",
     "slogan": "جودة يدوية لكل المناسبات",
@@ -289,7 +290,18 @@
   "Nav": {
     "home": "الرئيسية",
     "allProducts": "جميع المنتجات",
-    "logo": "SK bags"
+    "logo": "SK bags",
+    "menu": "القائمة",
+    "search": "بحث",
+    "cart": "السلة",
+    "orders": "طلباتي",
+    "delivery": "توصيل لكل أنحاء مصر",
+    "shop": "تسوقي",
+    "newIn": "وصل حديثاً",
+    "bestSellers": "الأكثر مبيعاً",
+    "collections": "المجموعات",
+    "sale": "تخفيضات",
+    "brand": "SK Bags"
   },
   "ProductGrid": {
     "all": "الكل",

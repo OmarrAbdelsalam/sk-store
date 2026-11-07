@@ -43,6 +43,24 @@
   --primary: 39 39% 62%;
   --primary-foreground: 0 0% 100%;
   --ring: 39 39% 62%;
+
+  /* The storefront theme (globals.css) is square and black; the admin
+     keeps its own rounded look, so pin the shared shadcn variables here. */
+  --radius: 1rem;
+  --background: 0 0% 99%;
+  --foreground: 0 0% 15%;
+  --card: 0 0% 98%;
+  --card-foreground: 0 0% 15%;
+  --popover: 0 0% 99%;
+  --popover-foreground: 0 0% 15%;
+  --secondary: 0 0% 94%;
+  --secondary-foreground: 0 0% 20%;
+  --muted: 0 0% 96%;
+  --muted-foreground: 0 0% 35%;
+  --accent: 210 8% 92%;
+  --accent-foreground: 0 0% 20%;
+  --border: 0 0% 90%;
+  --input: 0 0% 90%;
   
   font-family: var(--font-jakarta), system-ui, -apple-system, sans-serif;
   background-color: var(--bg-primary);

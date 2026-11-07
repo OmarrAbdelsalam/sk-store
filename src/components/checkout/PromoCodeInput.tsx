@@ -2,12 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { X, Loader2 } from "lucide-react";
+import { X, Loader2, Tag } from "lucide-react";
 import { applyDiscount, deleteDiscount } from "@/lib/api/discount";
 import { getOrCreateSessionId } from "@/lib/session";
-import DiscountBreakdown from "@/components/ui/DiscountBreakdown";
 
 interface PromoCodeInputProps {
   onDiscountApplied: (discount: { 
@@ -162,83 +159,80 @@ export default function PromoCodeInput({
     if (errorMessage) setErrorMessage(null);
   };
 
+  // Shopify checkout: one row — floating-label field + Apply (gray until
+  // there is something to apply). An applied code shows as a removable tag.
   return (
-    <div className="space-y-3">
-      {/* Error message */}
-      {errorMessage && (
-        <div className="p-3 border border-red-300 bg-red-50/50">
-          <p className="text-xs text-red-600">{errorMessage}</p>
-        </div>
-      )}
-
-      {/* Applied discount */}
-      {appliedDiscount && (
-        <div className="space-y-3">
-          {/* Remove button */}
-          <div className="flex justify-end">
-            <button
-              onClick={handleRemoveDiscount}
-              className="inline-flex items-center gap-1.5 text-xs tracking-wider uppercase text-muted-foreground hover:text-foreground transition-colors"
-              disabled={disabled || isRemoving}
-            >
-              {isRemoving ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  {isAr ? "جاري الإزالة..." : "Removing..."}
-                </>
-              ) : (
-                <>
-                  <X className="w-3.5 h-3.5" />
-                  {isAr ? "إزالة الخصم" : "Remove"}
-                </>
-              )}
-            </button>
-          </div>
-
-          {/* Discount details */}
-          <DiscountBreakdown discount={appliedDiscount} />
-        </div>
-      )}
-
-      {/* Promo code input */}
+    <div>
       {!appliedDiscount && (
-        <div className="space-y-2.5">
-          <Label htmlFor="promo-code" className="text-xs font-medium tracking-wider uppercase text-muted-foreground">
-            {t("label")}
-          </Label>
-          <div className="flex gap-0">
-            <Input
+        <div className="flex gap-3">
+          <div className="relative min-w-0 flex-1">
+            <input
               id="promo-code"
               type="text"
-              placeholder={t("placeholder")}
+              placeholder={isAr ? "كود الخصم" : "Discount code"}
               value={promoCode}
               onChange={(e) => {
                 setPromoCode(e.target.value.toUpperCase());
                 clearError();
               }}
-              onKeyPress={handleKeyPress}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleKeyPress(e);
+                }
+              }}
               disabled={isApplying || disabled}
-              className="uppercase rounded-none border-border bg-transparent h-11 text-sm focus-visible:ring-1 focus-visible:ring-foreground border-r-0"
               maxLength={20}
+              aria-invalid={errorMessage ? true : undefined}
+              aria-describedby={errorMessage ? "promo-code-msg" : undefined}
+              className={`peer h-[52px] w-full rounded-none border bg-white px-3 font-sans text-[16px] uppercase text-ink outline-none transition-[border-color,box-shadow] duration-fast placeholder:normal-case placeholder:text-gray-500 hover:border-gray-400 focus:border-ink focus:ring-1 focus:ring-ink disabled:bg-gray-50 md:text-[14px] [&:not(:placeholder-shown)]:pb-1 [&:not(:placeholder-shown)]:pt-[18px] ${
+                errorMessage ? "border-danger focus:border-danger focus:ring-danger" : "border-gray-300"
+              }`}
             />
-            <button
-              onClick={handleApplyPromoCode}
-              disabled={isApplying || !promoCode.trim() || disabled}
-              className="h-11 px-5 bg-foreground text-background text-xs font-medium tracking-wider uppercase hover:bg-foreground/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap"
+            <label
+              htmlFor="promo-code"
+              className="pointer-events-none absolute start-3 top-[7px] font-sans text-[12px] leading-4 text-gray-500 transition-[opacity,transform] duration-fast peer-placeholder-shown:translate-y-1 peer-placeholder-shown:opacity-0"
             >
-              {isApplying ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  {t("applying")}
-                </>
+              {isAr ? "كود الخصم" : "Discount code"}
+            </label>
+          </div>
+          <button
+            type="button"
+            onClick={handleApplyPromoCode}
+            disabled={isApplying || !promoCode.trim() || disabled}
+            className="flex h-[52px] shrink-0 items-center justify-center gap-2 border border-ink bg-ink px-5 font-sans text-[13px] font-semibold text-white transition-colors duration-fast hover:bg-night disabled:cursor-not-allowed disabled:border-gray-300 disabled:bg-gray-100 disabled:text-gray-500"
+          >
+            {isApplying && <Loader2 className="size-4 animate-spin" strokeWidth={1.5} />}
+            {t("apply")}
+          </button>
+        </div>
+      )}
+
+      {errorMessage && (
+        <p id="promo-code-msg" className="mt-1.5 font-sans text-[13px] leading-5 text-danger">
+          {errorMessage}
+        </p>
+      )}
+
+      {appliedDiscount && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-flex h-8 items-center gap-2 bg-gray-200 ps-2.5 pe-1 font-sans text-[13px] font-semibold uppercase tracking-[0.04em] text-ink">
+            <Tag className="size-3.5" strokeWidth={1.5} />
+            {appliedDiscount.code}
+            <button
+              type="button"
+              onClick={handleRemoveDiscount}
+              disabled={disabled || isRemoving}
+              aria-label={isAr ? "إزالة الخصم" : "Remove discount"}
+              className="flex size-6 items-center justify-center text-gray-600 transition-colors duration-fast hover:text-ink disabled:opacity-50"
+            >
+              {isRemoving ? (
+                <Loader2 className="size-3.5 animate-spin" strokeWidth={1.5} />
               ) : (
-                t("apply")
+                <X className="size-3.5" strokeWidth={1.75} />
               )}
             </button>
-          </div>
-          <p className="text-[11px] text-muted-foreground">
-            {t("hint")}
-          </p>
+          </span>
         </div>
       )}
     </div>

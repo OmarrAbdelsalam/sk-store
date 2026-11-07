@@ -5,6 +5,8 @@ import { useTranslations, useLocale } from "next-intl";
 import { prefetchProduct } from "@/hooks/useProduct";
 import DropboxImage from "@/components/DropboxImage";
 import * as React from "react";
+import QuickAddModal from "@/components/product/QuickAddModal";
+import { formatPrice } from "@/lib/price";
 
 interface Product {
   id: string | number;
@@ -138,73 +140,147 @@ const ProductCard: React.FC<ProductCardProps> = ({
     }
   }, [product.id, index]);
 
+  // ── Quick add (Dead Sea Luxe pattern) ──────────────────────────────────
+  // The card's "Quick add" opens QuickAddModal (colour, quantity, add to cart).
+  const [quickOpen, setQuickOpen] = React.useState(false);
+  const soldOut = variants.length > 0 && totalStock <= 0;
+  const openQuickAdd = React.useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setQuickOpen(true);
+  }, []);
+  const quickAddLabel = soldOut
+    ? locale === "ar" ? "نفدت الكمية" : "Sold out"
+    : locale === "ar" ? "إضافة سريعة" : "Quick add";
+
+  const before =
+    Number(product.raw?.beforePrice ?? (product as any).beforePrice ?? product.raw?.compareAtPrice) || 0;
+  const onSale = before > product.priceNum && product.priceNum > 0;
+
+  /*
+   * Product card — DESIGN_SYSTEM.md › Product tile (Parfois).
+   * Light-gray 3:4 tile, photo fills it (white studio backgrounds blend into
+   * the gray), white round "+" at the bottom. Under it, left-aligned: 13px
+   * uppercase name, 13px price (sale: old struck + new in red).
+   */
   return (
-    <div 
+    <div
       onClick={handleClick}
-      className="flex flex-col group cursor-pointer"
+      className="group flex cursor-pointer flex-col"
       style={{ animationDelay: `${Math.min(index, 4) * 0.05}s` }}
     >
-      <div 
-        className="relative aspect-[4/5] bg-[#f5f5f5] mb-3 overflow-hidden rounded-2xl"
+      <div
+        className="ds-cutout-frame relative aspect-product overflow-hidden"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         onTouchStart={handleTouchStart}
       >
-        {/* Primary Image */}
         <DropboxImage
           src={primaryImage}
           alt={product.name}
           fill
-          sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
-          className={`object-cover object-center transition-opacity duration-[400ms] ease-in-out ${secondaryImage ? 'group-hover:opacity-0' : ''}`}
+          sizes="(max-width: 1024px) 50vw, 25vw"
+          className={`ds-cutout object-center transition-[opacity,transform] duration-500 ease-brand lg:group-hover:scale-[1.06] ${secondaryImage ? "group-hover:opacity-0" : ""}`}
           priority={index < 2}
           showLoader={false}
         />
-        
-        {/* Secondary Image (Hover) */}
+
         {secondaryImage && (
           <DropboxImage
             src={secondaryImage}
             alt={`${product.name} alternate view`}
             fill
-            sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
-            className="object-cover object-center opacity-0 group-hover:opacity-100 transition-opacity duration-[400ms] ease-in-out absolute inset-0"
+            sizes="(max-width: 1024px) 50vw, 25vw"
+            className="ds-cutout-cover absolute inset-0 object-center opacity-0 transition-opacity duration-image ease-brand group-hover:opacity-100"
             showLoader={false}
-            priority={index < 2} // Also prioritize if primary is prioritized
+            priority={index < 2}
           />
         )}
-        
-        {/* Wishlist Button */}
 
-        {/* New Badge - positioned at bottom left/right of image */}
         {showNewBadge && (
-          <div className={`absolute bottom-4 ${locale === 'ar' ? 'right-4' : 'left-4'} bg-black text-white text-xs font-bold px-3 py-1 tracking-[0.2em] uppercase z-10 shadow-lg rounded-full`}>
-            {locale === 'ar' ? 'جديد' : 'New'}
-          </div>
+          <span className="absolute start-2 top-2 z-10 bg-white px-2 py-0.5 font-sans text-[12px] font-semibold uppercase leading-[18px] tracking-[0.04em] text-ink">
+            {locale === "ar" ? "جديد" : "New"}
+          </span>
+        )}
+        {onSale && (
+          <span className="absolute end-2 top-2 z-10 bg-accent-2 px-2 py-0.5 font-sans text-[12px] font-semibold uppercase leading-[18px] tracking-[0.04em] text-white">
+            {locale === "ar" ? "خصم" : "Sale"}
+          </span>
         )}
 
-
-
-
+        {/* Quick add — desktop: a light floating bar, inset from the tile
+            edges, that rises in on hover; fills ink when pointed at. */}
+        <button
+          type="button"
+          onClick={openQuickAdd}
+          disabled={soldOut}
+          aria-label={`${quickAddLabel}: ${product.name}`}
+          className="invisible absolute inset-x-3 bottom-3 z-20 hidden h-10 translate-y-2 items-center justify-center gap-1.5 bg-white/95 font-sans text-[11px] font-semibold uppercase tracking-[0.12em] text-ink opacity-0 shadow-[0_1px_2px_rgba(0,0,0,0.06)] backdrop-blur-sm transition-[opacity,visibility,transform,background-color,color] duration-300 ease-brand hover:bg-ink hover:text-white focus-visible:visible focus-visible:translate-y-0 focus-visible:opacity-100 disabled:cursor-not-allowed disabled:text-gray-500 disabled:hover:bg-white/95 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 lg:flex"
+        >
+          {quickAddLabel}
+        </button>
       </div>
 
-      {/* Product Details */}
-      <div className="text-center space-y-1">
-        <h3 className="font-sans font-medium text-sm text-gray-900 truncate px-2">
+      <div className="flex flex-col gap-0.5 px-2.5 pt-2.5">
+        <h3 className="truncate font-sans text-[13px] uppercase leading-5 tracking-[0.04em] text-ink">
           {product.name}
         </h3>
-        
-        <div className="flex items-center justify-center gap-2">
-           {product.raw?.beforePrice && (
-              <p className="text-xs text-gray-500 line-through">
-                {product.raw.beforePrice} {locale === 'ar' ? 'ج.م' : 'EGP'}
-              </p>
-           )}
-           <p className="text-sm font-bold text-gray-900">
-             {product.price}
-           </p>
+        <div className="flex flex-wrap items-baseline gap-x-2 font-sans text-[13px] leading-5">
+          {onSale && (
+            <span className="text-ink line-through">
+              {formatPrice(before, locale)}
+            </span>
+          )}
+          <span className={onSale ? "text-accent-2" : "text-ink"}>{product.price}</span>
         </div>
+
+        {/* Colour swatches (Parfois): 12px squares, selected one framed in
+            ink, first 3 then "+N". Clicking switches the card photo. */}
+        {colors.length > 1 && (
+          <div className="flex flex-wrap items-center gap-1 pt-1.5" onClick={(e) => e.stopPropagation()}>
+            {colors.slice(0, 3).map((c: any, i: number) => {
+              const name = (locale === "ar" ? c.colorNameAr || c.colorNameEn : c.colorNameEn || c.colorNameAr) || "";
+              const selected = selectedColorId !== null ? String(selectedColorId) === String(c.id) : i === 0;
+              return (
+                <button
+                  key={String(c.id)}
+                  type="button"
+                  aria-label={name}
+                  title={name}
+                  aria-pressed={selected}
+                  onClick={(e) => handleColorClick(e, c.id)}
+                  className={`shrink-0 border p-0.5 transition-colors duration-fast ${selected ? "border-ink" : "border-transparent hover:border-gray-300"}`}
+                >
+                  <span className="block size-3 border border-gray-200" style={{ backgroundColor: c.hexa || undefined }} />
+                </button>
+              );
+            })}
+            {colors.length > 3 && (
+              <span className="ps-0.5 font-sans text-[10px] leading-4 text-gray-500">+{colors.length - 3}</span>
+            )}
+          </div>
+        )}
       </div>
+
+      {/* Quick add — phone: always visible under the price */}
+      <div className="mt-auto px-2.5 pt-2.5 lg:hidden">
+        <button
+          type="button"
+          onClick={openQuickAdd}
+          disabled={soldOut}
+          aria-label={`${quickAddLabel}: ${product.name}`}
+          className="flex h-9 w-full items-center justify-center gap-1.5 border border-ink/80 bg-transparent font-sans text-[11px] font-semibold uppercase tracking-[0.12em] text-ink transition-colors duration-fast active:bg-ink active:text-white disabled:cursor-not-allowed disabled:border-gray-300 disabled:text-gray-500"
+        >
+          {quickAddLabel}
+        </button>
+      </div>
+
+      <QuickAddModal
+        open={quickOpen}
+        onOpenChange={setQuickOpen}
+        product={product}
+        initialColorId={selectedColorId}
+      />
     </div>
   );
 };

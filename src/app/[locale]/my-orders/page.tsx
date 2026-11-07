@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
-import { Package, ChevronDown, ChevronUp, ArrowRight } from "lucide-react";
+import { Package, ChevronDown } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { MyOrdersSkeleton } from "@/components/skeletons";
+import { formatPrice } from "@/lib/price";
 import { getOrCreateSessionId } from "@/lib/session";
 import { OrderItemReview } from "@/components/orders/OrderItemReview";
 import { API_ROUTES } from "@/lib/api-routes";
@@ -47,7 +50,6 @@ type Order = {
 };
 
 export default function MyOrdersPage() {
-  const router = useRouter();
   const t = useTranslations("MyOrders");
   const locale = useLocale();
   const isAr = locale === "ar";
@@ -127,30 +129,35 @@ export default function MyOrdersPage() {
   const getStatusStyle = (status: string) => {
     switch (status.toLowerCase()) {
       case "pending":
-        return "border-amber-500 text-amber-700 bg-amber-50 dark:bg-amber-950/20 dark:text-amber-400";
+        return "border-warning bg-warning-soft text-ink";
       case "confirmed":
-        return "border-blue-500 text-blue-700 bg-blue-50 dark:bg-blue-950/20 dark:text-blue-400";
+        return "border-info bg-info-soft text-ink";
       case "shipped":
-        return "border-purple-500 text-purple-700 bg-purple-50 dark:bg-purple-950/20 dark:text-purple-400";
+        return "border-ink bg-beige text-ink";
       case "delivered":
-        return "border-green-600 text-green-700 bg-green-50 dark:bg-green-950/20 dark:text-green-400";
+        return "border-success bg-success-soft text-ink";
       case "cancelled":
-        return "border-red-500 text-red-700 bg-red-50 dark:bg-red-950/20 dark:text-red-400";
+        return "border-danger bg-danger-soft text-ink";
       default:
-        return "border-border text-muted-foreground";
+        return "border-gray-300 text-gray-500";
     }
   };
 
-  // Loading state
+  // Stored values ("easykash", "cash"…) → words a customer reads.
+  const paymentMethodLabel = (method?: string | null) => {
+    const m = String(method ?? "").toLowerCase();
+    if (m.includes("easykash") || m === "online" || m === "card") return isAr ? "دفع أونلاين (EasyKash)" : "Paid online (EasyKash)";
+    if (m.includes("cash") || m === "cod") return isAr ? "الدفع عند الاستلام" : "Cash on delivery";
+    return method || "—";
+  };
+
+  const money = (v: number | string) => formatPrice(v, locale);
+
+  // Loading state — same skeleton as the route loader
   if (loading) {
     return (
       <div className="min-h-screen bg-background" dir={dir}>
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
-          <div className="flex flex-col items-center gap-4">
-            <div className="animate-spin h-8 w-8 border-2 border-foreground border-t-transparent" />
-            <p className="text-xs tracking-widest uppercase text-muted-foreground">{t("loading")}</p>
-          </div>
-        </div>
+        <MyOrdersSkeleton />
       </div>
     );
   }
@@ -159,123 +166,97 @@ export default function MyOrdersPage() {
   if (error) {
     return (
       <div className="min-h-screen bg-background" dir={dir}>
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
-          <div className="border border-border p-8 text-center space-y-4">
-            <p className="text-sm text-muted-foreground">{error}</p>
-            <button
-              onClick={() => router.push("/")}
-              className="h-11 px-8 bg-foreground text-background text-xs font-medium tracking-widest uppercase hover:bg-foreground/90 transition-colors"
-            >
-              {t("backToHome")}
-            </button>
-          </div>
+        <div className="mx-auto flex max-w-3xl flex-col items-center px-gutter py-16 text-center sm:py-24 lg:px-gutter-lg">
+          <h1 className="font-display text-[28px] leading-tight text-ink sm:text-[36px]">
+            {isAr ? "حصلت مشكلة" : "Something went wrong"}
+          </h1>
+          <p className="mt-3 font-sans text-[14px] leading-6 text-gray-500">{error}</p>
+          <Button asChild className="mt-8 h-12 px-10">
+            <Link href="/products">{t("backToHome")}</Link>
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white" dir={dir}>
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
-        {/* Page Title */}
-        <div className="mb-8 sm:mb-12">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-light tracking-wider uppercase text-gray-900">{t("title")}</h1>
-          <div className="h-px w-12 bg-black mt-3" />
-          <p className="text-xs tracking-wider text-muted-foreground mt-3">{t("subtitle")}</p>
+    <div className="min-h-screen bg-background" dir={dir}>
+      <div className="mx-auto max-w-3xl px-gutter py-8 sm:py-section lg:px-gutter-lg">
+        {/* Page title */}
+        <div className="mb-8">
+          <h1 className="font-display text-[28px] leading-tight text-ink sm:text-[36px]">{t("title")}</h1>
+          <p className="mt-2 font-sans text-[14px] leading-6 text-gray-500">{t("subtitle")}</p>
         </div>
 
-        {/* Empty State */}
         {orders.length === 0 ? (
-          <div className="bg-[#F0EBE3]/30 rounded-[32px] border border-[#d4c9bc] p-10 sm:p-16 text-center space-y-5 shadow-sm">
-            <Package className="h-12 w-12 text-gray-900/40 mx-auto" />
-            <h3 className="text-base font-bold tracking-widest uppercase text-gray-900">{t("noOrders")}</h3>
-            <p className="text-sm text-muted-foreground tracking-wider">{t("noOrdersDesc")}</p>
-            <button
-              onClick={() => router.push("/")}
-              className="h-14 px-10 rounded-full bg-black text-white text-sm font-bold tracking-widest uppercase hover:bg-black hover:-translate-y-1 shadow-md hover:shadow-xl transition-all duration-300 inline-flex items-center gap-2 mt-4"
-            >
-              {t("startShopping")}
-              <ArrowRight className="h-4 w-4" />
-            </button>
+          <div className="flex flex-col items-center border-t border-gray-200 py-16 text-center">
+            <Package className="size-9 text-ink" strokeWidth={1.25} />
+            <h2 className="mt-5 font-display text-[22px] leading-tight text-ink">{t("noOrders")}</h2>
+            <p className="mt-2 font-sans text-[14px] leading-6 text-gray-500">{t("noOrdersDesc")}</p>
+            <Button asChild className="mt-8 h-12 px-10">
+              <Link href="/products">{t("startShopping")}</Link>
+            </Button>
           </div>
         ) : (
-          <div className="space-y-6">
+          <ul className="space-y-4">
             {orders.map((order) => {
               const isOpen = openOrderId === order.id;
               return (
-                <div key={order.id} className="bg-[#F0EBE3]/40 rounded-[24px] border border-[#d4c9bc] overflow-hidden shadow-sm transition-all duration-300 hover:shadow-md">
-                  {/* Order Header */}
-                  <div className="p-5 sm:p-6">
-                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-3">
-                          <h3 className="text-sm font-medium tracking-wider">
-                            #{order.id}
-                          </h3>
-                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${getStatusStyle(order.orderStatus)}`}>
-                            {t(`status.${order.orderStatus.toLowerCase()}`)}
-                          </span>
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-xs text-muted-foreground">
-                            {formatDate(order.orderDate)}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {t("expectedDelivery")}: {getExpectedDeliveryDate(order.orderDate)}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-start sm:text-end">
-                        <span className="text-xl font-light tracking-wider">
-                          {order.totalAmount}
-                        </span>
-                        <span className="text-xs tracking-wider uppercase text-muted-foreground ml-1.5">
-                          {isAr ? "جنيه" : "EGP"}
+                <li key={order.id} className="border border-gray-200 bg-background">
+                  {/* Order header */}
+                  <div className="flex flex-col gap-3 p-5 sm:flex-row sm:items-start sm:justify-between sm:p-6">
+                    <div className="space-y-1.5">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <h2 className="font-sans text-[15px] font-semibold text-ink">
+                          {isAr ? "طلب" : "Order"} #{order.id}
+                        </h2>
+                        <span className={`border px-2 py-0.5 font-sans text-[11px] font-semibold uppercase tracking-[0.08em] ${getStatusStyle(order.orderStatus)}`}>
+                          {t(`status.${order.orderStatus.toLowerCase()}`)}
                         </span>
                       </div>
+                      <p className="font-sans text-[13px] leading-5 text-gray-500">{formatDate(order.orderDate)}</p>
+                      <p className="font-sans text-[13px] leading-5 text-gray-500">
+                        {t("expectedDelivery")}: {getExpectedDeliveryDate(order.orderDate)}
+                      </p>
                     </div>
+                    <p className="font-sans text-[17px] font-semibold tabular-nums text-ink sm:text-end">
+                      {money(order.totalAmount)}
+                    </p>
                   </div>
 
-                  {/* Expand Toggle */}
+                  {/* Expand toggle */}
                   <button
+                    type="button"
                     onClick={() => setOpenOrderId(isOpen ? null : order.id)}
-                    className="w-full flex items-center justify-between px-5 sm:px-6 py-4 border-t border-[#d4c9bc]/60 text-xs tracking-widest uppercase text-gray-900 font-bold hover:bg-white/50 transition-colors"
+                    aria-expanded={isOpen}
+                    className="flex w-full items-center justify-between border-t border-gray-200 px-5 py-3.5 font-sans text-[14px] text-ink transition-colors duration-fast hover:bg-beige sm:px-6"
                   >
-                    <span>{t("viewDetails")}</span>
-                    {isOpen ? (
-                      <ChevronUp className="h-4 w-4" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4" />
-                    )}
+                    <span>{isOpen ? (isAr ? "إخفاء التفاصيل" : "Hide details") : t("viewDetails")}</span>
+                    <ChevronDown
+                      className={`size-4 transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
+                      strokeWidth={1.5}
+                    />
                   </button>
 
-                  {/* Expanded Details */}
                   {isOpen && (
-                    <div className="border-t border-[#d4c9bc]/60 bg-white/60">
-                      {/* Items Section */}
-                      <div className="p-5 sm:p-6">
-                        <h4 className="text-xs font-bold tracking-widest uppercase text-gray-900 mb-4">
+                    <div className="border-t border-gray-200">
+                      {/* Items */}
+                      <div className="px-5 pt-5 sm:px-6 sm:pt-6">
+                        <h3 className="border-b border-gray-200 pb-3 font-sans text-[11px] uppercase tracking-[0.12em] text-gray-500">
                           {t("items")}
-                        </h4>
-                        <div className="space-y-0">
+                        </h3>
+                        <ul>
                           {order.items.map((item, idx) => {
                             const colorName = isAr ? item.colorNameAr : item.colorNameEn;
+                            const meta = [colorName, item.sizeName, `${t("qty")}: ${item.quantity}`].filter(Boolean).join(" · ");
                             return (
-                              <div key={idx} className="space-y-2">
-                                <div className="flex justify-between items-center py-4 border-b border-[#d4c9bc]/40 last:border-0">
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium">{item.productName}</p>
-                                    <p className="text-xs text-muted-foreground mt-0.5">
-                                      {colorName && `${colorName}`}
-                                      {colorName && item.sizeName && " · "}
-                                      {item.sizeName && `${item.sizeName}`}
-                                      {(colorName || item.sizeName) && " · "}
-                                      {t("qty")}: {item.quantity}
-                                    </p>
+                              <li key={idx} className="border-b border-gray-200 py-4 last:border-0">
+                                <div className="flex items-start justify-between gap-4">
+                                  <div className="min-w-0 flex-1">
+                                    <p className="font-sans text-[15px] leading-[22px] text-ink">{item.productName}</p>
+                                    <p className="mt-0.5 font-sans text-[13px] leading-5 text-gray-500">{meta}</p>
                                   </div>
-                                  <p className="text-sm font-medium flex-shrink-0">
-                                    {item.subtotal} {isAr ? "جنيه" : "EGP"}
-                                  </p>
+                                  <p className="shrink-0 font-sans text-[14px] tabular-nums text-ink">{money(item.subtotal)}</p>
                                 </div>
                                 {order.orderStatus.toLowerCase() === "delivered" && (
                                   <OrderItemReview
@@ -289,90 +270,66 @@ export default function MyOrdersPage() {
                                     }}
                                   />
                                 )}
-                              </div>
+                              </li>
                             );
                           })}
-                        </div>
+                        </ul>
                       </div>
 
-                      {/* Shipping Address */}
-                      <div className="px-5 sm:px-6 pb-5 sm:pb-6">
-                        <h4 className="text-xs font-bold tracking-widest uppercase text-gray-900 mb-3">
-                          {t("shippingAddress")}
-                        </h4>
-                        <div className="bg-white rounded-[16px] border border-[#d4c9bc]/50 p-5 space-y-2 text-sm shadow-sm">
-                          <p>
-                            <span className="text-xs text-muted-foreground">{t("name")}:</span>{" "}
-                            {order.customerName}
-                          </p>
-                          <p>
-                            <span className="text-xs text-muted-foreground">{t("phone")}:</span>{" "}
-                            {order.phoneNumber}
-                          </p>
-                          <p>
-                            <span className="text-xs text-muted-foreground">{isAr ? "المحافظة" : "Governorate"}:</span>{" "}
-                            {order.government}
-                          </p>
-                          <p>
-                            <span className="text-xs text-muted-foreground">{isAr ? "المدينة" : "City"}:</span>{" "}
-                            {order.city}
-                          </p>
-                          {order.detailedAddress && (
-                            <p>
-                              <span className="text-xs text-muted-foreground">{t("address")}:</span>{" "}
-                              {order.detailedAddress}
-                            </p>
-                          )}
-                          {order.notes && (
-                            <p>
-                              <span className="text-xs text-muted-foreground">{t("notes")}:</span>{" "}
-                              {order.notes}
-                            </p>
-                          )}
+                      <div className="grid gap-4 p-5 sm:grid-cols-2 sm:p-6">
+                        {/* Delivery address */}
+                        <div>
+                          <h3 className="mb-3 font-sans text-[11px] uppercase tracking-[0.12em] text-gray-500">{t("shippingAddress")}</h3>
+                          <dl className="space-y-1 font-sans text-[14px] leading-6 text-ink">
+                            <div><dt className="sr-only">{t("name")}</dt><dd>{order.customerName}</dd></div>
+                            <div><dt className="sr-only">{t("phone")}</dt><dd dir="ltr" className="text-start">{order.phoneNumber}</dd></div>
+                            <div>
+                              <dt className="sr-only">{t("address")}</dt>
+                              <dd>{[order.detailedAddress, order.city, order.government].filter(Boolean).join("، ")}</dd>
+                            </div>
+                            {order.notes && (
+                              <div className="text-gray-500">
+                                <dt className="inline">{t("notes")}: </dt>
+                                <dd className="inline">{order.notes}</dd>
+                              </div>
+                            )}
+                          </dl>
                         </div>
-                      </div>
 
-                      {/* Payment Summary */}
-                      <div className="px-5 sm:px-6 pb-5 sm:pb-6">
-                        <h4 className="text-xs font-bold tracking-widest uppercase text-gray-900 mb-3">
-                          {t("paymentSummary")}
-                        </h4>
-                        <div className="bg-white rounded-[16px] border border-[#d4c9bc]/50 p-5 space-y-3 text-sm shadow-sm">
-                          <div className="flex justify-between">
-                            <span className="text-xs tracking-wider uppercase text-muted-foreground">{t("subtotal")}</span>
-                            <span>{order.subTotal} {isAr ? "جنيه" : "EGP"}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-xs tracking-wider uppercase text-muted-foreground">{t("shipping")}</span>
-                            <span>{order.shippingCost} {isAr ? "جنيه" : "EGP"}</span>
-                          </div>
-                          {order.discountAmount > 0 && (
-                            <div className="flex justify-between">
-                              <span className="text-xs tracking-wider uppercase text-muted-foreground">{t("discount")}</span>
-                              <span>-{order.discountAmount} {isAr ? "جنيه" : "EGP"}</span>
+                        {/* Payment summary */}
+                        <div className="bg-beige p-5">
+                          <h3 className="mb-3 font-sans text-[11px] uppercase tracking-[0.12em] text-gray-500">{t("paymentSummary")}</h3>
+                          <dl className="space-y-2 font-sans text-[14px] text-ink">
+                            <div className="flex justify-between gap-4">
+                              <dt>{t("subtotal")}</dt>
+                              <dd className="tabular-nums">{money(order.subTotal)}</dd>
                             </div>
-                          )}
-                          <div className="border-t border-[#d4c9bc] pt-3 mt-1">
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm font-bold tracking-wider uppercase text-gray-900">{t("total")}</span>
-                              <span className="text-xl font-bold tracking-wider text-gray-900">
-                                {order.totalAmount} <span className="text-xs font-medium uppercase">{isAr ? "جنيه" : "EGP"}</span>
-                              </span>
+                            <div className="flex justify-between gap-4">
+                              <dt>{t("shipping")}</dt>
+                              <dd className="tabular-nums">{money(order.shippingCost)}</dd>
                             </div>
-                          </div>
-                          <div className="pt-3 border-t border-[#d4c9bc]/40">
-                            <span className="text-xs text-muted-foreground tracking-wider uppercase">
-                              {t("paymentMethod")}: {order.paymentMethod}
-                            </span>
-                          </div>
+                            {order.discountAmount > 0 && (
+                              <div className="flex justify-between gap-4">
+                                <dt>{t("discount")}</dt>
+                                <dd className="tabular-nums">−{money(order.discountAmount)}</dd>
+                              </div>
+                            )}
+                            <div className="flex items-baseline justify-between gap-4 border-t border-gray-200 pt-3">
+                              <dt className="font-semibold">{t("total")}</dt>
+                              <dd className="text-[17px] font-semibold tabular-nums">{money(order.totalAmount)}</dd>
+                            </div>
+                          </dl>
+                          <p className="mt-3 font-sans text-[13px] text-gray-500">
+                            {t("paymentMethod")}: {paymentMethodLabel(order.paymentMethod)}
+                          </p>
                         </div>
                       </div>
                     </div>
                   )}
-                </div>
+                </li>
               );
             })}
-          </div>
+          </ul>
         )}
       </div>
     </div>

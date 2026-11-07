@@ -1,21 +1,18 @@
 "use client";
 
 import { useEffect, useState, useMemo, useRef } from "react";
-import { useProducts, type Product } from "@/hooks/useProducts";
+import { useProducts } from "@/hooks/useProducts";
 import { useCart } from "@/hooks/useCart";
 import { useLocale } from "next-intl";
-import { useRouter } from "next/navigation";
-import DropboxImage from "@/components/DropboxImage";
-import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import ProductCard from "@/components/product/ProductCard";
 
 export default function CartUpsell() {
   const locale = useLocale();
-  const router = useRouter();
   const { products, isLoading } = useProducts();
-  const { items, addToCart } = useCart();
-  const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
+  const { items } = useCart();
   const [mounted, setMounted] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLUListElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -70,133 +67,57 @@ export default function CartUpsell() {
     return [...shuffle(sameCategory), ...shuffle(other)].slice(0, 8);
   }, [products, cartProductIds, cartCategoryIds]);
 
-  const scroll = (direction: 'left' | 'right') => {
-    if (scrollRef.current) {
-      const { scrollLeft, clientWidth } = scrollRef.current;
-      const scrollTo = direction === 'left' ? scrollLeft - clientWidth : scrollLeft + clientWidth;
-      scrollRef.current.scrollTo({ left: scrollTo, behavior: 'smooth' });
-    }
+  // RTL-aware: "next" always moves toward the end of the reading direction.
+  const scroll = (dir: "prev" | "next") => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const rtl = getComputedStyle(el).direction === "rtl";
+    const step = el.clientWidth * 0.9 * (dir === "next" ? 1 : -1) * (rtl ? -1 : 1);
+    el.scrollBy({ left: step, behavior: "smooth" });
   };
 
   if (!mounted || isLoading || suggestions.length === 0) return null;
 
-  const handleAddToCart = (product: Product, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const isAr = locale === "ar";
 
-    // Get default variant
-    const raw = product.raw;
-    const firstVariant = raw?.variants?.[0];
-    const firstColor = raw?.colors?.[0];
-
-    if (!firstVariant) return;
-
-    addToCart({
-      productId: product.id,
-      name: product.name,
-      nameAr: product.nameAr,
-      nameEn: product.nameEn,
-      price: product.priceNum.toString(),
-      beforePrice: product.beforePrice ?? undefined,
-      image: product.image,
-      colorId: firstColor?.id || "",
-      colorName: firstColor?.colorNameEn || "",
-      sizeId: firstVariant.sizeId || "",
-      sizeName: firstVariant.name || "",
-      availableStock: firstVariant.quantity || 999,
-    });
-
-    setAddedIds((prev) => new Set([...prev, String(product.id)]));
-  };
-
+  // Same product card as the shop grid (photo, swatches, sale price, Quick
+  // add modal with colour choice) in a horizontal row.
   return (
-    <div className="mt-8 sm:mt-12 relative group">
-      {/* Section Header */}
-      <div className="mb-5 sm:mb-6 flex items-center justify-between">
-        <div>
-          <h2 className="text-sm sm:text-base font-medium tracking-widest uppercase">
-            You Might Also Like
-          </h2>
-          <div className="h-px w-12 bg-foreground mt-3" />
-        </div>
-
-        {/* Navigation Arrows for Desktop */}
-        <div className="hidden lg:flex items-center gap-2">
+    <section className="mt-12 border-t border-gray-200 pt-10 sm:mt-16" aria-labelledby="cart-upsell-title">
+      <div className="mb-5 flex items-center justify-between gap-4">
+        <h2 id="cart-upsell-title" className="font-display text-[22px] leading-tight text-ink sm:text-[26px]">
+          {isAr ? "ممكن يعجبك كمان" : "You may also like"}
+        </h2>
+        <div className="hidden items-center gap-2 lg:flex">
           <button
-            onClick={() => scroll('left')}
-            className="w-8 h-8 rounded-full border border-border flex items-center justify-center hover:bg-foreground hover:text-background transition-colors"
-            aria-label="Scroll left"
+            type="button"
+            onClick={() => scroll("prev")}
+            className="flex size-10 items-center justify-center border border-gray-300 text-ink transition-colors duration-fast hover:border-ink"
+            aria-label={isAr ? "السابق" : "Previous"}
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="size-4 rtl:rotate-180" strokeWidth={1.5} />
           </button>
           <button
-            onClick={() => scroll('right')}
-            className="w-8 h-8 rounded-full border border-border flex items-center justify-center hover:bg-foreground hover:text-background transition-colors"
-            aria-label="Scroll right"
+            type="button"
+            onClick={() => scroll("next")}
+            className="flex size-10 items-center justify-center border border-gray-300 text-ink transition-colors duration-fast hover:border-ink"
+            aria-label={isAr ? "التالي" : "Next"}
           >
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="size-4 rtl:rotate-180" strokeWidth={1.5} />
           </button>
         </div>
       </div>
 
-      {/* Scrollable product row */}
-      <div 
+      <ul
         ref={scrollRef}
-        className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide pb-2 -mx-1 px-1"
+        className="scrollbar-hide -mx-gutter flex snap-x snap-mandatory gap-tile overflow-x-auto scroll-px-gutter px-gutter pb-2 sm:mx-0 sm:scroll-px-0 sm:px-0"
       >
-        {suggestions.map((product) => {
-          const isAdded = addedIds.has(String(product.id)) || cartProductIds.has(String(product.id));
-
-          return (
-            <div
-              key={product.id}
-              className="flex-shrink-0 w-[140px] sm:w-[180px] cursor-pointer group/item"
-              onClick={() => router.push(`/product/${product.id}`)}
-            >
-              {/* Image */}
-              <div className="relative aspect-[4/5] bg-[#f5f5f5] mb-3 overflow-hidden">
-                <DropboxImage
-                  src={product.image}
-                  alt={product.name}
-                  fill
-                  sizes="180px"
-                  className="object-cover object-center"
-                  showLoader={false}
-                />
-
-                {/* Quick Add Button - always visible on mobile, hover on desktop */}
-                {!isAdded && (
-                  <button
-                    onClick={(e) => handleAddToCart(product, e)}
-                    className="absolute bottom-2 right-2 w-8 h-8 bg-foreground text-background flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover/item:opacity-100 transition-opacity duration-200 hover:bg-foreground/80"
-                    aria-label="Add to cart"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
-                )}
-
-                {isAdded && (
-                  <div className="absolute bottom-2 right-2 px-2 py-1 bg-green-600 text-white text-[10px] tracking-wider uppercase font-medium">
-                    Added
-                  </div>
-                )}
-              </div>
-
-              {/* Product Info */}
-              <div className="space-y-1">
-                <p className="text-xs sm:text-sm font-medium line-clamp-1">{product.name}</p>
-                <div className="flex items-center gap-2">
-                  {product.beforePrice && (
-                    <span className="text-[11px] text-muted-foreground line-through">
-                      {product.beforePrice} EGP
-                    </span>
-                  )}
-                  <span className="text-xs sm:text-sm font-semibold">{product.price}</span>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
+        {suggestions.map((product, i) => (
+          <li key={product.id} className="w-[46%] shrink-0 snap-start sm:w-[31%] lg:w-[23.5%]">
+            <ProductCard product={product} index={i} />
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

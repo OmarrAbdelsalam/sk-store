@@ -12,7 +12,6 @@ import ProductImageGallery from "@/components/ProductImageGallery";
 import ProductInfo from "@/components/product/ProductInfo";
 import AddToCartSection from "@/components/product/AddToCartSection";
 import ProductSpecifications from "@/components/product/ProductSpecifications";
-import ProductReviews from "@/components/product/ProductReviews";
 import RelatedProducts from "@/components/product/RelatedProducts";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:5000";
@@ -275,6 +274,10 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
 
   const totalPrice = Number(product?.price ?? 0) * quantity;
 
+  // Buy now after Add to cart must not add the same selection twice.
+  const selectionKey = `${product?.id ?? ""}|${selectedColorId ?? ""}|${selectedSizeId ?? ""}|${selectedChainId ?? ""}`;
+  const lastAddedKeyRef = useRef<string | null>(null);
+
   const handleAddToCart = async () => {
     if (!product) return;
     const sessionId = getOrCreateSessionId();
@@ -344,6 +347,7 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
         sizeName: selectedSize?.name,
         availableStock: availableStock,
       }, quantity);
+      lastAddedKeyRef.current = selectionKey;
 
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : t("unknownError");
@@ -355,9 +359,15 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
   };
 
   const handleBuyNow = async () => {
+    // Already added from this page with the same colour/size/option → just
+    // go to checkout. Otherwise (Buy now pressed directly) add it first.
+    if (lastAddedKeyRef.current === selectionKey) {
+      router.push(`/checkout`);
+      return;
+    }
     await handleAddToCart();
     if (!addDisabled) {
-      router.push(`/cart`);
+      router.push(`/checkout`);
     }
   };
 
@@ -370,46 +380,31 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
   // Convert photos for gallery component
   const galleryPhotos = mapPhotosForGallery(photos);
 
+  const productDescription = isAr
+    ? (product.descriptionAr || product.descriptionEn || "")
+    : (product.descriptionEn || product.descriptionAr || "");
+
   return (
     <>
-      <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-8">
-        {/* Left column: Images + Specs */}
-        <div className={`order-1 lg:order-1 ${isAr ? "lg:col-start-1" : ""}`}>
-          <div className="space-y-6">
-            {/* Images */}
-            <ProductImageGallery
-              photos={galleryPhotos}
-              selectedColorId={selectedColorId}
-              selectedOptionValueId={selectedChainId}
-              thumbSide={isAr ? "right" : "left"}
-              mainImageSecond={!!product?.main_image_second}
-            />
-
-            {/* Specs - Desktop (without description, it's in the right column) */}
-            <div className="hidden lg:block">
-              <ProductSpecifications
-                product={{
-                  category:
-                    isAr
-                      ? (product?.categories?.[0]?.arabicName || product?.categories?.[0]?.englishName || "")
-                      : (product?.categories?.[0]?.englishName || product?.categories?.[0]?.arabicName || ""),
-                  longDescription: "",
-                  materials: (product as any).material?.trim() || (product.material_en?.trim()) || (isAr ? "قطن 100% عالي الجودة، مريح وقابل للتنفس" : "100% high-quality cotton, comfortable and breathable"),
-                  care: isAr ? "يُغسل بالماء البارد، لا يُستخدم المُبيض، يُجفف على حرارة منخفضة" : "Wash with cold water, do not bleach, tumble dry low",
-                }}
-              />
-            </div>
-          </div>
+      <div className="lg:flex lg:items-start lg:gap-gutter-lg">
+        {/* Start side (~2/3): gallery — full-bleed on phone, 2-up grid on desktop */}
+        <div className="min-w-0 lg:flex-1">
+          <ProductImageGallery
+            photos={galleryPhotos}
+            selectedColorId={selectedColorId}
+            selectedOptionValueId={selectedChainId}
+            thumbSide={isAr ? "right" : "left"}
+            mainImageSecond={!!product?.main_image_second}
+          />
         </div>
 
-        {/* Right column: Info */}
-        <div className={`order-2 lg:order-2 px-4 lg:px-0 ${isAr ? "lg:col-start-2" : ""}`}>
-          <div className="lg:sticky lg:top-24 space-y-6">
-            {/* Sentinel: observed to show/hide the sticky add to cart bar */}
-            <div ref={addToCartSentinelRef} />
+        {/* End side: narrow sticky info column */}
+        <div className="px-gutter pt-6 lg:sticky lg:top-header-desktop lg:w-[460px] lg:shrink-0 lg:ps-12 lg:pe-gutter-lg lg:pt-section xl:w-[520px]">
+          {/* Sentinel: observed to show/hide the sticky add to cart bar */}
+          <div ref={addToCartSentinelRef} />
+          <div className="flex flex-col gap-6">
             <ProductInfo
               name={isAr ? (product.nameAr || product.nameEn || "") : (product.nameEn || product.nameAr || "")}
-              description={isAr ? (product.descriptionAr || product.descriptionEn || "") : (product.descriptionEn || product.descriptionAr || "")}
               price={Number(product.price ?? 0)}
               beforePrice={product.beforePrice}
               productId={String(product.id)}
@@ -446,11 +441,11 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
             />
 
             {errorMessage && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+              <div className="bg-danger-soft p-3 text-fine text-danger" role="alert">
                 {errorMessage}
               </div>
             )}
-            
+
             <AddToCartSection
               totalPrice={Number(totalPrice.toFixed(2))}
               onAddToCart={handleAddToCart}
@@ -466,39 +461,30 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
                   : undefined
               }
             />
+
+            {/* Tabs: Services / Description / Details / Care */}
+            <ProductSpecifications
+              product={{
+                category:
+                  isAr
+                    ? (product?.categories?.[0]?.arabicName || product?.categories?.[0]?.englishName || "")
+                    : (product?.categories?.[0]?.englishName || product?.categories?.[0]?.arabicName || ""),
+                longDescription: productDescription,
+                // Real material only — no invented fabric copy.
+                materials: (isAr
+                  ? product.material_ar?.trim() || product.material_en?.trim()
+                  : product.material_en?.trim() || product.material_ar?.trim()) || (product as any).material?.trim() || "",
+                // General care for a hand-crocheted bag (not clothing).
+                care: isAr
+                  ? "نظفيها بقطعة قماش مبلولة بهدوء على المكان المتبقع بس. متتغسلش في الغسالة ومتتنشفش في النشافة. خزنيها محشية بورق عشان تحافظ على شكلها، وبعيد عن الشمس المباشرة."
+                  : "Spot clean gently with a damp cloth. Do not machine wash or tumble dry. Store it stuffed with paper to keep its shape, away from direct sunlight.",
+              }}
+            />
           </div>
         </div>
       </div>
 
-      {/* Specs - Mobile */}
-      <div className="mt-12 px-4 lg:hidden">
-        <ProductSpecifications
-          product={{
-            category:
-              isAr
-                ? (product?.categories?.[0]?.arabicName || product?.categories?.[0]?.englishName || "")
-                : (product?.categories?.[0]?.englishName || product?.categories?.[0]?.arabicName || ""),
-            longDescription: isAr ? (product.descriptionAr || product.descriptionEn || "") : (product.descriptionEn || product.descriptionAr || ""),
-            materials: (product as any).material?.trim() || (product.material_en?.trim()) || (isAr ? "قطن 100% عالي الجودة، مريح وقابل للتنفس" : "100% high-quality cotton, comfortable and breathable"),
-            care: isAr ? "يُغسل بالماء البارد، لا يُستخدم المُبيض، يُجفف على حرارة منخفضة" : "Wash with cold water, do not bleach, tumble dry low",
-          }}
-        />
-      </div>
-
-      {/* Reviews section */}
-      <div className="mt-12 px-4 lg:px-0">
-      <ProductReviews 
-        reviews={[]}
-        averageRating={0}
-        totalReviews={0}
-        productId={Number(product?.id) || 0}
-        sessionId={getOrCreateSessionId()}
-        canAddReview={false}
-      />
-      </div>
-
-      {/* Related products */}
-      <div className="mt-12 ps-4 lg:px-0">
+      {/* Related products ("You may also like") */}
       <RelatedProducts 
         currentProductId={product?.id || 0}
         relatedProducts={(product?.relatedProducts || []).map(rp => ({
@@ -508,7 +494,6 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
         }))}
         categoryId={product?.categories?.[0]?.id}
       />
-      </div>
     </>
   );
 }

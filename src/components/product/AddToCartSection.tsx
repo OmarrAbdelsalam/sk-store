@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
 import { ShoppingBag, Check, Loader2 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -122,79 +123,87 @@ const AddToCartSection = React.memo(({
       case "loading":
         return (
           <>
-            <Loader2 className={`h-5 w-5 animate-spin ${dir === "rtl" ? "ml-2" : "mr-2"}`} />
+            <Loader2 className="animate-spin" strokeWidth={1.25} />
             {isAr ? "جاري الإضافة..." : "Adding..."}
           </>
         );
       case "added":
         return (
           <>
-            {isAr ? "تمت الإضافة ✓" : "Added to Cart ✓"}
+            <Check strokeWidth={1.5} />
+            {isAr ? "تمت الإضافة" : "Added"}
           </>
         );
       default:
         return (
           <>
-            <ShoppingBag className={`h-5 w-5 ${dir === "rtl" ? "ml-2" : "mr-2"}`} />
+            <ShoppingBag strokeWidth={1.25} />
             {t("addToCart")}
           </>
         );
     }
   };
 
+  // Add to cart = outline; Buy now = the solid primary (clean-theme order).
   const getButtonClasses = () => {
-    const base = "w-full font-sans font-medium text-sm h-11 rounded-full transition-all duration-300 shadow-md border border-transparent";
+    const base = "h-12 w-full";
     switch (buttonState) {
       case "loading":
-        return `${base} bg-gray-700 text-white cursor-wait`;
+        return `${base} cursor-wait`;
       case "added":
-        return `${base} bg-emerald-700 text-white border-emerald-600`;
+        return `${base} border-ink bg-ink text-white hover:bg-ink hover:text-white`;
       default:
-        return `${base} bg-black hover:bg-black text-white border-white/10 hover:scale-[1.02]`;
+        return base;
     }
   };
+
+  const buyNowButton = onBuyNow ? (
+    <Button className="h-12 w-full" onClick={() => onBuyNow()} disabled={disabled || buttonState === "loading"}>
+      {t("buyNow")}
+    </Button>
+  ) : null;
+
+  const whatsappButton = (
+    <a
+      href={whatsappHref}
+      onClick={handleWhatsappClick}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="mx-auto mt-1 inline-flex items-center gap-2 font-sans text-[13px] text-ink/70 underline underline-offset-4 transition-colors duration-fast hover:text-ink"
+    >
+      <WhatsAppIcon className="size-[18px] text-[#25D366]" />
+      {isAr ? "اسألينا على واتساب" : "Ask us on WhatsApp"}
+    </a>
+  );
 
   return (
     <>
       
       {/* Mobile button - fixed at bottom, shown only when inline button scrolled out of view */}
       <div 
-        className={`fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-100 px-4 pt-3 pb-5 lg:hidden shadow-[0_-8px_20px_rgba(0,0,0,0.06)] transition-transform duration-300 ${showSticky ? "translate-y-0" : "translate-y-full"}`}
+        className={`fixed inset-x-0 bottom-0 z-50 border-t border-gray-200 bg-background px-gutter pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 lg:hidden transition-transform duration-300 ${showSticky ? "translate-y-0" : "translate-y-full"}`}
         dir={dir}
       >
-        <Button
-          size="lg"
-          className={getButtonClasses()}
-          onClick={handleAddToCart}
-          onMouseEnter={handleCartHover}
-          disabled={disabled || buttonState === "loading"}
-        >
-          {getButtonContent()}
-        </Button>
-      </div>
-
-      {/* Mobile WhatsApp and inline Add to Cart - not sticky, in normal flow */}
-      <div className="lg:hidden mt-4 flex flex-col gap-3 pb-4" dir={dir}>
-        <a
-          href={whatsappHref}
-          onClick={handleWhatsappClick}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block"
-        >
+        <div className={buyNowButton ? "grid grid-cols-2 gap-2" : ""}>
           <Button
             variant="outline"
-            size="lg"
-            className="w-full font-sans font-medium text-base h-14 rounded-full bg-[#075E54] hover:bg-[#064d44] text-white hover:text-white border-none shadow-md transition-all duration-300"
+            className={getButtonClasses()}
+            onClick={handleAddToCart}
+            onMouseEnter={handleCartHover}
+            disabled={disabled || buttonState === "loading"}
           >
-            {isAr ? "اسألينا على واتساب" : "Ask Us on WhatsApp"}
+            {getButtonContent()}
           </Button>
-        </a>
-        
+          {buyNowButton}
+        </div>
+      </div>
+
+      {/* Mobile inline Add to Cart + WhatsApp - not sticky, in normal flow */}
+      <div className="lg:hidden flex flex-col gap-tile" dir={dir}>
         {/* Inline Add to Cart button — observed by IntersectionObserver */}
         <Button
           ref={inlineButtonRef}
-          size="lg"
+          variant="outline"
           className={getButtonClasses()}
           onClick={handleAddToCart}
           onMouseEnter={handleCartHover}
@@ -202,12 +211,15 @@ const AddToCartSection = React.memo(({
         >
           {getButtonContent()}
         </Button>
+        {buyNowButton}
+
+        {whatsappButton}
       </div>
 
       {/* Desktop - Regular button */}
-      <div className="hidden lg:block" dir={dir}>
+      <div className="hidden lg:flex lg:flex-col lg:gap-tile" dir={dir}>
         <Button
-          size="lg"
+          variant="outline"
           className={getButtonClasses()}
           onClick={handleAddToCart}
           onMouseEnter={handleCartHover}
@@ -215,23 +227,10 @@ const AddToCartSection = React.memo(({
         >
           {getButtonContent()}
         </Button>
+        {buyNowButton}
 
         {/* Contact Seller */}
-        <a
-          href={whatsappHref}
-          onClick={handleWhatsappClick}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block mt-3"
-        >
-          <Button
-            variant="outline"
-            size="lg"
-            className="w-full font-sans font-medium text-base h-14 rounded-full bg-[#075E54] hover:bg-[#064d44] text-white hover:text-white border-none shadow-md transition-all duration-300"
-          >
-            {isAr ? "اسألينا على واتساب" : "Ask Us on WhatsApp"}
-          </Button>
-        </a>
+        {whatsappButton}
       </div>
     </>
   );

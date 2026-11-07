@@ -1,14 +1,10 @@
 import { Suspense } from "react";
-import dynamic from "next/dynamic";
 import Hero from "@/components/Hero";
 import HeroFallback from "@/components/HeroFallback";
 import NewArrivals from "@/components/NewArrivals";
 import MaisonClutchSection from "@/components/MaisonClutchSection";
-import FeaturesSection from "@/components/FeaturesSection";
-import MovingTicker from "@/components/MovingTicker";
 import DiscoverSection from "@/components/DiscoverSection";
-import { ClothingShowcase } from "@/components/CategoryBanners";
-import ReviewsGallery from "@/components/ReviewsGallery";
+import dynamic from "next/dynamic";
 import ProductsCacheSeeder from "@/components/ProductsCacheSeeder";
 import { fetchProducts } from "@/api/products";
 import { generatePageMetadata } from "@/lib/metadata";
@@ -37,11 +33,6 @@ export async function generateMetadata({
   });
 }
 
-// Lazy loaded client-only components
-const ReelsShowcase = dynamic(() => import("@/components/ReelsShowcase").then(mod => mod.ReelsShowcase));
-const ProductGrid = dynamic(() => import("@/components/ProductGrid"));
-const HandbagsSection = dynamic(() => import("@/components/HandbagsSection"));
-const BestSellers = dynamic(() => import("@/components/BestSellers"));
 
 /**
  * Async component that fetches products and seeds the client cache.
@@ -60,6 +51,10 @@ async function ProductsLoader({ locale }: { locale: string }) {
 
   return <ProductsCacheSeeder products={allProducts} locale={locale} />;
 }
+
+// Lazy loaded client-only components
+const ReelsShowcase = dynamic(() => import("@/components/ReelsShowcase").then(mod => mod.ReelsShowcase));
+const BestSellers = dynamic(() => import("@/components/BestSellers"));
 
 export default async function Page({
   params,
@@ -97,57 +92,36 @@ export default async function Page({
         <Hero />
       </Suspense>
 
-      {/* Sections with consistent spacing (48px mobile / 64px desktop) */}
-      <div className="bg-white space-y-12 md:space-y-16 pt-12 md:pt-16 pb-12 md:pb-16">
-        {/* New Arrivals - Server Component */}
-        <Suspense fallback={null}>
-          <NewArrivals />
-        </Suspense>
+      {/* Home: hero → New Arrivals → Maison Clutch → More to Discover →
+          Best Sellers → Reels. (The old category tiles, "Our collections" grid
+          and customer-photo gallery were removed with the re-theme.) */}
+      <div className="flex flex-col gap-tile bg-background pt-tile">
 
-        {/* Category Banners - Server fetches, Client handles interaction */}
-        <Suspense fallback={null}>
-          <ClothingShowcase />
-        </Suspense>
+        <div className="ds-grid-page py-section">
+          <Suspense fallback={null}>
+            <NewArrivals />
+          </Suspense>
+        </div>
 
-        {/* Reels Showcase - Client (video/carousel) */}
-        <ReelsShowcase />
-
-        {/* Product Grid - Client (filters/pagination) */}
-        <ProductGrid />
-
-        {/* Discover Section - Server Component */}
-        <Suspense fallback={null}>
-          <DiscoverSection />
-        </Suspense>
-
-        {/* Moving Ticker - Server Component */}
-        <Suspense fallback={null}>
-          <MovingTicker />
-        </Suspense>
-
-        {/* Maison Clutch - Server Component */}
         <Suspense fallback={null}>
           <MaisonClutchSection />
         </Suspense>
 
-        {/* Handbags - Client (carousel) */}
-        <HandbagsSection />
-
-        {/* Reviews - Server fetches, Client handles lightbox */}
+        {/* More to Discover — two editorial tiles */}
         <Suspense fallback={null}>
-          <ReviewsGallery />
+          <DiscoverSection />
         </Suspense>
+      </div>
 
-        {/* Best Sellers - Client (carousel) */}
+      {/* Best sellers, reels */}
+      <div className="ds-grid-page">
         <Suspense fallback={null}>
           <BestSellers />
         </Suspense>
-
-        {/* Features - Server Component */}
-        <Suspense fallback={null}>
-          <FeaturesSection />
-        </Suspense>
       </div>
+
+      <ReelsShowcase />
+
     </div>
   );
 }

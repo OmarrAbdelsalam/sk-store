@@ -1,153 +1,129 @@
 "use client";
 
-import { Instagram, Facebook } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { useTranslations, useLocale } from 'next-intl';
-import { useCategories } from "@/hooks/useCategories";
+import { useTranslations, useLocale } from "next-intl";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import Image from "next/image";
+import { useCategories } from "@/hooks/useCategories";
 import { CONTACT_INFO } from "@/lib/constants";
+import { siteUrl } from "@/lib/site";
 
 const Footer = () => {
   const t = useTranslations();
   const locale = useLocale();
-  const router = useRouter();
+  const isAr = locale === "ar";
   const { categories } = useCategories();
+  // Categories come from a browser cache, so they're drawn after mount to
+  // keep the server and client HTML identical.
   const [mounted, setMounted] = useState(false);
-  
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => setMounted(true), []);
 
-  const goToCategory = (id: string, name: string) => {
-    const slug = name.toLowerCase().replace(/\s+/g, '-');
-    sessionStorage.setItem(`category_${slug}`, id);
-    router.push(`/?category=${encodeURIComponent(slug)}`);
+  const categoryHref = (name: string) => `/products?category=${encodeURIComponent(name.toLowerCase().replace(/\s+/g, "-"))}`;
+  // Same hand-off as the menu drawer: the grid resolves the slug to its id.
+  const rememberCategory = (id: string, name: string) => {
+    try {
+      sessionStorage.setItem(`category_${name.toLowerCase().replace(/\s+/g, "-")}`, id);
+    } catch {}
   };
 
-  return (
-    <footer className="bg-black text-white py-16 mt-12 relative z-20 overflow-hidden">
-      <div className="container mx-auto px-6 md:px-10">
-        
-        {/* Top Section */}
-        <div className="flex flex-col items-center justify-center mb-16 text-center space-y-4">
-          <h2 className="text-3xl md:text-4xl font-black tracking-widest text-white uppercase">
-            SK BAGS
-          </h2>
-          <p className="text-sm md:text-base font-light text-gray-400 max-w-xl leading-relaxed">
-            {t('Footer.brandDesc') || "Handcrafted crochet bags that blend elegance with everyday functionality. Each piece is unique, just like you."}
-          </p>
-        </div>
+  // Footer — DESIGN_SYSTEM.md › Page anatomy (Prestige): white surface;
+  // a short intro + primary button, then link columns with 12px uppercase
+  // tracked headings and 14px ink/65 links; © line at the bottom.
+  const link = "block text-fine text-ink/65 text-start transition-colors duration-fast hover:text-ink";
+  const heading = "ds-label mb-5 text-ink";
 
-        {/* Footer Links & Image */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16 border-t border-white/10 pt-16">
-          
-          {/* Shop Categories */}
-          <div className="flex flex-col items-center md:items-start text-center md:text-start">
-            <h5 className="text-sm font-bold mb-6 tracking-widest text-white uppercase">{t('Footer.shop')}</h5>
-            <ul className="space-y-3 text-sm">
+  return (
+    <footer className="relative z-20 bg-white text-ink">
+      <div className="ds-page py-12 lg:py-16">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-4 lg:gap-12">
+          {/* About + WhatsApp (Prestige's newsletter column) */}
+          <div>
+            <p className={heading}>{t("Footer.brand")}</p>
+            <p className="ds-body mb-5 text-ink/65">{t("Footer.brandDesc")}</p>
+            <Button asChild>
+              <a href={CONTACT_INFO.whatsappLink} target="_blank" rel="noopener noreferrer">
+                {t("Footer.whatsapp")}
+              </a>
+            </Button>
+          </div>
+
+          {/* Shop */}
+          <div>
+            <p className={heading}>{t("Footer.shop")}</p>
+            <ul className="space-y-2.5">
+              <li>
+                <Link href="/products" className={link}>
+                  {isAr ? "كل المنتجات" : "All products"}
+                </Link>
+              </li>
               {mounted && categories.map((category) => {
-                const categoryName = locale === 'ar' ? category.arabicName : category.englishName;
+                const name = isAr ? category.arabicName : category.englishName;
+                if (!name) return null;
                 return (
-                  <li key={category.key} className="group">
-                    <button
-                      onClick={() => goToCategory(category.key, categoryName)}
-                      className={`text-gray-200 hover:text-white transition-all duration-300 ${locale === 'ar' ? 'group-hover:-translate-x-2 text-right' : 'group-hover:translate-x-2 text-left'}`}
-                    >
-                      {categoryName}
-                    </button>
+                  <li key={category.key}>
+                    <Link href={categoryHref(category.englishName || name)} onClick={() => rememberCategory(category.key, category.englishName || name)} className={link}>
+                      {name}
+                    </Link>
                   </li>
                 );
               })}
             </ul>
           </div>
-          
-          {/* Orders & Help */}
-          <div className="flex flex-col items-center md:items-start text-center md:text-start">
-            <h5 className="text-sm font-bold mb-6 tracking-widest text-white uppercase">{t('Footer.orders')}</h5>
-            <div className="space-y-3">
-              <div className="group">
-                <button 
-                  className={`text-gray-200 hover:text-white transition-all duration-300 ${locale === 'ar' ? 'group-hover:-translate-x-2 text-right' : 'group-hover:translate-x-2 text-left'}`}
-                  onClick={() => router.push(`/my-orders`)}
-                >
-                  {t('Footer.myOrders')}
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          {/* Contact */}
-          <div className="flex flex-col items-center md:items-start text-center md:text-start">
-            <h5 className="text-sm font-bold mb-6 tracking-widest text-white uppercase">{t('Footer.contactUs')}</h5>
-            <div className="space-y-3">
-              <div className="group">
-                <button 
-                  className={`text-gray-200 hover:text-white transition-all duration-300 ${locale === 'ar' ? 'group-hover:-translate-x-2 text-right' : 'group-hover:translate-x-2 text-left'}`}
-                  onClick={() => window.open(CONTACT_INFO.whatsappLink, "_blank")}
-                >
-                  {t('Footer.whatsapp')}
-                </button>
-              </div>
-              <div className="group">
-                <button 
-                  className={`text-gray-200 hover:text-white transition-all duration-300 ${locale === 'ar' ? 'group-hover:-translate-x-2 text-right' : 'group-hover:translate-x-2 text-left'}`}
-                  onClick={() => window.open("https://www.facebook.com/skbags/", "_blank")}
-                >
-                  {t('Footer.facebook')}
-                </button>
-              </div>
-              <div className="group">
-                <button 
-                  className={`text-gray-200 hover:text-white transition-all duration-300 ${locale === 'ar' ? 'group-hover:-translate-x-2 text-right' : 'group-hover:translate-x-2 text-left'}`}
-                  onClick={() => window.open("https://www.instagram.com/skbags/", "_blank")}
-                >
-                  {t('Footer.instagram')}
-                </button>
-              </div>
-            </div>
+
+          {/* Orders */}
+          <div>
+            <p className={heading}>{t("Footer.orders")}</p>
+            <ul className="space-y-2.5">
+              <li>
+                <Link href="/my-orders" className={link}>
+                  {t("Footer.myOrders")}
+                </Link>
+              </li>
+              <li>
+                <Link href="/cart" className={link}>
+                  {isAr ? "سلة التسوق" : "Cart"}
+                </Link>
+              </li>
+            </ul>
           </div>
 
-          {/* 4th Column: Footer Image */}
-          <div className="flex flex-col items-center md:items-start text-center md:text-start mt-8 md:mt-0">
-            <div className="relative w-full h-[250px] sm:h-[300px] md:h-full md:min-h-[160px] overflow-hidden opacity-90 hover:opacity-100 transition-opacity duration-300">
-              <Image 
-                src="/footer.webp" 
-                alt="SK Bags Collection"
-                fill
-                className="object-cover object-center"
-              />
-            </div>
+          {/* Follow / contact */}
+          <div>
+            <p className={heading}>{isAr ? "تابعينا" : "Follow us"}</p>
+            <ul className="space-y-2.5">
+              <li>
+                <a href={CONTACT_INFO.whatsappLink} target="_blank" rel="noopener noreferrer" className={link}>
+                  {t("Footer.whatsapp")}
+                </a>
+              </li>
+              <li>
+                <a href="https://www.instagram.com/skbags/" target="_blank" rel="noopener noreferrer" className={link}>
+                  {t("Footer.instagram")}
+                </a>
+              </li>
+              <li>
+                <a href="https://www.facebook.com/skbags/" target="_blank" rel="noopener noreferrer" className={link}>
+                  {t("Footer.facebook")}
+                </a>
+              </li>
+            </ul>
           </div>
-
         </div>
 
-        {/* Bottom Section */}
-        <div className="border-t border-white/10 pt-8 pb-4">
-          <div className="flex flex-col-reverse md:flex-row justify-between items-center gap-6">
-            <div className="text-center md:text-left">
-              <p className="text-white/80 text-sm tracking-wide">
-                © {new Date().getFullYear()} SK Bags. {locale === 'ar' ? 'جميع الحقوق محفوظة.' : 'All rights reserved.'}
-              </p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <button 
-                className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white hover:bg-white hover:text-black hover:scale-110 transition-all duration-300"
-                onClick={() => window.open("https://www.instagram.com/skbags/", "_blank")}
-                aria-label="Instagram"
-              >
-                <Instagram className="h-4 w-4" />
-              </button>
-              <button 
-                className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white hover:bg-white hover:text-black hover:scale-110 transition-all duration-300 ml-4"
-                onClick={() => window.open("https://www.facebook.com/skbags/", "_blank")}
-                aria-label="Facebook"
-              >
-                <Facebook className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
+        <div className="mt-12 flex flex-col gap-2 border-t border-gray-200 pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <p className="ds-caption">© {new Date().getFullYear()} SK Bags.</p>
+          {/* Developer credit → WhatsApp with a prefilled enquiry + this site's link */}
+          <a
+            href={`https://wa.me/201098505924?text=${encodeURIComponent(
+              `Hi Omar, I'm interested in a website like this one: ${siteUrl}`
+            )}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ds-caption transition-colors duration-fast hover:text-ink"
+          >
+            {isAr ? "تطوير " : "Developed by "}
+            <span className="text-ink underline underline-offset-2">{isAr ? "عمر عبدالسلام" : "Omar Abdelsalam"}</span>
+          </a>
         </div>
       </div>
     </footer>

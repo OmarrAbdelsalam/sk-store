@@ -1,56 +1,37 @@
 "use client";
 
+import Link from "next/link";
 import { useLocale } from "next-intl";
-import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function NotFound() {
   const locale = useLocale();
-  const router = useRouter();
   const isAr = locale === "ar";
 
   return (
     <div
-      className="min-h-[80vh] flex flex-col items-center justify-center px-4"
+      className="flex min-h-[70vh] flex-col items-center justify-center bg-background px-gutter py-16 text-center"
       dir={isAr ? "rtl" : "ltr"}
     >
-      {/* 404 number */}
-      <p className="text-[120px] sm:text-[160px] font-light leading-none tracking-tighter text-foreground/8 select-none">
-        404
-      </p>
-
-      {/* Divider */}
-      <div className="h-px w-16 bg-foreground mb-8 -mt-4" />
-
-      {/* Heading */}
-      <h1 className="text-xl sm:text-2xl md:text-3xl font-light tracking-widest uppercase text-foreground mb-4 text-center">
-        {isAr ? "الصفحة غير موجودة" : "Page Not Found"}
+      <p className="font-sans text-[11px] uppercase tracking-[0.12em] text-gray-500">404</p>
+      <h1 className="mt-4 font-display text-[28px] leading-tight text-ink sm:text-[36px]">
+        {isAr ? "الصفحة مش موجودة" : "Page not found"}
       </h1>
-
-      {/* Subtitle */}
-      <p className="text-sm text-muted-foreground tracking-wider text-center max-w-xs mb-10">
+      <p className="mt-3 max-w-sm font-sans text-[14px] leading-6 text-gray-500">
         {isAr
-          ? "الصفحة التي تبحث عنها غير موجودة أو تم نقلها"
-          : "The page you're looking for doesn't exist or has been moved"}
+          ? "الصفحة اللي بتدوري عليها مش موجودة أو اتنقلت."
+          : "The page you're looking for doesn't exist or has been moved."}
       </p>
-
-      {/* CTA */}
-      <button
-        onClick={() => router.push("/")}
-        className="inline-flex items-center gap-2.5 h-12 px-10 rounded-full bg-foreground text-background text-xs font-medium tracking-widest uppercase hover:bg-foreground/90 transition-all hover:scale-[1.02] shadow-md"
-      >
-        {isAr ? (
-          <>
-            {isAr ? "العودة للرئيسية" : "Back to Home"}
-            <ArrowLeft className="w-3.5 h-3.5" />
-          </>
-        ) : (
-          <>
-            <ArrowLeft className="w-3.5 h-3.5" />
-            Back to Home
-          </>
-        )}
-      </button>
+      <Button asChild className="mt-8 h-12 px-10">
+        <Link href="/products">
+          {isAr ? "تسوقي الكل" : "Shop all bags"}
+          <ArrowRight className="rtl:rotate-180" strokeWidth={1.5} />
+        </Link>
+      </Button>
+      <Link href="/" className="mt-4 font-sans text-[13px] text-ink underline underline-offset-4 transition-opacity duration-fast hover:opacity-60">
+        {isAr ? "الرجوع للرئيسية" : "Back to home"}
+      </Link>
     </div>
   );
 }

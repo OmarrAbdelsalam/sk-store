@@ -1,69 +1,14 @@
-"use client";
+import { notFound, redirect } from "next/navigation";
 
-import { useParams, useRouter } from "next/navigation";
-import { lazy, Suspense, useEffect } from "react";
-import { useLocale, useTranslations } from "next-intl";
-import { useProduct } from "@/hooks/useProduct";
-import ProductHeader from "@/components/product/ProductHeader";
-import ProductDetailLoading from "@/components/product/ProductDetailLoading";
-import ProductDetailError from "@/components/product/ProductDetailError";
-import ProductDetailContent from "@/components/product/ProductDetailContent";
-import NavigationLoadingHandler from "@/components/NavigationLoadingHandler";
+/**
+ * Old product links were /<id>. Those still work — a product id is sent on
+ * to /product/<id> — while any other one-segment URL gets the real 404
+ * instead of a broken product page.
+ */
+const PRODUCT_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$|^\d+$/i;
 
-
-
-export default function ProductDetailPage() {
-  const router = useRouter();
-  const locale = useLocale();
-  const isAr = locale === "ar";
-  const dir = isAr ? "rtl" : "ltr";
-  const t = useTranslations("ProductDetail");
-
-  const params = useParams<{ id: string }>();
-  const id = Array.isArray(params?.id) ? params?.id[0] : params?.id;
-  
-  // Use string ID directly - updated to handle UUIDs
-  const { product, isLoading, error } = useProduct(id);
-
-  // Prefetch cart and checkout pages in background
-  useEffect(() => {
-    if (product) {
-      // ✅ Prefetch فوراً بدون تأخير
-      router.prefetch(`/cart`);
-      router.prefetch(`/checkout`);
-    }
-  }, [product, locale, router]);
-
-  if (isLoading) {
-    return <ProductDetailLoading dir={dir} onBack={() => router.back()} />;
-  }
-
-  if (error || !product) {
-    return (
-      <ProductDetailError
-        dir={dir}
-        message={isAr ? "المنتج غير موجود أو حدث خطأ في التحميل." : "Product not found or failed to load."}
-        onBack={() => router.back()}
-      />
-    );
-  }
-
-  return (
-    <div className="min-h-screen" dir={dir}>
-      <NavigationLoadingHandler />
-      <div className="container mx-auto px-4 py-4">
-        <ProductHeader onBack={() => router.back()} />
-        
-        <ProductDetailContent product={product} />
-
-
-
-        {/* Hidden prefetch links for cart and checkout */}
-        <div className="hidden">
-          <link rel="prefetch" href={`/cart`} />
-          <link rel="prefetch" href={`/checkout`} />
-        </div>
-      </div>
-    </div>
-  );
+export default async function LegacyProductRoute({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  if (PRODUCT_ID.test(id)) redirect(`/product/${id}`);
+  notFound();
 }
