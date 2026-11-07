@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { useCategories } from "@/hooks/useCategories";
 import { CONTACT_INFO } from "@/lib/constants";
 import { siteUrl } from "@/lib/site";
+import { openCartDrawer } from "@/lib/cart-drawer";
 
 const Footer = () => {
   const t = useTranslations();
@@ -80,9 +81,9 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link href="/cart" className={link}>
+                <button type="button" onClick={openCartDrawer} className={link}>
                   {isAr ? "سلة التسوق" : "Cart"}
-                </Link>
+                </button>
               </li>
             </ul>
           </div>

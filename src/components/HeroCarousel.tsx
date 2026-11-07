@@ -69,7 +69,7 @@ export default function HeroCarousel({ slides }: { slides: SlideData[] }) {
         {slides.map((slide, index) => (
           <CarouselItem
             key={index}
-            className="pl-0 basis-full h-[88svh] min-h-[520px] lg:h-screen lg:min-h-[640px]"
+            className="pl-0 basis-full h-[calc(100svh-var(--ds-announcement-h))] min-h-[520px] lg:h-screen lg:min-h-[640px]"
           >
             {/* Hero — DESIGN_SYSTEM.md › Page anatomy (3): full-bleed media,
                 centered light serif title, overlay button. */}

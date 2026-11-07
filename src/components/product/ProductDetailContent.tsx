@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useCart } from "@/hooks/useCart";
 import { getOrCreateSessionId } from "@/lib/session";
+import { suppressCartDrawer } from "@/lib/cart-drawer";
 import { addToCart as addToCartApi, getCart, updateItemQuantity } from "@/lib/api/cart";
 import type { ProductApi } from "@/lib/api/products";
 
@@ -359,6 +360,8 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
   };
 
   const handleBuyNow = async () => {
+    // Going straight to checkout — skip the cart drawer.
+    suppressCartDrawer();
     // Already added from this page with the same colour/size/option → just
     // go to checkout. Otherwise (Buy now pressed directly) add it first.
     if (lastAddedKeyRef.current === selectionKey) {

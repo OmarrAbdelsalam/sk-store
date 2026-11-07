@@ -9,7 +9,7 @@ import { Link } from "@/i18n/navigation";
  */
 export default function HeroFallback() {
   return (
-    <section className="relative w-full overflow-hidden bg-beige -mt-header-mobile lg:-mt-header-desktop h-[88svh] min-h-[520px] lg:h-screen lg:min-h-[640px]">
+    <section className="relative w-full overflow-hidden bg-beige -mt-header-mobile lg:-mt-header-desktop h-[calc(100svh-var(--ds-announcement-h))] min-h-[520px] lg:h-screen lg:min-h-[640px]">
       <Image
         src="/hero.png"
         alt="SK Bags - Premium Handmade Bags"

@@ -28,6 +28,10 @@
     --ds-primary-line: #3e3e3e;
     --ds-accent: #e32c2b;
     --ds-beige: #f5f5f5;
+    /* --ds-beige as a brightness factor (245 / 255). Used by .ds-cutout /
+       .ds-blend to melt white photo backgrounds into the tile — keep in sync
+       with --ds-beige. */
+    --ds-tile-tone: 0.9608;
     --ds-announcement-h: 36px;
 
     --ds-text-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
@@ -289,25 +293,29 @@
   /* Parfois composition: the (square) photo spans the full tile width and is
      anchored to the bottom, so the bag sits low with open gray space above
      it instead of being centred and cropped. */
+  /* How the melt works — no blend modes. The tile is one flat colour
+     (--ds-beige), and "multiply" over a flat colour is just scaling every
+     pixel by that colour: white × 0.9608 = #F5F5F5. So a plain brightness
+     filter does it. (mix-blend-mode was dropped: iPhone Safari ignores it
+     on images that also carry a filter or a transform, which left the white
+     boxes showing on iOS.) Each filter step clamps, so the result is
+     identical to the old contrast → brightness → multiply chain. */
   .ds-cutout {
     object-fit: contain !important;
     object-position: 50% 100% !important;
     /* bag ~8% larger, still anchored to the bottom */
     scale: 1.08;
     transform-origin: 50% 100%;
-    mix-blend-mode: multiply;
-    filter: contrast(1.08) brightness(1.08);
+    filter: contrast(1.08) brightness(1.08) brightness(var(--ds-tile-tone));
   }
-  /* Same white-melting blend, image kept centered (product page gallery,
-     zoom view, thumbnails). Parent needs the tile colour + `isolate`. */
+  /* Same white melt, image kept centered (product page gallery, zoom view,
+     thumbnails). Sits on a --ds-beige tile. */
   .ds-blend {
-    mix-blend-mode: multiply;
-    filter: contrast(1.08) brightness(1.08);
+    filter: contrast(1.08) brightness(1.08) brightness(var(--ds-tile-tone));
   }
   .ds-cutout-cover {
     object-fit: cover !important;
-    mix-blend-mode: multiply;
-    filter: contrast(1.08) brightness(1.08);
+    filter: contrast(1.08) brightness(1.08) brightness(var(--ds-tile-tone));
   }
 
   /* ---- Arabic: tracking breaks letter joining -------------------- */

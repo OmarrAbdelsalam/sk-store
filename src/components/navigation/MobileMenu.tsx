@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import Wordmark from "@/components/Wordmark";
+import { openCartDrawer } from "@/lib/cart-drawer";
 import { useCart } from "@/hooks/useCart";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -197,9 +198,13 @@ export const MobileMenu = ({ showLabel = false }: MobileMenuProps) => {
               <User className="size-4" strokeWidth={1.25} />
               {t("myOrders")}
             </Link>
-            <Link
-              href="/cart"
-              onClick={() => setOpen(false)}
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                // let the menu slide out before the cart slides in
+                window.setTimeout(openCartDrawer, 250);
+              }}
               className="flex h-11 items-center justify-center gap-2 border border-gray-300 bg-white font-sans text-[12px] font-semibold uppercase tracking-[0.12em] text-ink transition-colors duration-fast hover:border-ink"
               aria-label={cartItemsCount > 0 ? `${tNav("cart")} — ${t("itemsInCart", { count: cartItemsCount })}` : tNav("cart")}
             >
@@ -210,7 +215,7 @@ export const MobileMenu = ({ showLabel = false }: MobileMenuProps) => {
                   {cartItemsCount}
                 </span>
               )}
-            </Link>
+            </button>
           </div>
           <p className="mt-3 flex items-center justify-center gap-1.5 font-sans text-[12px] text-gray-500">
             <Truck className="size-3.5" strokeWidth={1.25} />

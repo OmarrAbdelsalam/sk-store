@@ -63,6 +63,7 @@ export default function CartPageClient() {
   };
 
   return (
+    <>
     <div dir={dir} className="animate-fade-in pb-32 md:pb-0">
       {/* Title row */}
       <div className="flex items-end justify-between gap-4">
@@ -176,8 +177,12 @@ export default function CartPageClient() {
       <Suspense fallback={null}>
         <CartUpsell />
       </Suspense>
+    </div>
 
-      {/* Phone: sticky total + checkout */}
+      {/* Phone: sticky total + checkout. Kept OUTSIDE the fade-in wrapper:
+          that animation leaves a transform on it, and a transformed parent
+          pins a position:fixed child to itself instead of the screen — the
+          bar ended up at the very bottom of the page instead of on screen. */}
       <div
         className="fixed inset-x-0 bottom-0 z-50 border-t border-gray-200 bg-background px-gutter pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 md:hidden"
         dir={dir}
@@ -192,6 +197,6 @@ export default function CartPageClient() {
           {goingToCheckout ? <Loader2 className="size-4 animate-spin" strokeWidth={1.5} /> : isAr ? "إتمام الشراء" : "Check out"}
         </Button>
       </div>
-    </div>
+    </>
   );
 }

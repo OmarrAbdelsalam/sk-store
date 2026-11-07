@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/useCart";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { openCartDrawer } from "@/lib/cart-drawer";
 
 interface CartButtonProps {
   isMobile?: boolean;
@@ -18,7 +18,6 @@ interface CartButtonProps {
 export const CartButton = ({ isMobile = false, className = "", isTransparent = false, showLabel = false }: CartButtonProps) => {
   const t = useTranslations("Nav");
   const locale = useLocale();
-  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [isBouncing, setIsBouncing] = useState(false);
   const badgeRef = useRef<HTMLSpanElement>(null);
@@ -54,7 +53,7 @@ export const CartButton = ({ isMobile = false, className = "", isTransparent = f
   const cartItemsCount = mounted && cart ? cart.getTotalItems() : 0;
 
   const handleClick = () => {
-    router.push(`/cart`);
+    openCartDrawer();
   };
 
   const ariaLabel = cartItemsCount > 0 ? `Cart (${cartItemsCount} items)` : "Cart";

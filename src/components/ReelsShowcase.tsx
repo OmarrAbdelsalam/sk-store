@@ -33,8 +33,6 @@ export const ReelsShowcase = () => {
     return [];
   });
   const [loading, setLoading] = useState(true);
-  const [isMuted, setIsMuted] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
 
   const [mounted, setMounted] = useState(false);
 
@@ -80,12 +78,6 @@ export const ReelsShowcase = () => {
     return url;
   };
 
-  const toggleMute = () => {
-    if (videoRef.current) {
-      videoRef.current.muted = !videoRef.current.muted;
-      setIsMuted(!isMuted);
-    }
-  };
 
   const getFormattedPrice = (video: SocialProofVideo) => {
     if (!video.product_price) return null;
@@ -216,28 +208,7 @@ export const ReelsShowcase = () => {
                     allowFullScreen
                   />
                 ) : (
-                  <div className="relative h-full w-full">
-                    <video
-                      ref={videoRef}
-                      src={selectedReel.video_url}
-                      autoPlay
-                      loop
-                      muted={false}
-                      playsInline
-                      controls
-                      className="h-full w-full object-cover"
-                    />
-                    <Button
-                      type="button"
-                      variant="overlay"
-                      size="icon"
-                      onClick={toggleMute}
-                      className="absolute end-4 top-4"
-                      aria-label={isMuted ? (isAr ? "تشغيل الصوت" : "Unmute") : (isAr ? "كتم الصوت" : "Mute")}
-                    >
-                      {isMuted ? <VolumeX strokeWidth={1.25} /> : <Volume2 strokeWidth={1.25} />}
-                    </Button>
-                  </div>
+                  <ReelPlayer src={selectedReel.video_url} isAr={isAr} />
                 )}
 
                 {/* Product */}
@@ -272,3 +243,94 @@ export const ReelsShowcase = () => {
   );
 };
 
+
+/**
+ * Story-style player: no native browser controls (they stacked a second
+ * sound button and a control bar under the product card). Tap the video to
+ * pause / play, one sound toggle top-end, a thin progress line along the
+ * top. Starts with sound; if the browser blocks that (iPhone), it starts
+ * muted and the sound button shows it.
+ */
+function ReelPlayer({ src, isAr }: { src: string; isAr: boolean }) {
+  const ref = useRef<HTMLVideoElement>(null);
+  const [muted, setMuted] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const v = ref.current;
+    if (!v) return;
+    v.muted = false;
+    v.play().catch(() => {
+      v.muted = true;
+      setMuted(true);
+      v.play().catch(() => setPaused(true));
+    });
+  }, [src]);
+
+  const togglePlay = () => {
+    const v = ref.current;
+    if (!v) return;
+    if (v.paused) {
+      v.play().catch(() => {});
+    } else {
+      v.pause();
+    }
+  };
+
+  const toggleMute = () => {
+    const v = ref.current;
+    if (!v) return;
+    v.muted = !v.muted;
+    setMuted(v.muted);
+  };
+
+  return (
+    <div className="relative h-full w-full">
+      <video
+        ref={ref}
+        src={src}
+        loop
+        playsInline
+        preload="auto"
+        onClick={togglePlay}
+        onPlay={() => setPaused(false)}
+        onPause={() => setPaused(true)}
+        onTimeUpdate={(e) => {
+          const v = e.currentTarget;
+          setProgress(v.duration ? v.currentTime / v.duration : 0);
+        }}
+        className="h-full w-full cursor-pointer object-cover"
+      />
+
+      {/* Progress */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-white/25">
+        <div className="h-full bg-white" style={{ width: `${progress * 100}%` }} />
+      </div>
+
+      {/* Paused: one big play button in the middle */}
+      {paused && (
+        <button
+          type="button"
+          onClick={togglePlay}
+          aria-label={isAr ? "تشغيل" : "Play"}
+          className="absolute left-1/2 top-1/2 flex size-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center bg-white/90 text-ink transition-opacity duration-fast hover:opacity-80"
+        >
+          <Play className="size-6 fill-current" strokeWidth={1.25} />
+        </button>
+      )}
+
+      {/* Sound */}
+      <Button
+        type="button"
+        variant="overlay"
+        size="icon"
+        onClick={toggleMute}
+        className="absolute end-4 top-4 z-[110]"
+        aria-label={muted ? (isAr ? "تشغيل الصوت" : "Unmute") : (isAr ? "كتم الصوت" : "Mute")}
+      >
+        {muted ? <VolumeX strokeWidth={1.25} /> : <Volume2 strokeWidth={1.25} />}
+      </Button>
+    </div>
+  );
+}

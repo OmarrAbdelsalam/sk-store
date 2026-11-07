@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
+import CartDrawer from '@/components/cart/CartDrawer';
 import { useSettledOrderRedirect } from '@/hooks/useSettledOrderRedirect';
 
 export default function CommonLayout({ children, topBanner }: { children: React.ReactNode, topBanner?: React.ReactNode }) {
@@ -39,6 +40,7 @@ export default function CommonLayout({ children, topBanner }: { children: React.
         </main>
         <Footer />
       </div>
+      <CartDrawer />
     </>
   );
 }

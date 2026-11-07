@@ -104,7 +104,8 @@ export default function QuickAddModal({ open, onOpenChange, product, initialColo
       qty
     );
     setAdded(true);
-    window.setTimeout(() => onOpenChange(false), 900);
+    // Close right away — the cart drawer slides in as the confirmation.
+    onOpenChange(false);
   };
 
   return (
