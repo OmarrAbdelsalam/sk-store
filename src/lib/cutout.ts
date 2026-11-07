@@ -23,3 +23,14 @@ export function cutoutSrc(src: string | null | undefined, width = 828): string {
   if (src.startsWith("/api/cutout")) return src;
   return `/api/cutout?u=${encodeURIComponent(src)}&w=${cutoutWidth(width)}`;
 }
+
+/**
+ * Same server route in "plain" mode: just resized to `width` and re-encoded
+ * as WebP, colours untouched — for real (lifestyle) photos, which were sent
+ * at full original size before.
+ */
+export function photoSrc(src: string | null | undefined, width = 1080): string {
+  if (!src) return "";
+  if (!/^https?:\/\//i.test(src) || /\.svg(\?|$)/i.test(src)) return src;
+  return `/api/cutout?u=${encodeURIComponent(src)}&w=${cutoutWidth(width)}&mode=plain`;
+}

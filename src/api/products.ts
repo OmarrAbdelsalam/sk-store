@@ -85,7 +85,43 @@ type Paged<T> = {
 };
 
 /** Map Supabase row to ProductApi */
+/**
+ * The colours table has the same colour entered twice in places (two
+ * "White", two "Black"…), and a few products are linked to both — so the
+ * storefront listed "White, White". Colours with the same name are merged
+ * into the first one, and photos / variants that pointed at the duplicate
+ * are re-pointed at it, so no photo is lost. Storefront only (admin reads
+ * the raw rows).
+ */
+function dedupeColors(p: ProductApi): ProductApi {
+  const canonical = new Map<string, string>(); // name → kept colour id
+  const remap = new Map<string, string>(); // duplicate id → kept id
+  const colors: ProductApi["colors"] = [];
+  for (const c of p.colors) {
+    const key = String(c.colorNameEn || c.colorNameAr || c.id).trim().toLowerCase();
+    const kept = canonical.get(key);
+    if (kept) {
+      if (String(c.id) !== kept) remap.set(String(c.id), kept);
+      continue;
+    }
+    canonical.set(key, String(c.id));
+    colors.push(c);
+  }
+  if (remap.size === 0) return p;
+  const fix = (id: string | null) => (id && remap.has(String(id)) ? remap.get(String(id))! : id);
+  return {
+    ...p,
+    colors,
+    photos: p.photos.map((ph) => ({ ...ph, colorId: fix(ph.colorId) })),
+    variants: p.variants.map((v) => ({ ...v, colorId: fix(v.colorId) })),
+  };
+}
+
 function mapRow(row: any): ProductApi {
+  return dedupeColors(mapRowRaw(row));
+}
+
+function mapRowRaw(row: any): ProductApi {
   return {
     id: row.id,
     nameAr: row.name_ar,

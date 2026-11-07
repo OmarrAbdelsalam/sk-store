@@ -1,6 +1,10 @@
 import { Suspense } from "react";
 import { fetchProducts } from "@/api/products";
 import { generatePageMetadata } from "@/lib/metadata";
+import { setRequestLocale } from "next-intl/server";
+
+// Cached and refreshed at most once a minute (admin edits show within 60s).
+export const revalidate = 60;
 import type { Metadata } from "next";
 import ClientProductGrid from "@/components/product/ClientProductGrid";
 import { ProductsPageSkeleton } from "@/components/skeletons";
@@ -29,6 +33,7 @@ export default async function ProductsPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  setRequestLocale(locale);
 
   // Fetch initial products server-side for faster first paint
   let initialProducts: any[] = [];

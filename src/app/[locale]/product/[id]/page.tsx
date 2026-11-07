@@ -1,9 +1,24 @@
+import { cache } from "react";
 import { notFound } from "next/navigation";
+import { setRequestLocale } from "next-intl/server";
 import { fetchProductById } from "@/api/products";
+import { getStudioMap } from "@/lib/studio-photos";
 import ProductDetailContent from "@/components/product/ProductDetailContent";
 import ProductHeader from "@/components/product/ProductHeader";
 import type { Metadata } from "next";
 import { generatePageMetadata } from "@/lib/metadata";
+
+// Cached page, refreshed at most once a minute (admin edits show within 60s).
+export const revalidate = 60;
+
+// No product is built ahead of time; each one is rendered on its first
+// visit and then served from the cache (and refreshed as above).
+export async function generateStaticParams() {
+  return [];
+}
+
+// One database round trip per render: generateMetadata and the page share it.
+const getProduct = cache((id: string) => fetchProductById(id));
 
 export async function generateMetadata({
   params,
@@ -11,7 +26,7 @@ export async function generateMetadata({
   params: Promise<{ locale: string; id: string }>;
 }): Promise<Metadata> {
   const { locale, id } = await params;
-  const product = await fetchProductById(id);
+  const product = await getProduct(id);
 
   if (!product) {
     return generatePageMetadata({
@@ -50,10 +65,11 @@ export default async function ProductDetailPage({
   params: Promise<{ locale: string; id: string }>;
 }) {
   const { locale, id } = await params;
+  setRequestLocale(locale);
   const isAr = locale === "ar";
   const dir = isAr ? "rtl" : "ltr";
 
-  const product = await fetchProductById(id);
+  const product = await getProduct(id);
 
   if (!product) {
     notFound();
@@ -61,11 +77,18 @@ export default async function ProductDetailPage({
 
   const productName = isAr ? product.nameAr : product.nameEn;
 
+  // Which photos are white-background studio shots — decided here (cached
+  // per photo) so the gallery renders right away instead of checking every
+  // photo in the browser first.
+  const studioMap = await getStudioMap(
+    (product.photos ?? []).map((p) => p.imageUrl).filter((u): u is string => !!u && u.startsWith("http"))
+  );
+
   return (
     <div className="min-h-screen bg-background" dir={dir}>
       <div className="container px-0 pb-section">
         <ProductHeader productName={productName} />
-        <ProductDetailContent product={product} />
+        <ProductDetailContent product={product} studioMap={studioMap} />
       </div>
     </div>
   );

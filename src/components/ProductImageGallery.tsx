@@ -10,7 +10,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDropboxImage } from "@/hooks/useDropboxImage";
 import { useStudioPhotos } from "@/hooks/useStudioPhotos";
-import { cutoutSrc } from "@/lib/cutout";
+import { cutoutSrc, photoSrc } from "@/lib/cutout";
 
 type Photo = {
   id: string | number;
@@ -26,6 +26,8 @@ interface ProductImageGalleryProps {
   selectedOptionValueId?: string | number;
   thumbSide?: "left" | "right";
   mainImageSecond?: boolean;
+  /** Server-computed url → studio shot. When given, no in-browser check. */
+  studioMap?: Record<string, boolean>;
 }
 
 const FALLBACK = "/placeholder.png";
@@ -76,7 +78,10 @@ function SafeImage({
   // background is already the tile gray; fall back to the original on error.
   const wantsCutout = !failed && !cutoutFailed && /ds-blend/.test(className || "");
   if (wantsCutout && effectiveSrc) {
-    effectiveSrc = cutoutSrc(effectiveSrc, fill ? 1600 : 256) || effectiveSrc;
+    effectiveSrc = cutoutSrc(effectiveSrc, fill ? 1080 : 256) || effectiveSrc;
+  } else if (!failed && !cutoutFailed && effectiveSrc) {
+    // Real photos: resized WebP instead of the full-size original.
+    effectiveSrc = photoSrc(effectiveSrc, fill ? 1080 : 256) || effectiveSrc;
   }
 
   // Show loader while loading Dropbox URL
@@ -93,7 +98,7 @@ function SafeImage({
       src={effectiveSrc}
       alt={alt}
       className={className}
-      onError={() => (wantsCutout ? setCutoutFailed(true) : setFailed(true))}
+      onError={() => (!cutoutFailed && effectiveSrc.startsWith("/api/cutout") ? setCutoutFailed(true) : setFailed(true))}
       {...(fill
         ? { fill: true, sizes: sizes || "(max-width: 1024px) 100vw, 50vw" }
         : { width: width ?? 80, height: height ?? 80 })}
@@ -113,6 +118,7 @@ const ProductImageGallery = ({
   selectedOptionValueId,
   thumbSide,
   mainImageSecond = false,
+  studioMap,
 }: ProductImageGalleryProps) => {
   const t = useTranslations("Gallery");
   const locale = useLocale();
@@ -171,7 +177,11 @@ const ProductImageGallery = ({
   // Studio (white-background, cut-out) shots: when the product also has
   // real photos, hide them here — they stay on the cards / quick add. When a
   // product only has studio shots, show them as usual.
-  const { studio, ready: studioReady } = useStudioPhotos(orderedImages.map((p) => p.imageUrl));
+  // Prefer the server's answer; only fall back to checking in the browser
+  // when the page didn't provide one.
+  const clientStudio = useStudioPhotos(studioMap ? [] : orderedImages.map((p) => p.imageUrl));
+  const studio = studioMap ?? clientStudio.studio;
+  const studioReady = studioMap ? true : clientStudio.ready;
   const currentImages = useMemo(() => {
     if (orderedImages.length < 2) return orderedImages;
     const hasLifestyle = orderedImages.some((p) => studio[p.imageUrl] === false);
@@ -326,17 +336,19 @@ const ProductImageGallery = ({
 
   return (
     <div dir={dir}>
-      {/* 🚀 Preload all gallery images in the background to make swiping instant */}
+      {/* Warm the other photos so swiping is instant — same URLs as the
+          visible ones (so they're shared from cache), at normal priority so
+          they never compete with the first photo. */}
       <div className="hidden">
         {currentImages.map((img) => (
           <SafeImage
             key={img.id}
             src={img.imageUrl || FALLBACK}
-            alt="preload"
+            alt=""
+            className={fitClass(img.imageUrl)}
             fill
-            priority
             loading="eager"
-            sizes="1px" // Minimal sizes attribute for preload
+            sizes="1px"
           />
         ))}
       </div>

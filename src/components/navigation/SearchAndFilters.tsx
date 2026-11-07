@@ -4,7 +4,7 @@ import { Search, X, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import CutoutImage from "@/components/CutoutImage";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -29,14 +29,18 @@ export const SearchAndFilters = ({ showLabel = false }: SearchAndFiltersProps) =
   const locale = useLocale();
   const isAr = locale === "ar";
   const router = useRouter();
-  const sp = useSearchParams();
   const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState(sp.get("q") ?? "");
+  const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const { products } = useProducts();
 
   useEffect(() => setMounted(true), []);
+  // Prefill with the current ?q= when the panel opens (read from the URL
+  // directly so the header doesn't force pages to render on the client).
+  useEffect(() => {
+    if (open) setQuery(new URLSearchParams(window.location.search).get("q") ?? "");
+  }, [open]);
 
   const q = query.trim().toLowerCase();
   const results = useMemo(() => {

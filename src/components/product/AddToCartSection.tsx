@@ -144,24 +144,31 @@ const AddToCartSection = React.memo(({
     }
   };
 
-  // Add to cart = outline; Buy now = the solid primary (clean-theme order).
-  const getButtonClasses = () => {
-    const base = "h-12 w-full";
+  // Prestige order: Add to cart = the solid ink primary, Buy now = ink
+  // outline under it. 56px tall, 14px semibold labels — clearly visible
+  // without leaving the theme (same ink, square corners, tracked caps).
+  const label = "text-[14px] font-semibold tracking-[0.14em] [&_svg]:size-[18px]";
+  const getButtonClasses = (size: "lg" | "bar" = "lg") => {
+    const base = `${size === "lg" ? "h-14" : "h-12"} w-full ${label}`;
     switch (buttonState) {
       case "loading":
         return `${base} cursor-wait`;
-      case "added":
-        return `${base} border-ink bg-ink text-white hover:bg-ink hover:text-white`;
       default:
         return base;
     }
   };
 
-  const buyNowButton = onBuyNow ? (
-    <Button className="h-12 w-full" onClick={() => onBuyNow()} disabled={disabled || buttonState === "loading"}>
-      {t("buyNow")}
-    </Button>
-  ) : null;
+  const buyNowButton = (size: "lg" | "bar" = "lg") =>
+    onBuyNow ? (
+      <Button
+        variant="outline"
+        className={`${size === "lg" ? "h-14" : "h-12"} w-full ${label}`}
+        onClick={() => onBuyNow()}
+        disabled={disabled || buttonState === "loading"}
+      >
+        {t("buyNow")}
+      </Button>
+    ) : null;
 
   const whatsappButton = (
     <a
@@ -184,26 +191,24 @@ const AddToCartSection = React.memo(({
         className={`fixed inset-x-0 bottom-0 z-50 border-t border-gray-200 bg-background px-gutter pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 lg:hidden transition-transform duration-300 ${showSticky ? "translate-y-0" : "translate-y-full"}`}
         dir={dir}
       >
-        <div className={buyNowButton ? "grid grid-cols-2 gap-2" : ""}>
+        <div className={onBuyNow ? "grid grid-cols-2 gap-2" : ""}>
           <Button
-            variant="outline"
-            className={getButtonClasses()}
+            className={getButtonClasses("bar")}
             onClick={handleAddToCart}
             onMouseEnter={handleCartHover}
             disabled={disabled || buttonState === "loading"}
           >
             {getButtonContent()}
           </Button>
-          {buyNowButton}
+          {buyNowButton("bar")}
         </div>
       </div>
 
       {/* Mobile inline Add to Cart + WhatsApp - not sticky, in normal flow */}
-      <div className="lg:hidden flex flex-col gap-tile" dir={dir}>
+      <div className="flex flex-col gap-2.5 lg:hidden" dir={dir}>
         {/* Inline Add to Cart button — observed by IntersectionObserver */}
         <Button
           ref={inlineButtonRef}
-          variant="outline"
           className={getButtonClasses()}
           onClick={handleAddToCart}
           onMouseEnter={handleCartHover}
@@ -211,15 +216,14 @@ const AddToCartSection = React.memo(({
         >
           {getButtonContent()}
         </Button>
-        {buyNowButton}
+        {buyNowButton()}
 
         {whatsappButton}
       </div>
 
       {/* Desktop - Regular button */}
-      <div className="hidden lg:flex lg:flex-col lg:gap-tile" dir={dir}>
+      <div className="hidden lg:flex lg:flex-col lg:gap-2.5" dir={dir}>
         <Button
-          variant="outline"
           className={getButtonClasses()}
           onClick={handleAddToCart}
           onMouseEnter={handleCartHover}
@@ -227,7 +231,7 @@ const AddToCartSection = React.memo(({
         >
           {getButtonContent()}
         </Button>
-        {buyNowButton}
+        {buyNowButton()}
 
         {/* Contact Seller */}
         {whatsappButton}

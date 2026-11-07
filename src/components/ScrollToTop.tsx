@@ -1,11 +1,16 @@
 "use client";
 
 import { useEffect } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 
+/**
+ * Scroll to the top on page changes only. (It used to also fire on every
+ * query-string change, which threw the shopper back to the top each time a
+ * filter or colour was ticked on the products page — and reading the query
+ * here forced every page to render on the client.)
+ */
 export default function ScrollToTop() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   useEffect(() => {
     if (typeof window !== "undefined" && "scrollRestoration" in window.history) {
@@ -33,7 +38,7 @@ export default function ScrollToTop() {
       cancelAnimationFrame(rafId);
       clearTimeout(timerId);
     };
-  }, [pathname, searchParams]);
+  }, [pathname]);
 
   return null;
 }

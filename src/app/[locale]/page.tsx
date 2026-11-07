@@ -8,6 +8,7 @@ import dynamic from "next/dynamic";
 import ProductsCacheSeeder from "@/components/ProductsCacheSeeder";
 import { fetchProducts } from "@/api/products";
 import { generatePageMetadata } from "@/lib/metadata";
+import { setRequestLocale } from "next-intl/server";
 import { withRetry } from "@/lib/retry";
 import { CONTACT_INFO } from "@/lib/constants";
 import type { Metadata } from "next";
@@ -62,6 +63,7 @@ export default async function Page({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  setRequestLocale(locale);
 
   return (
     <div className="min-h-screen">

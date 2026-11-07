@@ -1,4 +1,5 @@
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
+import { setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 
@@ -42,6 +43,10 @@ const cairo = Cairo({
 });
 
 
+export function generateStaticParams() {
+  return routing.locales.map((locale) => ({ locale }));
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -65,6 +70,10 @@ export default async function LocaleLayout({
   if (!hasLocale(routing.locales, locale)) {
     notFound();
   }
+  // Tell next-intl the locale up front so it doesn't read it from the
+  // request headers — that made every page dynamic (rebuilt on every visit,
+  // never cached). With this the pages can be cached and revalidated.
+  setRequestLocale(locale);
 
   const dir = (locale as string) === 'ar' ? 'rtl' : 'ltr';
 

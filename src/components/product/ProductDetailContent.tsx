@@ -45,9 +45,11 @@ function mapPhotosForGallery(photos: ProductApi['photos']) {
 
 interface ProductDetailContentProps {
   product: ProductApi;
+  /** url → is a white-background studio shot (computed on the server). */
+  studioMap?: Record<string, boolean>;
 }
 
-export default function ProductDetailContent({ product }: ProductDetailContentProps) {
+export default function ProductDetailContent({ product, studioMap }: ProductDetailContentProps) {
   const router = useRouter();
   const locale = useLocale();
   const isAr = locale === "ar";
@@ -398,6 +400,7 @@ export default function ProductDetailContent({ product }: ProductDetailContentPr
             selectedOptionValueId={selectedChainId}
             thumbSide={isAr ? "right" : "left"}
             mainImageSecond={!!product?.main_image_second}
+            studioMap={studioMap}
           />
         </div>
 

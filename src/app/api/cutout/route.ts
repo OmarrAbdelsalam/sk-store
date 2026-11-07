@@ -3,7 +3,7 @@ import sharp from "sharp";
 import { cutoutWidth } from "@/lib/cutout";
 
 /**
- * GET /api/cutout?u=<image url>&w=<width>
+ * GET /api/cutout?u=<image url>&w=<width>[&mode=plain]
  *
  * Returns the product photo resized and with its near-white studio
  * background turned into exactly the tile gray (#F5F5F5), as WebP. This is
@@ -33,6 +33,8 @@ const CACHE = "public, max-age=31536000, s-maxage=31536000, stale-while-revalida
 export async function GET(req: NextRequest) {
   const u = req.nextUrl.searchParams.get("u");
   const w = cutoutWidth(Number(req.nextUrl.searchParams.get("w")) || 828);
+  // "plain" = resize + WebP only (lifestyle photos); default = melt the white.
+  const plain = req.nextUrl.searchParams.get("mode") === "plain";
   if (!u) return new Response("Missing u", { status: 400 });
 
   let target: URL;
@@ -56,6 +58,17 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    if (plain) {
+      const out = await sharp(input)
+        .rotate()
+        .resize({ width: w, withoutEnlargement: true })
+        .webp({ quality: 80 })
+        .toBuffer();
+      return new Response(new Uint8Array(out), {
+        headers: { "Content-Type": "image/webp", "Cache-Control": CACHE },
+      });
+    }
+
     // 1) orient, resize, transparent → white, push near-white to pure white
     //    (8-bit output clamps at 255, just like the CSS filter steps did)
     const { data, info } = await sharp(input)
